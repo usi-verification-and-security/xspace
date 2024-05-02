@@ -1,4 +1,3 @@
-#include <Opensmt.h>
 #include <iostream>
 #include "NNModel.h"
 #include "Verix.h"
@@ -10,7 +9,7 @@ int main()
 {
     NNModel nn = NNModel();
     Verix verix = Verix(nn);
-    verix.get_explanation(3, {1.0, 0.0, 0.0});
+    verix.get_explanation(2, {1.0, 0.0, 0.0});
 //    Logic logic{opensmt::Logic_t::QF_UF}; // UF Logic
 //    SMTConfig c;
 //    MainSolver mainSolver(logic, c, "test solver");

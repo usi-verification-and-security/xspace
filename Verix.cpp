@@ -52,6 +52,51 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
 //        outputVarsRefs.push_back(logic.mkRealVar(inputVars[i].c_str()));
 //    }
 
+    /*
+     * add model encoding and create the outputs
+     * TODO: you should do this automatically in the model class
+     * */
+    // Create constants
+    PTRef five = logic.mkRealConst(FastRational(5));
+    PTRef minus_one = logic.mkRealConst(FastRational(-1));
+    PTRef minus_half = logic.mkRealConst(FastRational(-1, 2));;
+    PTRef zero = logic.mkRealConst(FastRational(0));
+
+    // Create formulas
+    PTRef h1 = logic.mkMinus(logic.mkTimes(five, inputVarsRefs[0]), logic.mkPlus(inputVarsRefs[1], inputVarsRefs[2]));
+    PTRef h2 = logic.mkPlus(vec<PTRef>{logic.mkNeg(inputVarsRefs[0]), inputVarsRefs[1], inputVarsRefs[2]});
+
+    // Create ReLU function
+    PTRef h1_relu = logic.mkIte(logic.mkGt(h1, zero), h1, zero);
+    PTRef h2_relu = logic.mkIte(logic.mkGt(h2, zero), h2, zero);
+
+    // Create output formulas
+    PTRef o1 = logic.mkMinus(h1_relu, h2_relu);
+    PTRef o2 = logic.mkPlus(logic.mkTimes(minus_half, h1_relu), h2_relu);
+    outputVarsRefs.push_back(o1);
+    outputVarsRefs.push_back(o2);
+
+//    {
+//        for (int i = 0; i < input_example.size(); ++i) {
+////                set lower bound for the variable
+//                FastRational lower_bound_fr(input_example[i], 1); // Create FastRational from float
+////                set upper bound for the variable
+//                FastRational upper_bound_fr(input_example[i], 1); // Create FastRational from float
+//                mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(lower_bound_fr)),
+//                                                     logic.mkLeq(logic.mkRealConst(upper_bound_fr), inputVarsRefs[i])));
+//        }
+//        mainSolver.insertFormula(logic.mkLt(outputVarsRefs[0], outputVarsRefs[1]));
+//        auto res = mainSolver.check();
+//        assert(res == s_False);
+//        auto itp = mainSolver.getInterpolationContext();
+//        vec<PTRef> itps;
+//        ipartitions_t partitions = 1;
+//        itp->getSingleInterpolant(itps, partitions);
+//        assert(itps.size() == 1);
+//        std::cout << logic.pp(itps[0]);
+//        exit(1);
+//    }
+
     std::vector<float> output_vars = nn.predict(input_example);
     auto maxElementIter = std::max_element(output_vars.begin(), output_vars.end());
     int label = std::distance(output_vars.begin(), maxElementIter);
@@ -59,6 +104,7 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
     float lower_bound;
     float upper_bound;
     for (int feature = 0; feature < input_example.size(); feature++) {
+        mainSolver.push();
         for (int i = 0; i < input_example.size(); i++) {
             /*
              * Set constraints on the input variables.
@@ -68,8 +114,8 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
                 /*
                  * Set allowable perturbations on the current feature and the irrelevant features.
                  */
-                lower_bound =  input_example[i] - epsilon;
-                upper_bound =  input_example[i] + epsilon;
+                lower_bound =  std::max(input_example[i] - epsilon, 0.0f);
+                upper_bound =  std::min(input_example[i] + epsilon, 1.0f);
 //                set lower bound for the variable
                 FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq( logic.mkRealConst(lower_bound_fr), inputVarsRefs[i]));
@@ -90,30 +136,6 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
                 mainSolver.insertFormula(logic.mkLeq(logic.mkRealConst(upper_bound_fr), inputVarsRefs[i]));
             }
         }
-
-        /*
-         * add model encoding and create the outputs
-         * TODO: you should do this automatically in the model class
-         * */
-        // Create constants
-        PTRef five = logic.mkRealConst(FastRational(5));
-        PTRef minus_one = logic.mkRealConst(FastRational(-1));
-        PTRef minus_half = logic.mkRealConst(FastRational(-1, 2));;
-        PTRef zero = logic.mkRealConst(FastRational(0));
-
-        // Create formulas
-        PTRef h1 = logic.mkMinus(logic.mkTimes(five, inputVarsRefs[0]), logic.mkPlus(inputVarsRefs[1], inputVarsRefs[2]));
-        PTRef h2 = logic.mkPlus(logic.mkMinus(inputVarsRefs[1], inputVarsRefs[0]), inputVarsRefs[2]);
-
-        // Create ReLU function
-        PTRef h1_relu = logic.mkIte(logic.mkGt(h1, zero), h1, zero);
-        PTRef h2_relu = logic.mkIte(logic.mkGt(h2, zero), h2, zero);
-
-        // Create output formulas
-        PTRef o1 = logic.mkMinus(h1_relu, h2_relu);
-        PTRef o2 = logic.mkPlus(logic.mkTimes(minus_half, h1_relu), h2_relu);
-        outputVarsRefs.push_back(o1);
-        outputVarsRefs.push_back(o2);
 
 
         for (int j = 0; j < output_vars.size(); j++) {
@@ -161,6 +183,7 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
         } else {
             printf("error\n");
         }
+        mainSolver.pop();
     }
 
 //    print sat_set

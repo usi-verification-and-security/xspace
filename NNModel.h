@@ -13,8 +13,8 @@ public:
     std::vector<float> predict(std::vector<float> x) {
         /*
          * This is a dummy neural network model with 3 input nodes, 2 hidden nodes and 2 output nodes.
-            h1 = 5x1 − x2 − x3
-            h2 = −x1 + x2 + x3
+            h1 = 5x0 − x1 − x2
+            h2 = −x0 + x1 + x2
             h′1 = ReLU (h1)
             h′2 = ReLU (h2)
             o1 = h′1 − h′2
