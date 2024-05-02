@@ -146,10 +146,10 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
             printf("\n");
             const std::vector<float> &prediction = nn.predict(input_example);
 //            print the prediction
-            for (int i = 0; i < prediction.size(); i++) {
-                printf("%f ", prediction[i]);
-            }
-            printf("\n");
+//            for (int i = 0; i < prediction.size(); i++) {
+//                printf("%f ", prediction[i]);
+//            }
+//            printf("\n");
 
 
         } else if (r == s_False) {
