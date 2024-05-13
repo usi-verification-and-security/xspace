@@ -1,6 +1,6 @@
 
 from keras.src.saving import load_model
-from NNet.utils.writeNNet import writeNNet
+from nnet_utils.writeNNet import writeNNet
 
 
 def keras2nnets(kerasFile, input_min=-1000000, input_max=1000000, custom_objects=None):
