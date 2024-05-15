@@ -21,16 +21,14 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return tokens;
 }
 
-void readNNetAndCreateFormulas(const std::string& filename, ArithLogic& logic, std::vector<PTRef>& inputVarsRefs, std::vector<PTRef>& outputVarsRefs) {
+void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& logic, std::vector<PTRef>& inputVarsRefs, std::vector<PTRef>& outputVarsRefs) {
     /*
      * Read a .nnet file and create SMT formulas for the neural network.
      * param filename: the path to the .nnet file.
      * param logic: the logic.
      * param inputVarsRefs: the input variables.
      * param outputVarsRefs: the output variables.
-     */
 
-    /*
      * Read the .nnet file and create SMT formulas for the neural network.
      * The file begins with header lines, some information about the network architecture, normalization information, and then model parameters. Line by line:
         1: Header text. This can be any number of lines so long as they begin with "//"
@@ -69,6 +67,11 @@ void readNNetAndCreateFormulas(const std::string& filename, ArithLogic& logic, s
     int numOutputs = std::stoi(networkArchitecture[2]);
     int maxLayerSize = std::stoi(networkArchitecture[3]);
 
+    for (int i = 0; i < numInputs; i++) {
+        std::string name = "input_" + std::to_string(i);
+        inputVarsRefs.push_back(logic.mkRealVar(name.c_str()));
+    }
+
     // Skip normalization information
     for (int i = 0; i < 6; i++) {
         std::getline(file, line);
@@ -98,11 +101,11 @@ void readNNetAndCreateFormulas(const std::string& filename, ArithLogic& logic, s
 
     // Create SMT formulas
     std::vector<PTRef> previousLayerRefs = inputVarsRefs;
-    int denominator = 1000000000; // Adjust this value as needed
+    int denominator = 10000000; // Adjust this value as needed
     PTRef zero = logic.mkRealConst(FastRational(0));
     for (int layer = 0; layer < numLayers; layer++) {
         std::vector<PTRef> currentLayerRefs;
-        for (int i = 0; i < weights[layer].size(); i++) {
+        for (int i = 0; i < biases[layer].size(); i++) {
             int numerator_biases = static_cast<int>(biases[layer][i] * denominator);
             PTRef sum;
             if (numerator_biases == 0) {
@@ -123,18 +126,14 @@ void readNNetAndCreateFormulas(const std::string& filename, ArithLogic& logic, s
     outputVarsRefs = previousLayerRefs;
 }
 
-Verix::Verix(const NNModel& model)
-    : nn(model),
-      inputVars({"x1", "x2", "x3"}),
-      outputVars({"o1", "o2"})
+Verix::Verix(const std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals)
+    : model_file(model_file),
+        input_vals(inputVals),
+        output_vals(outputVals)
 {
-
-    // this->nn = model;
-    // this->logic = opensmt::Logic_t::QF_UF;
-    // this->mainSolver = MainSolver(logic, SMTConfig(), "Verix solver");
 }
 
-void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
+void Verix::get_explanation(float epsilon) {
     /*
      * To compute the explanation for the model and the neural network.
      * param epsilon: the perturbation magnitude.
@@ -153,23 +152,18 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
 
     std::vector<PTRef> outputVarsRefs;
     std::vector<PTRef> inputVarsRefs;
-    for (int i = 0; i < inputVars.size(); i++) {
-        std::string name = "input_" + std::to_string(i);
-        inputVarsRefs.push_back(logic.mkRealVar(name.c_str()));
-    }
 
     /*
      * add model encoding and create the outputs
      * */
-    std::string filename = "models/dummy_network.nnet";
-    readNNetAndCreateFormulas(filename, logic, inputVarsRefs, outputVarsRefs);
+    readNNetAndCreateFormulas(model_file, logic, inputVarsRefs, outputVarsRefs);
 
 //    {
-//        for (int i = 0; i < input_example.size(); ++i) {
+//        for (int i = 0; i < input_vals.size(); ++i) {
 ////                set lower bound for the variable
-//                FastRational lower_bound_fr(input_example[i], 1); // Create FastRational from float
+//                FastRational lower_bound_fr(input_vals[i], 1); // Create FastRational from float
 ////                set upper bound for the variable
-//                FastRational upper_bound_fr(input_example[i], 1); // Create FastRational from float
+//                FastRational upper_bound_fr(input_vals[i], 1); // Create FastRational from float
 //                mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(lower_bound_fr)),
 //                                                     logic.mkLeq(logic.mkRealConst(upper_bound_fr), inputVarsRefs[i])));
 //        }
@@ -185,15 +179,15 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
 //        exit(1);
 //    }
 
-    std::vector<float> output_vars = nn.predict(input_example);
-    auto maxElementIter = std::max_element(output_vars.begin(), output_vars.end());
-    int label = std::distance(output_vars.begin(), maxElementIter);
+//    std::vector<float> output_vars = nn.predict(input_vals);
+    auto maxElementIter = std::max_element(output_vals.begin(), output_vals.end());
+    int label = std::distance(output_vals.begin(), maxElementIter);
 
     float lower_bound;
     float upper_bound;
-    for (int feature = 0; feature < input_example.size(); feature++) {
+    for (int feature = 0; feature < input_vals.size(); feature++) {
         mainSolver.push();
-        for (int i = 0; i < input_example.size(); i++) {
+        for (int i = 0; i < input_vals.size(); i++) {
             /*
              * Set constraints on the input variables.
              */
@@ -202,10 +196,10 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
                 /*
                  * Set allowable perturbations on the current feature and the irrelevant features.
                  */
-                lower_bound =  std::max(input_example[i] - epsilon, 0.0f);
-                upper_bound =  std::min(input_example[i] + epsilon, 1.0f);
+                lower_bound =  std::max(input_vals[i] - epsilon, 0.0f);
+                upper_bound =  std::min(input_vals[i] + epsilon, 1.0f);
 //                set lower bound for the variable
-                FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
+                    FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq( logic.mkRealConst(lower_bound_fr), inputVarsRefs[i]));
 //                set upper bound for the variable
                 FastRational upper_bound_fr(upper_bound, 1); // Create FastRational from float
@@ -214,8 +208,8 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
                 /*
                  * Make sure the other pixels are fixed.
                  */
-                lower_bound =  input_example[i];
-                upper_bound =  input_example[i];
+                lower_bound =  input_vals[i];
+                upper_bound =  input_vals[i];
 //                set lower bound for the variable
                 FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(lower_bound_fr)));
@@ -226,7 +220,7 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
         }
 
 
-        for (int j = 0; j < output_vars.size(); j++) {
+        for (int j = 0; j < output_vals.size(); j++) {
             /*
              * Set constraints on the output variables.
              */
@@ -254,7 +248,7 @@ void Verix::get_explanation(float epsilon, std::vector<float> input_example) {
                 printf("%s, ", v1_p.c_str());
             }
             printf("\n");
-            const std::vector<float> &prediction = nn.predict(input_example);
+//            const std::vector<float> &prediction = nn.predict(input_vals);
 
 
         } else if (r == s_False) {

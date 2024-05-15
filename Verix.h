@@ -12,16 +12,16 @@
 
 class Verix {
     private:
-    NNModel nn;
+    std::string model_file;
 //    Logic logic;
 //    SMTConfig config;
 //    MainSolver mainSolver;
-    std::vector<std::string> inputVars;
-    std::vector<std::string> outputVars;
+    std::vector<float> input_vals;
+    std::vector<float> output_vals;
 
     public:
-    Verix(const NNModel& model);
-    void get_explanation(float epsilon, std::vector<float> input_example);
+    Verix(std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals);
+    void get_explanation(float epsilon);
 
     Opensmt*
     pre()
@@ -33,6 +33,8 @@ class Verix {
         return osmt;
     }
 
+    void readNNetAndCreateFormulas(const std::string &filename, ArithLogic &logic, std::vector<PTRef> &inputVarsRefs,
+                                   std::vector<PTRef> &outputVarsRefs);
 };
 //
 //def get_explanation(self, epsilon):
