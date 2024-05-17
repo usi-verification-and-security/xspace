@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(XAI-SMT)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 include_directories(.)
 
@@ -10,7 +10,9 @@ add_executable(XAI-SMT
         NNModel.cpp
         NNModel.h
         Verix.cpp
-        Verix.h)
+        NNet.cpp
+        algorithms/BasicVerix.cpp
+)
 
 
 include(FetchContent)
@@ -24,7 +26,7 @@ else(OpenSMT_FOUND)
     FetchContent_Declare(
         OpenSMT
         GIT_REPOSITORY https://github.com/usi-verification-and-security/opensmt.git
-        GIT_TAG a35c2a080801de0792677bb5ddfe5253e7cc67f2 # v2.6.0
+        GIT_TAG 239fed8847403183ce05ba78c85b6023c8deb7bb
         GIT_SHALLOW true
         GIT_PROGRESS true
     )
@@ -41,10 +43,9 @@ endif(OpenSMT_FOUND)
 if (NOT OpenSMT_FOUND)
     target_compile_definitions(XAI-SMT PUBLIC OPENSMT_LOCAL_BUILD)
     #message("Directories:${opensmt_SOURCE_DIR}; ${opensmt_BINARY_DIR}")
-    target_include_directories(XAI-SMT PUBLIC
-    "${opensmt_SOURCE_DIR}/src/symbols"
-    "${opensmt_SOURCE_DIR}/src/minisat/mtl"
-    ${opensmt_SOURCE_DIR}/src/minisat/core
+    target_include_directories(OpenSMT-static PUBLIC
+    ${opensmt_SOURCE_DIR}/src/
+    ${opensmt_SOURCE_DIR}/src/symbols
     ${opensmt_SOURCE_DIR}/src/common
     ${opensmt_SOURCE_DIR}/src/sorts
     ${opensmt_SOURCE_DIR}/src/symbols
@@ -71,5 +72,25 @@ if (NOT OpenSMT_FOUND)
     target_include_directories(XAI-SMT PUBLIC ${GMP_INCLUDE_DIR})
 endif()
 
-
 target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
+
+FetchContent_Declare(
+        Marabou
+        GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
+        GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
+        GIT_SHALLOW true
+        GIT_PROGRESS true
+    )
+FetchContent_MakeAvailable(Marabou)
+add_library(Marabou::Marabou ALIAS MarabouHelper)
+get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
+#message(STATUS "Include directories for Marabout: ${MARABOU_INCLUDE_DIRS}")
+target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
+target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
+#get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
+#message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
+
+add_subdirectory(verifiers)
+
+
+

@@ -9,6 +9,7 @@
 #include "NNModel.h"
 #include <Opensmt.h>
 #include <vector>
+#include "Verifier.h"
 
 class Verix {
     private:
@@ -16,12 +17,15 @@ class Verix {
 //    Logic logic;
 //    SMTConfig config;
 //    MainSolver mainSolver;
-    std::vector<float> input_vals;
-    std::vector<float> output_vals;
+    std::vector<float> input_examples;
+    std::vector<float> output_examples;
+    std::vector<float> inputMaxs;
+    std::vector<float> inputMins;
+    ;
 
     public:
     Verix(std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals);
-    void get_explanation(float epsilon);
+    void get_explanation(float get_explanation);
 
     Opensmt*
     pre()

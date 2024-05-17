@@ -1,0 +1,34 @@
+#ifndef XAI_SMT_MARABOUVERIFIER_H
+#define XAI_SMT_MARABOUVERIFIER_H
+
+#include "Verifier.h"
+
+
+namespace xai::verifiers {
+
+class MarabouVerifier : public Verifier {
+public:
+    MarabouVerifier();
+    ~MarabouVerifier();
+
+    void loadModel(NNet const & network) override;
+
+    void addUpperBound(LayerIndex layer, NodeIndex var, float value) override;
+
+    void addLowerBound(LayerIndex layer, NodeIndex var, float value) override;
+
+    void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
+
+    Answer check() override;
+
+    void clearAdditionalConstraints() override;
+
+private:
+    class MarabouImpl;
+    MarabouImpl * pimpl;
+};
+}
+
+
+
+#endif //XAI_SMT_MARABOUVERIFIER_H
