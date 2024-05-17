@@ -24,7 +24,7 @@ else(OpenSMT_FOUND)
     FetchContent_Declare(
         OpenSMT
         GIT_REPOSITORY https://github.com/usi-verification-and-security/opensmt.git
-        GIT_TAG a35c2a080801de0792677bb5ddfe5253e7cc67f2 # v2.6.0
+        GIT_TAG 2f72cc0e2e990eceac7827fa4b55c5c9c0874fdc
         GIT_SHALLOW true
         GIT_PROGRESS true
     )
@@ -71,5 +71,18 @@ if (NOT OpenSMT_FOUND)
     target_include_directories(XAI-SMT PUBLIC ${GMP_INCLUDE_DIR})
 endif()
 
-
 target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
+
+FetchContent_Declare(
+        Marabou
+        GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
+        GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
+        GIT_SHALLOW true
+        GIT_PROGRESS true
+    )
+FetchContent_MakeAvailable(Marabou)
+add_library(Marabou::Marabou ALIAS MarabouHelper)
+target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
+
+
+
