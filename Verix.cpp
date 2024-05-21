@@ -67,13 +67,12 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
     int numOutputs = std::stoi(networkArchitecture[2]);
     int maxLayerSize = std::stoi(networkArchitecture[3]);
 
-    for (int i = 0; i < numInputs; i++) {
-        std::string name = "input_" + std::to_string(i);
-        inputVarsRefs.push_back(logic.mkRealVar(name.c_str()));
-    }
+    // Specify layer sizes
+    std::getline(file, line);
+    std::vector<std::string> layer_sizes = split(line, ',');
 
     // Skip normalization information
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 5; i++) {
         std::getline(file, line);
     }
 
@@ -82,7 +81,7 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
     std::vector<std::vector<float>> biases(numLayers);
     for (int layer = 0; layer < numLayers; layer++) {
         // Parse weights
-        for (int i = 0; i < (layer == 0 ? numInputs : weights[layer - 1].size()); i++) {
+        for (int i = 0; i <  stoi(layer_sizes[layer+1]); i++) {
             std::getline(file, line);
             std::vector<std::string> weightStrings = split(line, ',');
             weights[layer].push_back(std::vector<float>());
@@ -92,11 +91,19 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
         }
 
         // Parse biases
-        std::getline(file, line);
-        std::vector<std::string> biasStrings = split(line, ',');
-        for (const auto& biasString : biasStrings) {
+        for (int i = 0; i <  stoi(layer_sizes[layer+1]); i++) {
+            std::getline(file, line);
+            std::vector<std::string> biasStrings = split(line, ',');
+            std::string biasString = biasStrings[0];
             biases[layer].push_back(std::stof(biasString));
         }
+    }
+    file.close();
+
+    // define input variables
+    for (int i = 0; i < numInputs; i++) {
+        std::string name = "input_" + std::to_string(i);
+        inputVarsRefs.push_back(logic.mkRealVar(name.c_str()));
     }
 
     // Create SMT formulas
@@ -106,17 +113,28 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
     for (int layer = 0; layer < numLayers; layer++) {
         std::vector<PTRef> currentLayerRefs;
         for (int i = 0; i < biases[layer].size(); i++) {
-            int numerator_biases = static_cast<int>(biases[layer][i] * denominator);
+            int numerator_biase = static_cast<int>(biases[layer][i] * denominator);
             PTRef sum;
-            if (numerator_biases == 0) {
-                sum = logic.mkRealConst(FastRational(numerator_biases));
-            } else {
-                sum = logic.mkRealConst(FastRational(numerator_biases, denominator));
-            }
+            sum = logic.mkRealConst(FastRational(numerator_biase, denominator));
+//            if (numerator_biase < 0){
+//                numerator_biase = -1 * numerator_biase;
+//                sum = logic.mkRealConst(FastRational(numerator_biase, -1 * denominator));
+//            }
+//            else {
+//                sum = logic.mkRealConst(FastRational(numerator_biase, denominator));
+//            }
 
             for (int j = 0; j < weights[layer][i].size(); j++) {
-                int numerator_weights = static_cast<int>(weights[layer][i][j] * denominator);
-                sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weights, denominator)), previousLayerRefs[j]));
+                int numerator_weight = static_cast<int>(weights[layer][i][j] * denominator);
+                sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, denominator)), previousLayerRefs[j]));
+
+//                if (numerator_weight < 0){
+//                    numerator_weight = -1 * numerator_weight;
+//                    sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, -1 * denominator)), previousLayerRefs[j]));
+//                }
+//                else {
+//                    sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, denominator)), previousLayerRefs[j]));
+//                }
             }
             PTRef relu = logic.mkIte(logic.mkGt(sum, zero), sum, zero);
             currentLayerRefs.push_back(relu);
@@ -128,8 +146,8 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
 
 Verix::Verix(const std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals)
     : model_file(model_file),
-        input_vals(inputVals),
-        output_vals(outputVals)
+      input_examples(inputVals),
+      output_examples(outputVals)
 {
 }
 
@@ -158,36 +176,67 @@ void Verix::get_explanation(float epsilon) {
      * */
     readNNetAndCreateFormulas(model_file, logic, inputVarsRefs, outputVarsRefs);
 
-//    {
-//        for (int i = 0; i < input_vals.size(); ++i) {
-////                set lower bound for the variable
-//                FastRational lower_bound_fr(input_vals[i], 1); // Create FastRational from float
-////                set upper bound for the variable
-//                FastRational upper_bound_fr(input_vals[i], 1); // Create FastRational from float
-//                mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(lower_bound_fr)),
-//                                                     logic.mkLeq(logic.mkRealConst(upper_bound_fr), inputVarsRefs[i])));
-//        }
-//        mainSolver.insertFormula(logic.mkLt(outputVarsRefs[0], outputVarsRefs[1]));
-//        auto res = mainSolver.check();
-//        assert(res == s_False);
-//        auto itp = mainSolver.getInterpolationContext();
-//        vec<PTRef> itps;
-//        ipartitions_t partitions = 1;
-//        itp->getSingleInterpolant(itps, partitions);
-//        assert(itps.size() == 1);
-//        std::cout << logic.pp(itps[0]);
-//        exit(1);
+    for (int i = 0; i < input_examples.size(); i++) {
+//                set lower bound for the variable
+            FastRational lower_bound_fr(input_examples[i], 1); // Create FastRational from float
+//                set upper bound for the variable
+            FastRational upper_bound_fr(input_examples[i], 1); // Create FastRational from float
+            mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(upper_bound_fr)),
+                                                 logic.mkLeq(logic.mkRealConst(lower_bound_fr), inputVarsRefs[i])));
+    }
+    // add constraints on the output variable
+    if(output_examples.size() == 1){
+        if(output_examples[0] > 0.5){
+            mainSolver.insertFormula(logic.mkLeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1,2))));
+
+        } else {
+            mainSolver.insertFormula(logic.mkGeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1, 2))));
+        }
+    }
+    auto res = mainSolver.check();
+    if (res == s_True) {
+        printf("sat\n");
+        auto m = mainSolver.getModel();
+        std::vector<float> cex;
+        for (int i = 0; i < inputVarsRefs.size(); i++) {
+            auto v1_p = logic.pp(m->evaluate(inputVarsRefs[i]));
+            auto var_a_s = logic.pp(inputVarsRefs[i]);
+            printf("%s, ", v1_p.c_str());
+        }
+        printf("\n");
+
+    } else if (res == s_False) {
+        printf("unsat\n");
+        auto itp = mainSolver.getInterpolationContext();
+        vec<PTRef> itps;
+        ipartitions_t partitions = 1;
+        itp->getSingleInterpolant(itps, partitions);
+        assert(itps.size() == 1);
+        std::cout << logic.pp(itps[0]);
+    } else if (res == s_Undef) {
+        printf("unknown\n");
+    } else {
+        printf("error\n");
+    }
+    //    assert(res == s_False);
+//    auto itp = mainSolver.getInterpolationContext();
+//    vec<PTRef> itps;
+//    ipartitions_t partitions = 1;
+//    itp->getSingleInterpolant(itps, partitions);
+//    assert(itps.size() == 1);
+//    std::cout << logic.pp(itps[0]);
+//    exit(1);
 //    }
 
-//    std::vector<float> output_vars = nn.predict(input_vals);
-    auto maxElementIter = std::max_element(output_vals.begin(), output_vals.end());
-    int label = std::distance(output_vals.begin(), maxElementIter);
+//    std::vector<float> output_vars = nn.predict(input_examples);
+    auto maxElementIter = std::max_element(output_examples.begin(), output_examples.end());
+    int label = std::distance(output_examples.begin(), maxElementIter);
 
     float lower_bound;
     float upper_bound;
-    for (int feature = 0; feature < input_vals.size(); feature++) {
+    for (int feature = 0; feature < input_examples.size(); feature++) {
         mainSolver.push();
-        for (int i = 0; i < input_vals.size(); i++) {
+        for (int i = 0; i < input_examples.size(); i++) {
             /*
              * Set constraints on the input variables.
              */
@@ -196,8 +245,8 @@ void Verix::get_explanation(float epsilon) {
                 /*
                  * Set allowable perturbations on the current feature and the irrelevant features.
                  */
-                lower_bound =  std::max(input_vals[i] - epsilon, 0.0f);
-                upper_bound =  std::min(input_vals[i] + epsilon, 1.0f);
+                lower_bound =  std::max(input_examples[i] - epsilon, 0.0f);
+                upper_bound =  std::min(input_examples[i] + epsilon, 1.0f);
 //                set lower bound for the variable
                     FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq( logic.mkRealConst(lower_bound_fr), inputVarsRefs[i]));
@@ -208,8 +257,8 @@ void Verix::get_explanation(float epsilon) {
                 /*
                  * Make sure the other pixels are fixed.
                  */
-                lower_bound =  input_vals[i];
-                upper_bound =  input_vals[i];
+                lower_bound =  input_examples[i];
+                upper_bound =  input_examples[i];
 //                set lower bound for the variable
                 FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(lower_bound_fr)));
@@ -220,7 +269,7 @@ void Verix::get_explanation(float epsilon) {
         }
 
 
-        for (int j = 0; j < output_vals.size(); j++) {
+        for (int j = 0; j < output_examples.size(); j++) {
             /*
              * Set constraints on the output variables.
              */
@@ -248,7 +297,7 @@ void Verix::get_explanation(float epsilon) {
                 printf("%s, ", v1_p.c_str());
             }
             printf("\n");
-//            const std::vector<float> &prediction = nn.predict(input_vals);
+//            const std::vector<float> &prediction = nn.predict(input_examples);
 
 
         } else if (r == s_False) {
