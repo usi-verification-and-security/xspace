@@ -9,6 +9,7 @@
 #include "NNModel.h"
 #include <Opensmt.h>
 #include <vector>
+#include "Verifier.h"
 
 class Verix {
     private:
