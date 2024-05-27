@@ -71,8 +71,21 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
     std::getline(file, line);
     std::vector<std::string> layer_sizes = split(line, ',');
 
+    std::getline(file, line);
+    std::getline(file, line);
+    std::vector<std::string> inputMinStr =  split(line, ',');
+    for (const auto& inputMinStrElement : inputMinStr) {
+        inputMins.push_back(std::stof(inputMinStrElement));
+    }
+
+    std::getline(file, line);
+    std::vector<std::string> inputMaxStr =  split(line, ',');
+    for (const auto& inputMaxStrElement : inputMaxStr) {
+        inputMaxs.push_back(std::stof(inputMaxStrElement));
+    }
+
     // Skip normalization information
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
         std::getline(file, line);
     }
 
@@ -151,10 +164,10 @@ Verix::Verix(const std::string model_file, std::vector<float> inputVals, std::ve
 {
 }
 
-void Verix::get_explanation(float epsilon) {
+void Verix::get_explanation(float freedom_factor) {
     /*
      * To compute the explanation for the model and the neural network.
-     * param epsilon: the perturbation magnitude.
+     * param freedom_factor: the perturbation magnitude.
      * return: an explanation, and possible counterfactual(s).
      */
 
@@ -167,6 +180,8 @@ void Verix::get_explanation(float epsilon) {
     std::vector<int> unsat_set;
     std::vector<int> sat_set;
     std::vector<int> timeout_set;
+//    std::vector<float> data_down;
+//    std::vector<float> data_up;
 
     std::vector<PTRef> outputVarsRefs;
     std::vector<PTRef> inputVarsRefs;
@@ -175,15 +190,31 @@ void Verix::get_explanation(float epsilon) {
      * add model encoding and create the outputs
      * */
     readNNetAndCreateFormulas(model_file, logic, inputVarsRefs, outputVarsRefs);
+    std::vector<float> inputLowerBounds;
+    std::vector<float> inputUpperBounds;
+    for(int i = 0; i < input_examples.size(); i++){
+        float  input_freedom = (inputMaxs[i] - inputMins[i]) * freedom_factor;
+        inputLowerBounds.push_back(std::max(input_examples[i] - input_freedom, inputMins[i]));
+        inputUpperBounds.push_back(std::min(input_examples[i] + input_freedom, inputMaxs[i]));
+    }
 
+    //set bounds on input variables
     for (int i = 0; i < input_examples.size(); i++) {
-//                set lower bound for the variable
-            FastRational lower_bound_fr(input_examples[i], 1); // Create FastRational from float
-//                set upper bound for the variable
-            FastRational upper_bound_fr(input_examples[i], 1); // Create FastRational from float
+            FastRational lower_bound_fr(inputMins[i], 1); // Create FastRational from float
+            FastRational upper_bound_fr(inputMins[i], 1); // Create FastRational from float
             mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(upper_bound_fr)),
                                                  logic.mkLeq(logic.mkRealConst(lower_bound_fr), inputVarsRefs[i])));
     }
+
+    //only if you want to freeze all the inputs
+//    for (int i = 0; i < input_examples.size(); i++) {
+////                set lower bound for the variable
+//            FastRational lower_bound_fr(input_examples[i], 1); // Create FastRational from float
+////                set upper bound for the variable
+//            FastRational upper_bound_fr(input_examples[i], 1); // Create FastRational from float
+//            mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(upper_bound_fr)),
+//                                                 logic.mkLeq(logic.mkRealConst(lower_bound_fr), inputVarsRefs[i])));
+//    }
     // add constraints on the output variable
     if(output_examples.size() == 1){
         if(output_examples[0] > 0.5){
@@ -207,12 +238,15 @@ void Verix::get_explanation(float epsilon) {
 
     } else if (res == s_False) {
         printf("unsat\n");
+        mainSolver.printFramesAsQuery();
         auto itp = mainSolver.getInterpolationContext();
         vec<PTRef> itps;
         ipartitions_t partitions = 1;
         itp->getSingleInterpolant(itps, partitions);
         assert(itps.size() == 1);
+        PTRef itp_formula = itps[0];
         std::cout << logic.pp(itps[0]);
+        logic.getPterm(itp_formula);
     } else if (res == s_Undef) {
         printf("unknown\n");
     } else {
@@ -245,8 +279,8 @@ void Verix::get_explanation(float epsilon) {
                 /*
                  * Set allowable perturbations on the current feature and the irrelevant features.
                  */
-                lower_bound =  std::max(input_examples[i] - epsilon, 0.0f);
-                upper_bound =  std::min(input_examples[i] + epsilon, 1.0f);
+                lower_bound =  inputLowerBounds[i];
+                upper_bound =  inputUpperBounds[i];
 //                set lower bound for the variable
                     FastRational lower_bound_fr(lower_bound, 1); // Create FastRational from float
                 mainSolver.insertFormula(logic.mkLeq( logic.mkRealConst(lower_bound_fr), inputVarsRefs[i]));
@@ -268,7 +302,6 @@ void Verix::get_explanation(float epsilon) {
             }
         }
 
-
         for (int j = 0; j < output_examples.size(); j++) {
             /*
              * Set constraints on the output variables.
@@ -281,7 +314,6 @@ void Verix::get_explanation(float epsilon) {
                 args_lt.push(outputVarsRefs[j]);
                 PTRef formula = logic.mkLt(args_lt);
                 mainSolver.insertFormula(formula);
-
             }
         }
 
@@ -302,6 +334,13 @@ void Verix::get_explanation(float epsilon) {
 
         } else if (r == s_False) {
             printf("unsat\n");
+            mainSolver.printFramesAsQuery();
+            auto itp = mainSolver.getInterpolationContext();
+            vec<PTRef> itps;
+            ipartitions_t partitions = 1;
+            itp->getSingleInterpolant(itps, partitions);
+            assert(itps.size() == 1);
+            std::cout << logic.pp(itps[0]);
             unsat_set.push_back(feature);
         } else if (r == s_Undef) {
             printf("unknown\n");

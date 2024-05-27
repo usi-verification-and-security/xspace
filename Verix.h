@@ -18,11 +18,13 @@ class Verix {
 //    MainSolver mainSolver;
     std::vector<float> input_examples;
     std::vector<float> output_examples;
+    std::vector<float> inputMaxs;
+    std::vector<float> inputMins;
     ;
 
     public:
     Verix(std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals);
-    void get_explanation(float epsilon);
+    void get_explanation(float get_explanation);
 
     Opensmt*
     pre()
