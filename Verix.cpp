@@ -129,25 +129,10 @@ void Verix::readNNetAndCreateFormulas(const std::string& filename, ArithLogic& l
             int numerator_biase = static_cast<int>(biases[layer][i] * denominator);
             PTRef sum;
             sum = logic.mkRealConst(FastRational(numerator_biase, denominator));
-//            if (numerator_biase < 0){
-//                numerator_biase = -1 * numerator_biase;
-//                sum = logic.mkRealConst(FastRational(numerator_biase, -1 * denominator));
-//            }
-//            else {
-//                sum = logic.mkRealConst(FastRational(numerator_biase, denominator));
-//            }
 
             for (int j = 0; j < weights[layer][i].size(); j++) {
                 int numerator_weight = static_cast<int>(weights[layer][i][j] * denominator);
                 sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, denominator)), previousLayerRefs[j]));
-
-//                if (numerator_weight < 0){
-//                    numerator_weight = -1 * numerator_weight;
-//                    sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, -1 * denominator)), previousLayerRefs[j]));
-//                }
-//                else {
-//                    sum = logic.mkPlus(sum, logic.mkTimes(logic.mkRealConst(FastRational(numerator_weight, denominator)), previousLayerRefs[j]));
-//                }
             }
             PTRef relu = logic.mkIte(logic.mkGt(sum, zero), sum, zero);
             currentLayerRefs.push_back(relu);
@@ -180,8 +165,6 @@ void Verix::get_explanation(float freedom_factor) {
     std::vector<int> unsat_set;
     std::vector<int> sat_set;
     std::vector<int> timeout_set;
-//    std::vector<float> data_down;
-//    std::vector<float> data_up;
 
     std::vector<PTRef> outputVarsRefs;
     std::vector<PTRef> inputVarsRefs;
@@ -198,12 +181,22 @@ void Verix::get_explanation(float freedom_factor) {
         inputUpperBounds.push_back(std::min(input_examples[i] + input_freedom, inputMaxs[i]));
     }
 
-    //set bounds on input variables
+    //set bounds on input variables (based on the training data)
     for (int i = 0; i < input_examples.size(); i++) {
             FastRational lower_bound_fr(inputMins[i], 1); // Create FastRational from float
             FastRational upper_bound_fr(inputMins[i], 1); // Create FastRational from float
             mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(upper_bound_fr)),
                                                  logic.mkLeq(logic.mkRealConst(lower_bound_fr), inputVarsRefs[i])));
+    }
+    // add constraints on the output variable
+    if(output_examples.size() == 1){
+        if(output_examples[0] > 0.5){
+            mainSolver.insertFormula(logic.mkLeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1,2))));
+        } else {
+            mainSolver.insertFormula(logic.mkGeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1, 2))));
+        }
+    } else {
+//        TODO: add constraints for multi-class classification
     }
 
     //only if you want to freeze all the inputs
@@ -215,57 +208,42 @@ void Verix::get_explanation(float freedom_factor) {
 //            mainSolver.insertFormula(logic.mkAnd(logic.mkLeq(inputVarsRefs[i], logic.mkRealConst(upper_bound_fr)),
 //                                                 logic.mkLeq(logic.mkRealConst(lower_bound_fr), inputVarsRefs[i])));
 //    }
-    // add constraints on the output variable
-    if(output_examples.size() == 1){
-        if(output_examples[0] > 0.5){
-            mainSolver.insertFormula(logic.mkLeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1,2))));
-
-        } else {
-            mainSolver.insertFormula(logic.mkGeq(outputVarsRefs[0], logic.mkRealConst(FastRational(1, 2))));
-        }
-    }
-    auto res = mainSolver.check();
-    if (res == s_True) {
-        printf("sat\n");
-        auto m = mainSolver.getModel();
-        std::vector<float> cex;
-        for (int i = 0; i < inputVarsRefs.size(); i++) {
-            auto v1_p = logic.pp(m->evaluate(inputVarsRefs[i]));
-            auto var_a_s = logic.pp(inputVarsRefs[i]);
-            printf("%s, ", v1_p.c_str());
-        }
-        printf("\n");
-
-    } else if (res == s_False) {
-        printf("unsat\n");
-        mainSolver.printFramesAsQuery();
-        auto itp = mainSolver.getInterpolationContext();
-        vec<PTRef> itps;
-        ipartitions_t partitions = 1;
-        itp->getSingleInterpolant(itps, partitions);
-        assert(itps.size() == 1);
-        PTRef itp_formula = itps[0];
-        std::cout << logic.pp(itps[0]);
-        logic.getPterm(itp_formula);
-    } else if (res == s_Undef) {
-        printf("unknown\n");
-    } else {
-        printf("error\n");
-    }
-    //    assert(res == s_False);
-//    auto itp = mainSolver.getInterpolationContext();
-//    vec<PTRef> itps;
-//    ipartitions_t partitions = 1;
-//    itp->getSingleInterpolant(itps, partitions);
-//    assert(itps.size() == 1);
-//    std::cout << logic.pp(itps[0]);
-//    exit(1);
+//    auto res = mainSolver.check();
+//    if (res == s_True) {
+//        printf("sat\n");
+//        auto m = mainSolver.getModel();
+//        std::vector<float> cex;
+//        for (int i = 0; i < inputVarsRefs.size(); i++) {
+//            auto v1_p = logic.pp(m->evaluate(inputVarsRefs[i]));
+//            auto var_a_s = logic.pp(inputVarsRefs[i]);
+//            printf("%s, ", v1_p.c_str());
+//        }
+//        printf("\n");
+//
+//    } else if (res == s_False) {
+//        printf("unsat\n");
+//        mainSolver.printFramesAsQuery();
+//        auto itp = mainSolver.getInterpolationContext();
+//        vec<PTRef> itps;
+//        ipartitions_t partitions = 1;
+//        itp->getSingleInterpolant(itps, partitions);
+//        assert(itps.size() == 1);
+//        PTRef itp_formula = itps[0];
+//        std::cout << logic.pp(itps[0]);
+//        logic.getPterm(itp_formula);
+//    } else if (res == s_Undef) {
+//        printf("unknown\n");
+//    } else {
+//        printf("error\n");
 //    }
-
-//    std::vector<float> output_vars = nn.predict(input_examples);
-    auto maxElementIter = std::max_element(output_examples.begin(), output_examples.end());
-    int label = std::distance(output_examples.begin(), maxElementIter);
-
+    int label;
+    if (output_examples.size() == 1){
+        label = output_examples[0] > 0.5 ? 1 : 0;
+    }else {
+        //TODO: These two lines are suspecoius
+        auto maxElementIter = std::max_element(output_examples.begin(), output_examples.end());
+        label = std::distance(output_examples.begin(), maxElementIter);
+    }
     float lower_bound;
     float upper_bound;
     for (int feature = 0; feature < input_examples.size(); feature++) {
@@ -274,7 +252,6 @@ void Verix::get_explanation(float freedom_factor) {
             /*
              * Set constraints on the input variables.
              */
-
             if (i == feature || std::find(unsat_set.begin(), unsat_set.end(), i) != unsat_set.end()) {
                 /*
                  * Set allowable perturbations on the current feature and the irrelevant features.
@@ -302,20 +279,21 @@ void Verix::get_explanation(float freedom_factor) {
             }
         }
 
-        for (int j = 0; j < output_examples.size(); j++) {
-            /*
-             * Set constraints on the output variables.
-             */
-            if (j != label) {
-                // [1, -1], -1e-6,
-                // isProperty=True)
-                vec<PTRef> args_lt;
-                args_lt.push(outputVarsRefs[label]);
-                args_lt.push(outputVarsRefs[j]);
-                PTRef formula = logic.mkLt(args_lt);
-                mainSolver.insertFormula(formula);
-            }
-        }
+//        TODO: uncomment for multi-class classification
+//        for (int j = 0; j < output_examples.size(); j++) {
+//            /*
+//             * Set constraints on the output variables.
+//             */
+//            if (j != label) {
+//                // [1, -1], -1e-6,
+//                // isProperty=True)
+//                vec<PTRef> args_lt;
+//                args_lt.push(outputVarsRefs[label]);
+//                args_lt.push(outputVarsRefs[j]);
+//                PTRef formula = logic.mkLt(args_lt);
+//                mainSolver.insertFormula(formula);
+//            }
+//        }
 
         sstat r = mainSolver.check();
         if (r == s_True) {
@@ -348,7 +326,10 @@ void Verix::get_explanation(float freedom_factor) {
         } else {
             printf("error\n");
         }
-        mainSolver.pop();
+        for (int i = 0; i < input_examples.size(); i++) {
+            mainSolver.pop();
+        }
+//        mainSolver.pop();
     }
 
 //    print sat_set
