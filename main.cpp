@@ -8,16 +8,20 @@
 //#include <stdio.h>
 
 
-int main()
+int main(int argc, char* argv[])
 {
-//    NNModel nn = NNModel();
     std::string filename = "models/heartAttack.nnet";
 //    std::string filename = "models/dummy_network.nnet";
+//    std::string filename = "models/test_network.nnet";
+    if (argc > 1) {
+        filename = argv[1];
+    }
     xai::algo::BasicVerix algo(filename);
     algo.setVerifier(std::make_unique<xai::verifiers::MarabouVerifier>());
 //    algo.setVerifier(std::make_unique<xai::verifiers::OpenSMTVerifier>());
 //    algo.computeExplanation({1,0,0}, 0.1);
     auto res = algo.computeExplanation({63, 1, 3, 145, 233, 1, 0, 150, 0, 2.3, 0, 0, 1}, 1);
+//    auto res = algo.computeExplanation({1,1}, 1);
     for (auto val : res.explanation) {
         std::cout << val << " ";
     }

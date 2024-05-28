@@ -53,7 +53,7 @@ void BasicVerix::setVerifier(std::unique_ptr<Verifier> verifier) {
 BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor) {
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     auto network = NNet::fromFile(networkFile);
-    if (not verifier)
+    if (not network or not verifier)
         return Result{};
 
     verifier->loadModel(*network);
@@ -90,7 +90,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         if (output.size() == 1) {
             // With single output, the flip in classification means flipping the value across certain threshold
             constexpr float THRESHOLD = 0;
-            constexpr float PRECISION = 1e-1;
+            constexpr float PRECISION = 0.0625f;
             float outputValue = output[0];
             if (outputValue >= THRESHOLD) {
                 verifier->addUpperBound(outputLayerIndex, 0, THRESHOLD - PRECISION);
@@ -112,6 +112,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         } else {
             explanationSet.insert(nodeToConsider);
         }
+        verifier->clearAdditionalConstraints();
     }
     std::vector<NodeIndex> explanation{explanationSet.begin(), explanationSet.end()};
     std::sort(explanation.begin(), explanation.end());

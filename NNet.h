@@ -36,8 +36,6 @@ private:
     std::vector<float> inputMaximums;
     weights_t weights;
     biases_t biases;
-
-
 };
 
 }
