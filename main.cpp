@@ -4,28 +4,27 @@
 #include "algorithms/BasicVerix.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
+#include "experiments/VerixExperiments.h"
 //
 //#include <stdio.h>
 
 
 int main(int argc, char* argv[])
 {
+    std::string verifier = "OpenSMT";
     std::string filename = "models/heartAttack.nnet";
+    std::string datafile = "data/heartAttack.csv";
+    std::string outputfile = "output/HA_" + verifier + ".csv";
+
 //    std::string filename = "models/dummy_network.nnet";
 //    std::string filename = "models/test_network.nnet";
     if (argc > 1) {
         filename = argv[1];
     }
-    xai::algo::BasicVerix algo(filename);
-    algo.setVerifier(std::make_unique<xai::verifiers::MarabouVerifier>());
-//    algo.setVerifier(std::make_unique<xai::verifiers::OpenSMTVerifier>());
+
 //    algo.computeExplanation({1,0,0}, 0.1);
-    auto res = algo.computeExplanation({63, 1, 3, 145, 233, 1, 0, 150, 0, 2.3, 0, 0, 1}, 1);
-//    auto res = algo.computeExplanation({1,1}, 1);
-    for (auto val : res.explanation) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
+    VerixExperiments::experiment_on_dataset(filename, datafile, verifier, outputfile);
+
     exit(0);
 
 
@@ -34,12 +33,12 @@ int main(int argc, char* argv[])
 //        // push a random float between 0 and 1
 //        input_example.push_back((float)rand() / RAND_MAX);
 //    }
-    std::vector<float> output_example = {1.0};
+//    std::vector<float> output_example = {1.0};
 
 
 
-    Verix verix = Verix(filename, input_example, output_example);
-    verix.get_explanation(1);
+//    Verix verix = Verix(filename, input_example, output_example);
+//    verix.get_explanation(1);
 //    Logic logic{opensmt::Logic_t::QF_UF}; // UF Logic
 //    SMTConfig c;
 //    MainSolver mainSolver(logic, c, "test solver");
@@ -63,8 +62,8 @@ int main(int argc, char* argv[])
 //    else
 //        printf("error\n");
 
-    printf("Done without any serious errors\n");
+//    printf("Done without any serious errors\n");
 
-    return 0;
+//    return 0;
 }
 
