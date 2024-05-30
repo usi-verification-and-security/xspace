@@ -11,7 +11,7 @@
 
 void
 VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
-                                        std::string outputPath, int featureSize) {
+                                        std::string outputPath, int featureSize, float freedom_factor=0.5) {
     xai::algo::BasicVerix algo(modelPath);
     if (verifier == "OpenSMT")
         algo.setVerifier(std::make_unique<xai::verifiers::OpenSMTVerifier>());

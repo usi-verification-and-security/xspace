@@ -11,7 +11,7 @@
 class VerixExperiments {
 public:
     static void experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
-                                      std::string outputPath, int featureSize=13);
+                                      std::string outputPath, int featureSize, float freedom_factor);
 
 };
 
