@@ -10,32 +10,6 @@ namespace xai::algo {
 
 namespace {
 using input_t = std::vector<float>;
-auto computeOutput(input_t const & inputValues, NNet const & network) {
-    auto inputSize = network.getInputSize();
-    if (inputValues.size() != inputSize) { throw std::logic_error("Input values do not have expected size!"); }
-
-    auto previousLayerValues = inputValues;
-    std::vector<float> currentLayerValues;
-    for (LayerIndex layer = 1; layer < network.getNumLayers(); ++layer) {
-        for (NodeIndex node = 0; node < network.getLayerSize(layer); ++node) {
-            auto const & incomingWeights = network.getWeights(layer, node);
-            assert(incomingWeights.size() == previousLayerValues.size());
-            std::vector<float> addends;
-            for (std::size_t i = 0; i < incomingWeights.size(); ++i) {
-                addends.push_back(incomingWeights[i] * previousLayerValues[i]);
-            }
-            currentLayerValues.push_back(std::accumulate(addends.begin(), addends.end(), network.getBias(layer, node)));
-        }
-        if (layer < network.getNumLayers() - 1) {
-            std::transform(currentLayerValues.begin(), currentLayerValues.end(), currentLayerValues.begin(), [](float val) {
-               return val >= 0.0f ? val : 0.0f;
-            });
-            previousLayerValues = std::move(currentLayerValues);
-            currentLayerValues.clear();
-        }
-    }
-    return currentLayerValues;
-}
 
 }
 
@@ -50,7 +24,8 @@ void BasicVerix::setVerifier(std::unique_ptr<Verifier> verifier) {
     this->verifier = std::move(verifier);
 }
 
-BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor) {
+BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor,
+                                                  std::vector<std::size_t> featureOrder) {
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     auto network = NNet::fromFile(networkFile);
     if (not network or not verifier)
@@ -75,7 +50,14 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
     std::unordered_set<NodeIndex> freeSet;
     assert(inputSize == inputValues.size());
     // TODO: Come up with heuristic for feature ordering
-    for (NodeIndex nodeToConsider = 0; nodeToConsider < inputSize; ++nodeToConsider) {
+    if (featureOrder.empty()) {
+        for (std::size_t node = 0; node < inputSize; ++node) {
+            featureOrder.push_back(node);
+        }
+    } else {
+        assert(featureOrder.size() == inputSize);
+    }
+    for (NodeIndex nodeToConsider : featureOrder) {
         for (NodeIndex node = 0; node < inputSize; ++node) {
             if (node == nodeToConsider or freeSet.contains(node)) { // this input feature is free
                 verifier->addLowerBound(0, node, inputLowerBounds[node]);
@@ -90,7 +72,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         if (output.size() == 1) {
             // With single output, the flip in classification means flipping the value across certain threshold
             constexpr float THRESHOLD = 0;
-            constexpr float PRECISION = 0.0625f;
+            constexpr float PRECISION = 0.015625f;
             float outputValue = output[0];
             if (outputValue >= THRESHOLD) {
                 verifier->addUpperBound(outputLayerIndex, 0, THRESHOLD - PRECISION);

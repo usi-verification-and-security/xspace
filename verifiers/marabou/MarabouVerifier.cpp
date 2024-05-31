@@ -205,7 +205,6 @@ std::unique_ptr<QueryIncrementalWrapper> QueryIncrementalWrapper::fromNNet(NNet 
         queryWrapper->setHardInputLowerBound(queryWrapper->getVarIndex(0, node, VariableType::FORWARD), network.getInputLowerBound(node));
         queryWrapper->setHardInputUpperBound(queryWrapper->getVarIndex(0, node, VariableType::FORWARD), network.getInputUpperBound(node));
     }
-    // TODO: Add lower and upper bounds on input
 
     return queryWrapper;
 }

@@ -12,6 +12,7 @@ add_executable(XAI-SMT
         Verix.cpp
         NNet.cpp
         algorithms/BasicVerix.cpp
+        algorithms/HypothesisTesting.cpp
         experiments/VerixExperiments.cpp
 )
 
