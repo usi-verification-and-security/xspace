@@ -52,6 +52,8 @@ private:
 
 class MarabouVerifier::MarabouImpl {
 public:
+    MarabouImpl();
+
     void loadModel(NNet const & network);
 
     void addUpperBound(LayerIndex layer, NodeIndex var, float value);
@@ -259,6 +261,10 @@ void QueryIncrementalWrapper::clearAdditionalConstraints() {
     upperBounds.clear();
 }
 
+}
+
+MarabouVerifier::MarabouImpl::MarabouImpl() {
+    Options::get()->setInt(Options::IntOptions::VERBOSITY, 0);
 }
 
 void MarabouVerifier::MarabouImpl::loadModel(const xai::NNet & network) {
