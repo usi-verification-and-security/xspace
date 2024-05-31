@@ -10,32 +10,6 @@ namespace xai::algo {
 
 namespace {
 using input_t = std::vector<float>;
-auto computeOutput(input_t const & inputValues, NNet const & network) {
-    auto inputSize = network.getInputSize();
-    if (inputValues.size() != inputSize) { throw std::logic_error("Input values do not have expected size!"); }
-
-    auto previousLayerValues = inputValues;
-    std::vector<float> currentLayerValues;
-    for (LayerIndex layer = 1; layer < network.getNumLayers(); ++layer) {
-        for (NodeIndex node = 0; node < network.getLayerSize(layer); ++node) {
-            auto const & incomingWeights = network.getWeights(layer, node);
-            assert(incomingWeights.size() == previousLayerValues.size());
-            std::vector<float> addends;
-            for (std::size_t i = 0; i < incomingWeights.size(); ++i) {
-                addends.push_back(incomingWeights[i] * previousLayerValues[i]);
-            }
-            currentLayerValues.push_back(std::accumulate(addends.begin(), addends.end(), network.getBias(layer, node)));
-        }
-        if (layer < network.getNumLayers() - 1) {
-            std::transform(currentLayerValues.begin(), currentLayerValues.end(), currentLayerValues.begin(), [](float val) {
-               return val >= 0.0f ? val : 0.0f;
-            });
-            previousLayerValues = std::move(currentLayerValues);
-            currentLayerValues.clear();
-        }
-    }
-    return currentLayerValues;
-}
 
 }
 

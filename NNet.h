@@ -8,6 +8,9 @@
 namespace xai {
 class NNet {
 public:
+    using input_t = std::vector<float>;
+    using output_t = std::vector<float>;
+
     static std::unique_ptr<NNet> fromFile(std::string_view filename);
 
     std::size_t getNumLayers() const { return numLayers; }
@@ -37,6 +40,8 @@ private:
     weights_t weights;
     biases_t biases;
 };
+
+NNet::output_t computeOutput(NNet::input_t const &, NNet const &);
 
 }
 
