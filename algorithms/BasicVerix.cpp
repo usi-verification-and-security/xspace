@@ -58,7 +58,6 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         assert(featureOrder.size() == inputSize);
     }
     for (NodeIndex nodeToConsider : featureOrder) {
-        std::cout << "Considering node " << nodeToConsider << std::endl;
         for (NodeIndex node = 0; node < inputSize; ++node) {
             if (node == nodeToConsider or freeSet.contains(node)) { // this input feature is free
                 verifier->addLowerBound(0, node, inputLowerBounds[node]);
