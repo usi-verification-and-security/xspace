@@ -12,14 +12,14 @@
 int main(int argc, char* argv[])
 {
     std::string verifier = "OpenSMT";
-    std::string filename = "models/heartAttack.nnet";
+    std::string filename = "models/heartAttack50.nnet";
     std::string datafile = "data/heartAttack.csv";
-    float freedom_factor = 0.5;
+    float freedom_factor = 1;
 
     std::ostringstream stream;
     stream << std::fixed << std::setprecision(2) << freedom_factor;
     std::string freedom_factor_str = stream.str();
-    std::string outputfile = "output/HA_" + verifier + "_" + freedom_factor_str + ".csv";
+    std::string outputfile = "output/HA50_" + verifier + "_" + freedom_factor_str + ".csv";
 
     if (argc > 1) {
         filename = argv[1];
