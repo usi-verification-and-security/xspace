@@ -24,7 +24,8 @@ void BasicVerix::setVerifier(std::unique_ptr<Verifier> verifier) {
     this->verifier = std::move(verifier);
 }
 
-BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor) {
+BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor,
+                                                  std::vector<int> featureOrder) {
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     auto network = NNet::fromFile(networkFile);
     if (not network or not verifier)
@@ -49,7 +50,15 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
     std::unordered_set<NodeIndex> freeSet;
     assert(inputSize == inputValues.size());
     // TODO: Come up with heuristic for feature ordering
-    for (NodeIndex nodeToConsider = 0; nodeToConsider < inputSize; ++nodeToConsider) {
+    if (featureOrder.empty()) {
+        for (int node = 0; node < inputSize; ++node) {
+            featureOrder.push_back(node);
+        }
+    }else{
+        assert(featureOrder.size() == inputSize);
+    }
+    for (NodeIndex nodeToConsider : featureOrder) {
+        std::cout << "Considering node " << nodeToConsider << std::endl;
         for (NodeIndex node = 0; node < inputSize; ++node) {
             if (node == nodeToConsider or freeSet.contains(node)) { // this input feature is free
                 verifier->addLowerBound(0, node, inputLowerBounds[node]);

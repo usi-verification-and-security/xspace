@@ -43,6 +43,11 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
     getline(file, header);
     outputFile << "datapoint" << "," << header << '\n';
     // Iterate over each line in the file
+//    TODO: reverse order! make it random
+    std::vector<int> featureOrder;
+    for (int node = 12; node > -1; --node) {
+        featureOrder.push_back(node);
+    }
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string field;
@@ -58,7 +63,7 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         datapoint = std::vector<float>(row.begin(), row.begin() + featureSize);
         data.push_back(datapoint);
 
-        auto res = algo.computeExplanation(datapoint, freedom_factor);
+        auto res = algo.computeExplanation(datapoint, freedom_factor, featureOrder);
         std::cout <<"explanation: ";
         std::vector<int> explanation(featureSize, 0);
         for (auto val : res.explanation) {
@@ -79,7 +84,6 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         }
         outputFile << output << "," << "\n";
     }
-
     // Close the file
     file.close();
 }
