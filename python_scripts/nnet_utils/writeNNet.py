@@ -57,9 +57,12 @@ def writeNNet(weights,biases,inputMins,inputMaxes,means,ranges,fileName):
         f2.write("\n")
         f2.write("0,\n") #Unused Flag
 
+        # assert len(inputMins) == inputSize
+        # assert len(inputMaxes) == inputSize
+
         # Write Min, Max, Mean, and Range of each of the inputs and outputs for normalization
-        f2.write(','.join(str(inputMins[i])  for i in range(inputSize)) + ',\n') #Minimum Input Values
-        f2.write(','.join(str(inputMaxes[i]) for i in range(inputSize)) + ',\n') #Maximum Input Values                
+        f2.write(','.join(str(inputMins[i])  for i in range(len(inputMins))) + ',\n') #Minimum Input Values
+        f2.write(','.join(str(inputMaxes[i]) for i in range(len(inputMaxes))) + ',\n') #Maximum Input Values
         f2.write(','.join(str(means[i])      for i in range(inputSize+1)) + ',\n') #Means for normalizations
         f2.write(','.join(str(ranges[i])     for i in range(inputSize+1)) + ',\n') #Ranges for noramlizations
 

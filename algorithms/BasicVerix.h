@@ -11,6 +11,29 @@ public:
         std::vector<NodeIndex> explanation;
     };
 
+    struct GeneralizedExplanation {
+        enum class BoundType {EQ, LB, UB};
+        struct Constraint {
+            NodeIndex inputIndex;
+            BoundType boundType;
+            float value;
+
+            std::string opString() const {
+                switch (boundType) {
+                    case BoundType::EQ:
+                        return "=";
+                    case BoundType::LB:
+                        return ">=";
+                    case BoundType::UB:
+                        return "<=";
+            }
+        }
+        };
+        std::vector<Constraint> constraints;
+
+
+    };
+
     explicit BasicVerix(std::string networkFile);
 
     void setVerifier(std::unique_ptr<Verifier> verifier);
@@ -18,12 +41,20 @@ public:
     Result computeExplanation(std::vector<float> const & inputValues, float freedom_factor,
                               std::vector<std::size_t> featureOrder = {});
 
+    /**
+     * Computes explanation not only as a subset of features, but also tries to relax the constraints on the relevant features
+     */
+    GeneralizedExplanation computeGeneralizedExplanation(std::vector<float> const & inputValues, std::vector<std::size_t> featureOrder = {});
+
 private:
-    // TODO: Should it have NN already
-    std::string networkFile;
+    // TODO: Figure out how to do this only once!
+    void encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label);
+
+    std::unique_ptr<NNet> network;
     std::unique_ptr<Verifier> verifier;
 
 };
+
 } // namespace xai::algo
 
 #endif //XAI_SMT_BASICVERIX_H

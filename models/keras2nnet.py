@@ -1,6 +1,6 @@
 
 from keras.src.saving import load_model
-from nnet_utils.writeNNet import writeNNet
+from python_scripts.nnet_utils.writeNNet import writeNNet
 
 
 def keras2nnets(kerasFile, input_min=-1000000, input_max=1000000, custom_objects=None):
@@ -40,6 +40,7 @@ def keras2nnets(kerasFile, input_min=-1000000, input_max=1000000, custom_objects
     # Convert the file
     writeNNet(weights, biases, input_mins, input_maxes, means, ranges, nnetFile)
 
-input_min = [29,0,0,94,126,0,0,71,0,0,0,0,0]
-input_max = [77,1,3,200,594,1,2,202,1,6.2,2,4,3]
-keras2nnets('heartAttack.h5', input_min=input_min, input_max=input_max)
+if __name__ == '__main__':
+    input_min = [29,0,0,94,126,0,0,71,0,0,0,0,0]
+    input_max = [77,1,3,200,594,1,2,202,1,6.2,2,4,3]
+    keras2nnets('heartAttack.h5', input_min=input_min, input_max=input_max)
