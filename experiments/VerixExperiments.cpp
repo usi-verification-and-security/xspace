@@ -7,10 +7,11 @@
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
 
+#include <cassert>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 #include <sstream>
-#include <cassert>
 
 void
 VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
@@ -44,10 +45,8 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
     outputFile << "datapoint" << "," << header << '\n';
     // Iterate over each line in the file
 //    TODO: reverse order! make it random
-    std::vector<int> featureOrder;
-    for (int node = 12; node > -1; --node) {
-        featureOrder.push_back(node);
-    }
+    std::vector<std::size_t> featureOrder(featureSize);
+    std::iota(featureOrder.rbegin(), featureOrder.rend(), 0);
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string field;

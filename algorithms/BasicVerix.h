@@ -16,7 +16,7 @@ public:
     void setVerifier(std::unique_ptr<Verifier> verifier);
 
     Result computeExplanation(std::vector<float> const & inputValues, float freedom_factor,
-                              std::vector<int> featureOrder = std::vector<int>());
+                              std::vector<std::size_t> featureOrder = {});
 
 private:
     // TODO: Should it have NN already

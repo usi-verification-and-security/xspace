@@ -25,7 +25,7 @@ void BasicVerix::setVerifier(std::unique_ptr<Verifier> verifier) {
 }
 
 BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor,
-                                                  std::vector<int> featureOrder) {
+                                                  std::vector<std::size_t> featureOrder) {
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     auto network = NNet::fromFile(networkFile);
     if (not network or not verifier)
@@ -51,10 +51,10 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
     assert(inputSize == inputValues.size());
     // TODO: Come up with heuristic for feature ordering
     if (featureOrder.empty()) {
-        for (int node = 0; node < inputSize; ++node) {
+        for (std::size_t node = 0; node < inputSize; ++node) {
             featureOrder.push_back(node);
         }
-    }else{
+    } else {
         assert(featureOrder.size() == inputSize);
     }
     for (NodeIndex nodeToConsider : featureOrder) {
@@ -72,7 +72,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         if (output.size() == 1) {
             // With single output, the flip in classification means flipping the value across certain threshold
             constexpr float THRESHOLD = 0;
-            constexpr float PRECISION = 0.0625f;
+            constexpr float PRECISION = 0.015625f;
             float outputValue = output[0];
             if (outputValue >= THRESHOLD) {
                 verifier->addUpperBound(outputLayerIndex, 0, THRESHOLD - PRECISION);
