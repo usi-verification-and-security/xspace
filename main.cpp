@@ -5,8 +5,6 @@
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
 #include "experiments/VerixExperiments.h"
-#include <iomanip>
-//#include <stdio.h>
 
 
 int main(int argc, char* argv[])
