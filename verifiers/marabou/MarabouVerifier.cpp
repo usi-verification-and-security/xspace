@@ -23,6 +23,9 @@ public:
     void setLowerBound(LayerIndex layerNum, NodeIndex nodeIndex, float);
     void setUpperBound(LayerIndex layerNum, NodeIndex nodeIndex, float);
 
+    void addClassificationConstraint(NodeIndex node, float threshold);
+
+
 private:
     std::size_t registerNewVariable();
     VarIndex getVarIndex(LayerIndex layerNum, NodeIndex nodeIndex, VariableType variableType) const;
@@ -46,7 +49,6 @@ private:
     std::unordered_map<VarIndex, float> lowerBounds;
     std::unordered_map<VarIndex, float> upperBounds;
     std::vector<Equation> extraEquations;
-
 };
 }
 
@@ -58,6 +60,8 @@ public:
 
     void addUpperBound(LayerIndex layer, NodeIndex var, float value);
     void addLowerBound(LayerIndex layer, NodeIndex var, float value);
+
+    void addClassificationConstraint(NodeIndex node, float threshold);
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
 
@@ -83,6 +87,10 @@ void MarabouVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value
 
 void MarabouVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value) {
     pimpl->addLowerBound(layer, var, value);
+}
+
+void MarabouVerifier::addClassificationConstraint(NodeIndex node, float threshold) {
+    pimpl->addClassificationConstraint(node, threshold);
 }
 
 void MarabouVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) {
@@ -139,6 +147,34 @@ void QueryIncrementalWrapper::setLowerBound(LayerIndex layer, NodeIndex node, fl
 void QueryIncrementalWrapper::setUpperBound(LayerIndex layer, NodeIndex node, float val) {
     auto var = getVarIndex(layer, node, layer == 0 ? VariableType::FORWARD : VariableType::BACKWARD);
     upperBounds[var] = val;
+}
+
+void QueryIncrementalWrapper::addClassificationConstraint(NodeIndex node, float threshold) {
+    if (node >= outputVariables.size()) {
+        throw std::out_of_range("Node index is out of range for outputVars.");
+    }
+
+    std::vector<Equation> inequalities;
+
+    for (size_t i = 0; i < outputVariables.size(); ++i) {
+        if (i != node) {
+            // Retrieve the variable index for the current output node
+            auto currentNodeVarIndex = getVarIndex(layerSizes.size() - 1, i, VariableType::FORWARD);
+            auto targetNodeVarIndex = getVarIndex(layerSizes.size() - 1, node, VariableType::FORWARD);
+
+            // Create an inequality:  currentNodeVar - targetNodeVar > threshold
+            Equation inequality(Equation::GE);
+            inequality.addAddend(1, currentNodeVarIndex);
+            inequality.addAddend(-1, targetNodeVarIndex);
+            inequality.setScalar(threshold); // Set the scalar to -threshold
+            inequalities.push_back(inequality);
+        }
+    }
+
+    if (!inequalities.empty()) {
+//        TODO:  add Disjunction Of Inequalities
+    }
+    throw std::logic_error("Unimplemented!");
 }
 
 void QueryIncrementalWrapper::setHardInputLowerBound(VarIndex var, float val) {
@@ -319,4 +355,10 @@ void MarabouVerifier::MarabouImpl::addLowerBound(LayerIndex layer, NodeIndex nod
     queryWrapper->setLowerBound(layer, node, value);
 }
 
+//void  MarabouVerifier::MarabouImpl::addClassificationConstraint(NodeIndex node, float threshold){
+//    throw std::logic_error("Unimplemented!");
+//}
+void MarabouVerifier::MarabouImpl::addClassificationConstraint(NodeIndex node, float threshold) {
+    queryWrapper->addClassificationConstraint(node, threshold);
+}
 } // namespace xai::verifiers
