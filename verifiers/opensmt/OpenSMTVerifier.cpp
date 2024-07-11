@@ -14,6 +14,7 @@ public:
 
     void addUpperBound(LayerIndex layer, NodeIndex var, float value);
     void addLowerBound(LayerIndex layer, NodeIndex var, float value);
+    void addClassificationConstraint(NodeIndex node, float threshold);
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
 
@@ -30,6 +31,7 @@ private:
     std::vector<PTRef> inputVars;
     std::vector<PTRef> outputVars;
     std::vector<std::size_t> layerSizes;
+
 };
 
 OpenSMTVerifier::OpenSMTVerifier() { pimpl = new OpenSMTImpl(); }
@@ -46,6 +48,10 @@ void OpenSMTVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value
 
 void OpenSMTVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value) {
     pimpl->addLowerBound(layer, var, value);
+}
+
+void OpenSMTVerifier::addClassificationConstraint(NodeIndex node, float threshold=0) {
+    pimpl->addClassificationConstraint(node, threshold);
 }
 
 void OpenSMTVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) {
@@ -171,6 +177,31 @@ void OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex nod
         throw std::logic_error("Unimplemented!");
     PTRef var = layer == 0 ? inputVars.at(node) : outputVars.at(node);
     solver->insertFormula(logic->mkGeq(var, logic->mkRealConst(floatToRational(value))));
+}
+
+void OpenSMTVerifier::OpenSMTImpl::addClassificationConstraint(NodeIndex node, float threshold=0.0){
+    // Ensure the node index is within the range of outputVars
+    if (node >= outputVars.size()) {
+        throw std::out_of_range("Node index is out of range for outputVars.");
+    }
+
+    PTRef targetNodeVar = outputVars[node];
+    std::vector<PTRef> constraints;
+
+    for (size_t i = 0; i < outputVars.size(); ++i) {
+        if (i != node) {
+            // Create a constraint: (targetNodeVar - outputVars[i]) > threshold
+            PTRef diff = logic->mkMinus(outputVars[i], targetNodeVar);
+            PTRef thresholdConst = logic->mkRealConst(floatToRational(threshold));
+            PTRef constraint = logic->mkGt(diff, thresholdConst);
+            constraints.push_back(constraint);
+        }
+    }
+
+    if (!constraints.empty()) {
+        PTRef combinedConstraint = logic->mkOr(constraints);
+        solver->insertFormula(combinedConstraint);
+    }
 }
 
 void

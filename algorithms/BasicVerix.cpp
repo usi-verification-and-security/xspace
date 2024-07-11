@@ -42,10 +42,11 @@ void BasicVerix::encodeClassificationConstraint(std::vector<float> const & outpu
             auto outputLayerSize = network->getLayerSize(outputLayerIndex);
             assert(outputLayerSize == output.size());
             // TODO: Build disjunction of inequalities
-            for (NodeIndex outputNode = 0; outputNode < outputLayerSize; ++outputNode) {
-                if (outputNode == label) { continue; }
-                throw std::logic_error("Not implemented yet!");
-            }
+            verifier->addClassificationConstraint(label, 0);
+//            for (NodeIndex outputNode = 0; outputNode < outputLayerSize; ++outputNode) {
+//                if (outputNode == label) { continue; }
+//                throw std::logic_error("Not implemented yet!");
+//            }
         }
 }
 

@@ -16,6 +16,8 @@ public:
 
     void addLowerBound(LayerIndex layer, NodeIndex var, float value) override;
 
+    void addClassificationConstraint(NodeIndex node, float threshold) override;
+
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
     Answer check() override;
