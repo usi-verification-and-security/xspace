@@ -1,6 +1,6 @@
 import numpy as np
-from nnet_utils.readNNet import readNNet
-from nnet_utils.writeNNet import writeNNet
+from python_scripts.nnet_utils.readNNet import readNNet
+from python_scripts.nnet_utils.writeNNet import writeNNet
 
 def normalizeNNet(readNNetFile, writeNNetFile=None):
     weights, biases, inputMins, inputMaxes, means, ranges = readNNet(readNNetFile,withNorm=True)

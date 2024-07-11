@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import onnx
 from onnx import numpy_helper
-from nnet_utils.writeNNet import writeNNet
+from python_scripts.nnet_utils.writeNNet import writeNNet
 
 def onnx2nnet(onnxFile, inputMins=None, inputMaxes=None, means=None, ranges=None, nnetFile="", inputName="", outputName=""):
     '''

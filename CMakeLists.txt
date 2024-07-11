@@ -14,6 +14,7 @@ add_executable(XAI-SMT
         algorithms/BasicVerix.cpp
         algorithms/HypothesisTesting.cpp
         experiments/VerixExperiments.cpp
+        experiments/VerixHiddenLayerExperiments.cpp
 )
 
 

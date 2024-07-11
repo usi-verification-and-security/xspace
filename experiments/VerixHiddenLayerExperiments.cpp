@@ -1,7 +1,7 @@
 //
 // Created by labbaf on 06.06.2024.
 //
-#include "VerixHiddenLayerExperiment.h"
+#include "VerixHiddenLayerExperiments.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
 #include "algorithms/BasicVerix.h"
@@ -11,11 +11,9 @@
 #include <sstream>
 #include <cassert>
 
-void experiment_on_dataset( std::string verifier, std::string outputPath, float freedom_factor) {
-
-    std::string modelPath = "models/HA_Hidden.nnet";
-    std::string datasetPath = "data/heartAttack_1st_layer.csv";
-    int featureSize = 20;
+void
+VerixHiddenLayerExperiments::experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
+                                                   std::string outputPath, int featureSize, float freedom_factor){
 
     xai::algo::BasicVerix algo(modelPath);
     if (verifier == "OpenSMT")
@@ -91,3 +89,4 @@ void experiment_on_dataset( std::string verifier, std::string outputPath, float 
     // Close the file
     file.close();
 }
+
