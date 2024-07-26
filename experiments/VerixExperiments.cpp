@@ -53,7 +53,7 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         std::vector<float> row;
         std::vector<float> datapoint;
         std::cout << "row: ";
-        std::cout << line << ' ';
+        std::cout << line << '\n';
         while (std::getline(ss, field, ',')) {
             // Convert the field to float and add it to the row vector
             row.push_back(std::stof(field));
@@ -62,26 +62,36 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         datapoint = std::vector<float>(row.begin(), row.begin() + featureSize);
         data.push_back(datapoint);
 
-        auto res = algo.computeExplanation(datapoint, freedom_factor, featureOrder);
-        std::cout <<"explanation: ";
-        std::vector<int> explanation(featureSize, 0);
-        for (auto val : res.explanation) {
-            std::cout << val << " ";
-            assert(val < featureSize);
-            explanation.at(val) = 1;
-        }
-        std::cout << std::endl;
 
-        // add results to output file
-        for (int i = 0; i < datapoint.size(); ++i) {
-            outputFile << datapoint[i] << " ";
+        auto res = algo.computeGeneralizedExplanation(datapoint);
+        for (auto const & constraint : res.constraints) {
+            std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
+                << constraint.value << '\n';
         }
-        outputFile << ",";
-        for (int i = 0; i < explanation.size(); ++i) {
-            outputFile << explanation[i];
-            outputFile << ",";
-        }
-        outputFile << output << "," << "\n";
+        std::cout << '\n';
+
+//        auto res = algo.computeExplanation(datapoint, freedom_factor);
+//        std::cout << res.explanation.size() << std::endl;
+//        continue;
+//        std::cout <<"explanation: ";
+//        std::vector<int> explanation(featureSize, 0);
+//        for (auto val : res.explanation) {
+//            std::cout << val << " ";
+//            assert(val < featureSize);
+//            explanation.at(val) = 1;
+//        }
+//        std::cout << std::endl;
+//
+//        // add results to output file
+//        for (int i = 0; i < datapoint.size(); ++i) {
+//            outputFile << datapoint[i] << " ";
+//        }
+//        outputFile << ",";
+//        for (int i = 0; i < explanation.size(); ++i) {
+//            outputFile << explanation[i];
+//            outputFile << ",";
+//        }
+//        outputFile << output << "," << "\n";
     }
     // Close the file
     file.close();
