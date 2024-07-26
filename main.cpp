@@ -1,14 +1,21 @@
 #include <iostream>
 #include "NNModel.h"
 #include "Verix.h"
+#include "algorithms/ITPBasedExplanations.h"
 #include "algorithms/BasicVerix.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
+#include "verifiers/opensmt/InterpolatingOpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
 #include "experiments/VerixExperiments.h"
 
 
 int main(int argc, char* argv[])
 {
+    xai::algo::ITPBasedExplanations algo("models/dummy_network.nnet");
+    algo.setVerifier(std::make_unique<xai::verifiers::InterpolatingOpenSMTVerifier>());
+    algo.computeExplanation({1,0,0});
+
+    return 0;
     std::string verifier = "OpenSMT";
     std::string filename = "models/heartAttack50.nnet";
     std::string datafile = "data/heartAttack.csv";
