@@ -1,1 +1,1 @@
-target_sources(XAI-SMT PUBLIC marabou/MarabouVerifier.cpp opensmt/OpenSMTVerifier.cpp)
+target_sources(XAI-SMT PUBLIC marabou/MarabouVerifier.cpp opensmt/OpenSMTVerifier.cpp opensmt/InterpolatingOpenSMTVerifier.cpp)
