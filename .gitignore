@@ -49,3 +49,7 @@ _deps
 cmake-build-debug/
 
 venv/
+
+build*/
+
+.ccls-cache/
