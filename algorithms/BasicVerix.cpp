@@ -4,6 +4,7 @@
 #include <iostream>
 #include <numeric>
 #include <unordered_set>
+#include <algorithm>
 
 namespace xai::algo {
 

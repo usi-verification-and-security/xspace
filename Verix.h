@@ -27,9 +27,11 @@ class Verix {
     Verix(std::string model_file, std::vector<float> inputVals, std::vector<float> outputVals);
     void get_explanation(float get_explanation);
 
-    Opensmt*
+    opensmt::Opensmt*
     pre()
     {
+        using namespace opensmt;
+
         auto config = std::make_unique<SMTConfig>();
         const char* msg;
         config->setOption(SMTConfig::o_produce_inter, SMTOption(true), msg);
@@ -37,8 +39,8 @@ class Verix {
         return osmt;
     }
 
-    void readNNetAndCreateFormulas(const std::string &filename, ArithLogic &logic, std::vector<PTRef> &inputVarsRefs,
-                                   std::vector<PTRef> &outputVarsRefs);
+    void readNNetAndCreateFormulas(const std::string &filename, opensmt::ArithLogic &logic, std::vector<opensmt::PTRef> &inputVarsRefs,
+                                   std::vector<opensmt::PTRef> &outputVarsRefs);
 };
 //
 //def get_explanation(self, epsilon):

@@ -29,7 +29,7 @@ else(OpenSMT_FOUND)
     FetchContent_Declare(
         OpenSMT
         GIT_REPOSITORY https://github.com/usi-verification-and-security/opensmt.git
-        GIT_TAG 9d83eb909202618b8000d340e7b097692be4c088
+        GIT_COMMIT effdd7757765dbed5d1e15f492e1940f92e00df8
         GIT_SHALLOW true
         GIT_PROGRESS true
     )
@@ -94,6 +94,3 @@ target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
 #message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
 
 add_subdirectory(verifiers)
-
-
-

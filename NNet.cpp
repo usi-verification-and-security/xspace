@@ -52,7 +52,7 @@ std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
         std::cerr << "File does not exist: " << filename << std::endl;
         return nullptr;
     }
-    std::ifstream file(filename);
+    std::ifstream file{std::string{filename}};
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
         return nullptr;
