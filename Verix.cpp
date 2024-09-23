@@ -9,6 +9,9 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <filesystem>
+
+using namespace opensmt;
 
 // Function to split a string by a delimiter
 std::vector<std::string> split(const std::string &s, char delimiter) {

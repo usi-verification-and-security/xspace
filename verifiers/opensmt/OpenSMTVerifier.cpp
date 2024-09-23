@@ -7,6 +7,7 @@
 
 namespace xai::verifiers {
 
+using namespace opensmt;
 
 class OpenSMTVerifier::OpenSMTImpl {
 public:
