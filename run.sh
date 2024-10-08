@@ -7,7 +7,15 @@ BIN=$1
   exit 1
 }
 
-VARIANT=${BIN#build/XAI-SMT_}
+BUILD_TYPE=${BIN%/*}
+if [[ $BUILD_TYPE == build ]]; then
+  unset BUILD_TYPE
+else
+  BUILD_TYPE=${BUILD_TYPE#build-}
+  BUILD_PREFIX=${BUILD_TYPE}-
+fi
+
+VARIANT=${BIN#build*/XAI-SMT_}
 if [[ $VARIANT =~ .*-.* ]]; then
   DATASET=${VARIANT#*-}
   VARIANT=${VARIANT%-*}
@@ -32,4 +40,6 @@ DIR=output/$DATASET
   exit 2
 }
 
-{ time $BIN >$DIR/${VARIANT}.out.txt 2>$DIR/${VARIANT}.err.txt; } 2>$DIR/${VARIANT}.time.txt &
+PREFIX=$DIR/${BUILD_PREFIX}${VARIANT}
+
+{ time $BIN >${PREFIX}.out.txt 2>${PREFIX}.err.txt; } 2>${PREFIX}.time.txt &

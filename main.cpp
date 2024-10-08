@@ -9,11 +9,13 @@
 
 using namespace xai;
 
-#define HEART_ATTACK
-
 int main(int argc, char* argv[])
 {
+    #ifndef MARABOU
     std::string verifier = "OpenSMT";
+    #else
+    std::string verifier = "Marabou";
+    #endif
     #ifdef HEART_ATTACK
     std::string filename = "models/Heart_attack/heartAttack50.nnet";
     std::string datafile = "data/heartAttack.csv";

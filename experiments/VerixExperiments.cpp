@@ -6,7 +6,9 @@
 #include "Utils.h"
 #include "algorithms/BasicVerix.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
+#ifdef MARABOU
 #include "verifiers/marabou/MarabouVerifier.h"
+#endif
 
 #include <cassert>
 #include <iostream>
@@ -21,8 +23,10 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
     xai::algo::BasicVerix algo(modelPath);
     if (verifier == "OpenSMT")
         algo.setVerifier(std::make_unique<xai::verifiers::OpenSMTVerifier>());
+    #ifdef MARABOU
     else if (verifier == "Marabou")
         algo.setVerifier(std::make_unique<xai::verifiers::MarabouVerifier>());
+    #endif
 
     // Open the data CSV file
     std::ifstream file(datasetPath);
@@ -70,7 +74,11 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
 
 
     if constexpr (Config::explanationType == Config::ExplanationType::general) {
-        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder, 5); //hardcoded threshold
+        #ifdef MARABOU
+        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder, 10); //hardcoded threshold
+        #else
+        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder, 3); //hardcoded threshold
+        #endif
         std::cerr << "(and";
         for (auto const & constraint : res.constraints) {
             // std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
