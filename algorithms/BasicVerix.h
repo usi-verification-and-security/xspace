@@ -45,7 +45,7 @@ public:
      * Computes explanation not only as a subset of features, but also tries to relax the constraints on the relevant features
      */
     GeneralizedExplanation computeGeneralizedExplanation(std::vector<float> const & inputValues,
-                                                         std::vector<std::size_t> const & featureOrder);
+                                 std::vector<std::size_t> const & featureOrder, int threshold);
 
     // not compatible with `computeGeneralizedExplanation` yet
     Result computeOpenSMTExplanation(std::vector<float> const & inputValues, float freedom_factor,

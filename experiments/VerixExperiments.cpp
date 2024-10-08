@@ -69,7 +69,7 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
 
 
     if constexpr (Config::explanationType == Config::ExplanationType::general) {
-        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder);
+        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder, 5); //hardcoded threshold
         for (auto const & constraint : res.constraints) {
             std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
                 << constraint.value << '\n';
