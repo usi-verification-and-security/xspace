@@ -8,16 +8,28 @@ BIN=$1
 }
 
 VARIANT=${BIN#build/XAI-SMT_}
-DATASET=${VARIANT#*-}
-VARIANT=${VARIANT%-*}
+if [[ $VARIANT =~ .*-.* ]]; then
+  DATASET=${VARIANT#*-}
+  VARIANT=${VARIANT%-*}
+else
+  DATASET=heart_attack
+fi
 
 [[ -z $VARIANT ]] && {
   echo "Expected a variant." >&2
   exit 2
 }
 
-[[ -z $DATASET ]] && DATASET=heart_attack
+[[ -z $DATASET ]] && {
+  echo "Expected a dataset." >&2
+  exit 2
+}
 
 DIR=output/$DATASET
+
+[[ -d $DIR ]] || {
+  printf "Directory '%s' does not exist.\n" "$DIR" >&2
+  exit 2
+}
 
 { time $BIN >$DIR/${VARIANT}.out.txt 2>$DIR/${VARIANT}.err.txt; } 2>$DIR/${VARIANT}.time.txt &
