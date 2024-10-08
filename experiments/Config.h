@@ -1,6 +1,10 @@
 #ifndef XAI_SMT_EXPERIMENTS_CONFIG_H
 #define XAI_SMT_EXPERIMENTS_CONFIG_H
 
+#define HEART_ATTACK
+
+#define MARABOU
+
 namespace xai::experiments {
 struct Config {
     enum class ExplanationType { simple = 0, general, opensmt };
