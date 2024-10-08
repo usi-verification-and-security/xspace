@@ -111,11 +111,13 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
 }
 
 BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(const std::vector<float> &inputValues,
-                                                                 std::vector<std::size_t> const & featureOrder) {
+                                       std::vector<std::size_t> const & featureOrder, int threshold) {
     auto output = computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     float freedomFactor = 1.0f;
     auto result = computeExplanation(inputValues, freedomFactor, featureOrder);
+
+    // Algorithm 1 in section 5.2 in the paper
     auto const & explanationFeatures = result.explanation;
     struct Bound { NodeIndex index; float value; };
     std::vector<Bound> lowerBounds;
@@ -137,10 +139,13 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         verifier->clearAdditionalConstraints();
         return answer;
     };
+
     for (NodeIndex inputIndex : explanationFeatures) {
+
         float inputValue = inputValues.at(inputIndex);
         float lowerBound = network->getInputLowerBound(inputIndex);
         float upperBound = network->getInputUpperBound(inputIndex);
+
         if (lowerBound < inputValue) {
             // Try relaxing lower bound
             auto it = std::find_if(lowerBounds.begin(), lowerBounds.end(), [&](auto const & lb) { return lb.index == inputIndex; });
@@ -149,9 +154,24 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             if (answer == Verifier::Answer::UNSAT) {
                 lowerBounds.erase(it);
             } else {
-                it->value = inputValue;
+
+                auto tmp = lowerBound;
+                for (int i = 0 ; i < threshold; i++)
+                {
+                    tmp = (inputValue + tmp)/2;
+                    it->value = tmp;
+                    answer = check();
+                    if (answer == Verifier::Answer::UNSAT) {
+                        it->value = tmp;
+                        break;
+                    }
+                }
+
+                if (answer != Verifier::Answer::UNSAT)
+                    it->value = inputValue;
             }
         }
+
         if (upperBound > inputValue) {
             // Try relaxing upper bound
             auto it = std::find_if(upperBounds.begin(), upperBounds.end(), [&](auto const & ub) { return ub.index == inputIndex; });
@@ -160,10 +180,25 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             if (answer == Verifier::Answer::UNSAT) {
                 upperBounds.erase(it);
             } else {
-                it->value = inputValue;
+
+                auto tmp = inputValue;
+                for (int i = 0 ; i < threshold; i++)
+                {
+                    tmp = (upperBound + tmp)/2;
+                    it->value = tmp;
+                    answer = check();
+                    if (answer == Verifier::Answer::UNSAT) {
+                        it->value = tmp;
+                        break;
+                    }
+                }
+
+              if (answer != Verifier::Answer::UNSAT)
+                  it->value = inputValue;
             }
         }
     }
+
     GeneralizedExplanation generalizedExplanation;
     auto & constraints = generalizedExplanation.constraints;
     for (auto const & lb : lowerBounds) {
