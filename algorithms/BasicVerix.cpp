@@ -127,6 +127,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         lowerBounds.push_back({.index = index, .value = inputValues.at(index)});
         upperBounds.push_back({.index = index, .value = inputValues.at(index)});
     }
+
     auto check = [&](){
         for (auto lb: lowerBounds) {
             verifier->addLowerBound(0, lb.index, lb.value);
@@ -134,12 +135,26 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         for (auto ub: upperBounds) {
             verifier->addUpperBound(0, ub.index, ub.value);
         }
+        #ifdef MARABOU
         // TODO: Figure out how to do this only once!
         this->encodeClassificationConstraint(output, label);
+        #endif
         auto answer = verifier->check();
+        #ifdef MARABOU
         verifier->clearAdditionalConstraints();
+        #endif
         return answer;
     };
+
+    #ifndef MARABOU
+    encodeClassificationConstraint(output, label);
+
+    assert(dynamic_cast<verifiers::OpenSMTVerifier *>(verifier.get()));
+    auto & openSMT = static_cast<verifiers::OpenSMTVerifier &>(*verifier);
+    auto & solver = openSMT.getSolver();
+
+    solver.push();
+    #endif
 
     for (NodeIndex inputIndex : explanationFeatures) {
 
@@ -155,15 +170,21 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             if (answer == Verifier::Answer::UNSAT) {
                 lowerBounds.erase(it);
             } else {
-
                 auto tmp = lowerBound;
                 for (int i = 0 ; i < threshold; i++)
                 {
                     tmp = (inputValue + tmp)/2;
                     it->value = tmp;
+                    #ifdef MARABOU
                     answer = check();
+                    #else
+                    verifier->addLowerBound(0, it->index, it->value);
+                    answer = verifier->check();
+                    #endif
                     if (answer == Verifier::Answer::UNSAT) {
+                        #ifdef MARABOU
                         it->value = tmp;
+                        #endif
                         break;
                     }
                 }
@@ -171,6 +192,9 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
                 if (answer != Verifier::Answer::UNSAT)
                     it->value = inputValue;
             }
+            #ifndef MARABOU
+            verifier->clearAdditionalConstraints();
+            #endif
         }
 
         if (upperBound > inputValue) {
@@ -181,15 +205,21 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             if (answer == Verifier::Answer::UNSAT) {
                 upperBounds.erase(it);
             } else {
-
                 auto tmp = inputValue;
                 for (int i = 0 ; i < threshold; i++)
                 {
                     tmp = (upperBound + tmp)/2;
                     it->value = tmp;
+                    #ifdef MARABOU
                     answer = check();
+                    #else
+                    verifier->addUpperBound(0, it->index, it->value);
+                    answer = verifier->check();
+                    #endif
                     if (answer == Verifier::Answer::UNSAT) {
+                        #ifdef MARABOU
                         it->value = tmp;
+                        #endif
                         break;
                     }
                 }
@@ -197,8 +227,15 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
               if (answer != Verifier::Answer::UNSAT)
                   it->value = inputValue;
             }
+            #ifndef MARABOU
+            verifier->clearAdditionalConstraints();
+            #endif
         }
     }
+
+    #ifndef MARABOU
+    solver.pop();
+    #endif
 
     GeneralizedExplanation generalizedExplanation;
     auto & constraints = generalizedExplanation.constraints;
