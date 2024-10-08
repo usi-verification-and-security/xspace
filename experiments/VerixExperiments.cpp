@@ -3,6 +3,7 @@
 //
 
 #include "VerixExperiments.h"
+#include "Utils.h"
 #include "algorithms/BasicVerix.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
@@ -70,11 +71,14 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
 
     if constexpr (Config::explanationType == Config::ExplanationType::general) {
         auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder, 5); //hardcoded threshold
+        std::cerr << "(and";
         for (auto const & constraint : res.constraints) {
-            std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
-                << constraint.value << '\n';
+            // std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
+            //    << constraint.value << '\n';
+            std::cerr << " (" << constraint.opString() << " input" << constraint.inputIndex << " " << floatToRationalString(constraint.value) << ")";
         }
-        std::cout << '\n';
+        // std::cout << '\n';
+        std::cerr << ")" << std::endl << std::endl;
     } else if constexpr (Config::explanationType == Config::ExplanationType::opensmt) {
         auto res = algo.computeOpenSMTExplanation(datapoint, freedom_factor, featureOrder);
         std::cout <<"explanation: ";

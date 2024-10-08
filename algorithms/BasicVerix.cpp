@@ -1,6 +1,7 @@
 #include "BasicVerix.h"
 
 #include "experiments/Config.h"
+#include "experiments/Utils.h"
 
 #include <cassert>
 #include <iomanip>
@@ -251,6 +252,9 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     auto & openSMT = static_cast<verifiers::OpenSMTVerifier &>(*verifier);
     auto & solver = openSMT.getSolver();
 
+    // to get psi:
+    // solver.printFramesAsQuery();
+
     if constexpr (Config::interpolation) {
         solver.push();
     }
@@ -298,13 +302,14 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         assert(itps.size() == 1);
         PTRef itp = itps[0];
 
-        std::cerr << solver.getLogic().pp(itp) << std::endl << std::endl;
+        std::cerr << experiments::fixOpenSMTString(solver.getLogic().pp(itp)) << std::endl << std::endl;
     } else {
         auto & logic = solver.getLogic();
         PTRef ucore = logic.mkAnd(unsatCore->getNamedTerms());
-        std::cerr << logic.pp(ucore) << std::endl << std::endl;
+        std::cerr << experiments::fixOpenSMTString(logic.pp(ucore)) << std::endl << std::endl;
     }
 
+    // to get the whole query:
     // solver.printFramesAsQuery();
 
     if constexpr (Config::samplesOnly) {

@@ -5,8 +5,6 @@
 #include "NNModel.h"
 // #include "Verix.h"
 #include "algorithms/BasicVerix.h"
-#include "verifiers/opensmt/OpenSMTVerifier.h"
-#include "verifiers/marabou/MarabouVerifier.h"
 #include "experiments/VerixExperiments.h"
 
 using namespace xai;
