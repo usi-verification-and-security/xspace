@@ -202,6 +202,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
 
     GeneralizedExplanation generalizedExplanation;
     auto & constraints = generalizedExplanation.constraints;
+    size_t fixedFeaturesCount = 0;
     for (auto const & lb : lowerBounds) {
         constraints.push_back({.inputIndex = lb.index, .boundType = GeneralizedExplanation::BoundType::LB, .value = lb.value});
     }
@@ -209,6 +210,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         auto it = std::find_if(constraints.begin(), constraints.end(), [&](auto const & bound){ return bound.inputIndex == ub.index; });
         if (it != constraints.end() and it->value == ub.value) {
             it->boundType = GeneralizedExplanation::BoundType::EQ;
+            ++fixedFeaturesCount;
         } else {
             constraints.push_back({.inputIndex = ub.index, .boundType = GeneralizedExplanation::BoundType::UB, .value = ub.value});
         }
@@ -216,6 +218,8 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
     std::sort(constraints.begin(), constraints.end(), [](auto const & first, auto const & second) {
         return first.inputIndex < second.inputIndex or (first.inputIndex == second.inputIndex and first.boundType == GeneralizedExplanation::BoundType::LB and second.boundType != GeneralizedExplanation::BoundType::LB);
     });
+    std::cout << "fixed features: " << fixedFeaturesCount << "/" << inputValues.size() << std::endl;
+    std::cout << "size: " << explanationFeatures.size() << "/" << inputValues.size() << std::endl;
     return generalizedExplanation;
 }
 
