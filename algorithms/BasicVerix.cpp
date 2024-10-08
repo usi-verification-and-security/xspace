@@ -299,6 +299,10 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         PTRef itp = itps[0];
 
         std::cerr << solver.getLogic().pp(itp) << std::endl << std::endl;
+    } else {
+        auto & logic = solver.getLogic();
+        PTRef ucore = logic.mkAnd(unsatCore->getNamedTerms());
+        std::cerr << logic.pp(ucore) << std::endl << std::endl;
     }
 
     // solver.printFramesAsQuery();
