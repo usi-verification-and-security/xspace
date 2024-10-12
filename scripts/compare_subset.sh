@@ -62,21 +62,30 @@ OFILES_SUPSET=()
 function cleanup {
     local code=$1
 
+    [[ -n $code && $code != 0 ]] && {
+        kill 0
+        wait
+    }
+
     for idx in ${!IFILES_SUBSET[@]}; do
         local ifile_subset=${IFILES_SUBSET[$idx]}
         local ofile_subset=${OFILES_SUBSET[$idx]}
         local ifile_supset=${IFILES_SUPSET[$idx]}
         local ofile_supset=${OFILES_SUPSET[$idx]}
-        rm $ifile_subset
-        rm $ofile_subset
-        rm $ifile_supset
-        rm $ofile_supset
+        rm -f $ifile_subset
+        rm -f $ofile_subset
+        rm -f $ifile_supset
+        rm -f $ofile_supset
     done
 
     [[ -n $code ]] && exit $code
 }
 
-## Not parallelized yet, seems fast enough
+N_CPU=$(nproc --all)
+MAX_PROC=$(( 1 + $N_CPU/2 ))
+N_PROC=0
+
+PIDS=()
 
 cnt=0
 while read line1 && read line2 <&3; do
@@ -96,18 +105,37 @@ while read line1 && read line2 <&3; do
     printf "(assert (and %s (not %s)))\n(check-sat)\n" "$line1" "$line2" >>$ifile_subset
     printf "(assert (and (not %s) %s))\n(check-sat)\n" "$line1" "$line2" >>$ifile_supset
 
-    $SOLVER $ifile_subset &>$ofile_subset
-    $SOLVER $ifile_supset &>$ofile_supset
+    while (( $N_PROC >= $MAX_PROC )); do
+        # wait -n -p pid || {
+        #     printf "Process %d exited with error.\n" $pid >&2
+        wait -n || {
+            printf "Process exited with error.\n" >&2
+            cleanup 4
+        }
+        (( --N_PROC ))
+    done
+
+    $SOLVER $ifile_subset &>$ofile_subset &
+    PIDS+=($!)
+    (( ++N_PROC ))
+    $SOLVER $ifile_supset &>$ofile_supset &
+    PIDS+=($!)
+    (( ++N_PROC ))
 
     [[ -z $MAX_LINES ]] && continue
     (( ++cnt ))
     (( $cnt >= $MAX_LINES )) && break
 done <"$FILE1" 3<"$FILE2"
 
+wait || {
+    printf "Error when waiting on the rest of processes.\n" >&2
+    cleanup 4
+}
+
 SUBSET_CNT=0
 SUPSET_CNT=0
 EQUAL_CNT=0
-DISTINCT_CNT=0
+UNCOMPARABLE_CNT=0
 for idx in ${!IFILES_SUBSET[@]}; do
     ofile_subset=${OFILES_SUBSET[$idx]}
     ofile_supset=${OFILES_SUPSET[$idx]}
@@ -129,7 +157,7 @@ for idx in ${!IFILES_SUBSET[@]}; do
         if [[ $supset_result == unsat ]]; then
             (( ++SUPSET_CNT ))
         elif [[ $supset_result == sat ]]; then
-            (( ++DISTINCT_CNT ))
+            (( ++UNCOMPARABLE_CNT ))
         else
             printf "Unexpected output of supset query: %s\n" $supset_result >&2
             less $ofile_supset
@@ -142,6 +170,6 @@ for idx in ${!IFILES_SUBSET[@]}; do
     fi
 done
 
-printf "<: %d =: %d >: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $DISTINCT_CNT
+printf "<: %d =: %d >: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $UNCOMPARABLE_CNT
 
 cleanup 0
