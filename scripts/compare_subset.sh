@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [[ -z $1 ]] && {
-    printf "USAGE: %s <psi_d> <f1> <f2> [<max_comparisons>]\n" "$0"
+    printf "USAGE: %s <psi_d> <f1> <f2> [<max_rows>]\n" "$0"
     exit 0
 }
 
