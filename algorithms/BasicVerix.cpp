@@ -118,7 +118,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
     float freedomFactor = 1.0f;
     auto result = computeExplanation(inputValues, freedomFactor, featureOrder);
 
-    // Algorithm 1 in section 5.2 in the paper
+    // Algorithm 1 in section 4.2 in the paper
     auto const & explanationFeatures = result.explanation;
     struct Bound { NodeIndex index; float value; };
     std::vector<Bound> lowerBounds;
@@ -205,10 +205,10 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             if (answer == Verifier::Answer::UNSAT) {
                 upperBounds.erase(it);
             } else {
-                auto tmp = inputValue;
+                auto tmp = upperBound;
                 for (int i = 0 ; i < threshold; i++)
                 {
-                    tmp = (upperBound + tmp)/2;
+                    tmp = (inputValue + tmp)/2;
                     it->value = tmp;
                     #ifdef MARABOU
                     answer = check();
