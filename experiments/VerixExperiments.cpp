@@ -132,7 +132,8 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         }
         outputFile << output << "," << "\n";
         std::cout << "size: " << res.explanation.size() << "/" << featureSize << std::endl;
-        }
+    }
+        std::cout << "#checks: " << algo.getChecksCount() << std::endl;
     }
     // Close the file
     file.close();

@@ -51,6 +51,8 @@ public:
     Result computeOpenSMTExplanation(std::vector<float> const & inputValues, float freedom_factor,
                                      std::vector<std::size_t> const & featureOrder);
 
+    std::size_t getChecksCount() const { return checksCount; }
+
 protected:
     void encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label);
 

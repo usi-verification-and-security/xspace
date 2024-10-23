@@ -82,8 +82,9 @@ N_LINES=$(wc -l <"$ERR_FILE")
     }
 }
 
+SOLVER=cvc5
 # SOLVER=z3
-SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
+# SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
 
 command -v $SOLVER &>/dev/null || {
     printf "Solver %s is not executable: %s\n" $SOLVER >&2
