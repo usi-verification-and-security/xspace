@@ -12,6 +12,11 @@
    div_sum_fixed += nums[2]
 }
 
+/^#checks:/ {
+   sum_checks += $2
+   cnt_checks++
+}
+
 /^relVolume\*:/ {
    split($2, nums, "%")
    sum_volume += nums[1]
@@ -21,5 +26,7 @@
 END {
    printf("avg #any features: %.1f%%\n", (sum_size/div_sum_size)*100)
    if (div_sum_fixed > 0) printf("avg #fixed features: %.1f%%\n", (sum_fixed/div_sum_fixed)*100)
+   else printf("avg #fixed features: %.1f%%\n", (sum_size/div_sum_size)*100)
    if (cnt_volume > 0) printf("avg volume: %.2f%%\n", sum_volume/cnt_volume)
+   printf("avg #checks: %.1f\n", (sum_checks/cnt_checks))
 }
