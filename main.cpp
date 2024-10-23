@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     #else
     std::string verifier = "Marabou";
     #endif
-    #ifdef HEART_ATTACK
+    #ifndef OBESITY
     std::string filename = "models/Heart_attack/heartAttack50.nnet";
     std::string datafile = "data/heartAttack.csv";
     #else
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         filename = argv[1];
     }
-    #ifdef HEART_ATTACK
+    #ifndef OBESITY
     experiments::VerixExperiments::experiment_on_dataset(filename, datafile, verifier, outputfile, 13, freedom_factor);
     #else
     experiments::VerixExperiments::experiment_on_dataset(filename, datafile, verifier, outputfile, 15, freedom_factor);

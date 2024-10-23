@@ -38,6 +38,7 @@ void BasicVerix::setVerifier(std::unique_ptr<Verifier> verifier) {
 }
 
 void BasicVerix::encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label) {
+    if (checksCount == 0) { std::cout << "computed output: "; }
     auto outputLayerIndex = network->getNumLayers() - 1;
         if (output.size() == 1) {
             // With single output, the flip in classification means flipping the value across certain threshold
@@ -45,8 +46,10 @@ void BasicVerix::encodeClassificationConstraint(std::vector<float> const & outpu
             constexpr float PRECISION = 0.015625f;
             float outputValue = output[0];
             if (outputValue >= THRESHOLD) {
+                if (checksCount == 0) { std::cout << 1; }
                 verifier->addUpperBound(outputLayerIndex, 0, THRESHOLD - PRECISION);
             } else {
+                if (checksCount == 0) { std::cout << 0; }
                 verifier->addLowerBound(outputLayerIndex, 0, THRESHOLD + PRECISION);
             }
         } else {
@@ -54,15 +57,23 @@ void BasicVerix::encodeClassificationConstraint(std::vector<float> const & outpu
             assert(outputLayerSize == output.size());
             // TODO: Build disjunction of inequalities
             verifier->addClassificationConstraint(label, 0);
+            if (checksCount == 0) { std::cout << label; }
 //            for (NodeIndex outputNode = 0; outputNode < outputLayerSize; ++outputNode) {
 //                if (outputNode == label) { continue; }
 //                throw std::logic_error("Not implemented yet!");
 //            }
         }
+    if (checksCount == 0) { std::cout << std::endl; }
+}
+
+Verifier::Answer BasicVerix::check() {
+    ++checksCount;
+    return verifier->check();
 }
 
 BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor,
                                                   std::vector<std::size_t> const & featureOrder) {
+    checksCount = 0;
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     if (not network or not verifier)
         return Result{};
@@ -98,7 +109,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         // TODO: General property specification?
         // TODO: Figure out how to do this only once!
         encodeClassificationConstraint(output, label);
-        auto answer = verifier->check();
+        auto answer = check();
         if (answer == Verifier::Answer::UNSAT) {
             freeSet.insert(nodeToConsider);
         } else {
@@ -113,6 +124,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
 
 BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(const std::vector<float> &inputValues,
                                        std::vector<std::size_t> const & featureOrder, int threshold) {
+    checksCount = 0;
     auto output = computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     float freedomFactor = 1.0f;
@@ -128,7 +140,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         upperBounds.push_back({.index = index, .value = inputValues.at(index)});
     }
 
-    auto check = [&](){
+    auto auxCheck = [&](){
         for (auto lb: lowerBounds) {
             verifier->addLowerBound(0, lb.index, lb.value);
         }
@@ -139,7 +151,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         // TODO: Figure out how to do this only once!
         this->encodeClassificationConstraint(output, label);
         #endif
-        auto answer = verifier->check();
+        auto answer = check();
         #ifdef MARABOU
         verifier->clearAdditionalConstraints();
         #endif
@@ -166,7 +178,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             // Try relaxing lower bound
             auto it = std::find_if(lowerBounds.begin(), lowerBounds.end(), [&](auto const & lb) { return lb.index == inputIndex; });
             it->value = lowerBound;
-            auto answer = check();
+            auto answer = auxCheck();
             if (answer == Verifier::Answer::UNSAT) {
                 lowerBounds.erase(it);
             } else {
@@ -176,10 +188,10 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
                     tmp = (inputValue + tmp)/2;
                     it->value = tmp;
                     #ifdef MARABOU
-                    answer = check();
+                    answer = auxCheck();
                     #else
                     verifier->addLowerBound(0, it->index, it->value);
-                    answer = verifier->check();
+                    answer = check();
                     #endif
                     if (answer == Verifier::Answer::UNSAT) {
                         #ifdef MARABOU
@@ -201,7 +213,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
             // Try relaxing upper bound
             auto it = std::find_if(upperBounds.begin(), upperBounds.end(), [&](auto const & ub) { return ub.index == inputIndex; });
             it->value = upperBound;
-            auto answer = check();
+            auto answer = auxCheck();
             if (answer == Verifier::Answer::UNSAT) {
                 upperBounds.erase(it);
             } else {
@@ -211,10 +223,10 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
                     tmp = (inputValue + tmp)/2;
                     it->value = tmp;
                     #ifdef MARABOU
-                    answer = check();
+                    answer = auxCheck();
                     #else
                     verifier->addUpperBound(0, it->index, it->value);
-                    answer = verifier->check();
+                    answer = check();
                     #endif
                     if (answer == Verifier::Answer::UNSAT) {
                         #ifdef MARABOU
@@ -262,6 +274,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
 
 BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputValues, float freedom_factor,
                                                          std::vector<std::size_t> const & featureOrder) {
+    checksCount = 0;
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     if (not network or not verifier)
         return Result{};
@@ -315,7 +328,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         if (not isLower) { verifier->addLowerBound(0, node, val, true); }
         if (not isUpper) { verifier->addUpperBound(0, node, val, true); }
     }
-    auto answer = verifier->check();
+    auto answer = check();
     assert(answer == Verifier::Answer::UNSAT);
 
     auto unsatCore = solver.getUnsatCore();
@@ -329,7 +342,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         }
         auto const lastIdx = solver.getInsertedFormulasCount()-1;
 
-        auto answer = verifier->check();
+        auto answer = check();
         assert(answer == Verifier::Answer::UNSAT);
 
         ipartitions_t part = 0;
@@ -343,7 +356,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         assert(itps.size() == 1);
         PTRef itp = itps[0];
 
-        std::cerr << experiments::fixOpenSMTString(solver.getLogic().pp(itp)) << std::endl << std::endl;
+        std::cerr << solver.getLogic().printTerm(itp) << std::endl << std::endl;
     } else {
         auto & logic = solver.getLogic();
         PTRef ucore = logic.mkAnd(unsatCore->getTerms());
