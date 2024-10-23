@@ -1,9 +1,9 @@
 #ifndef XAI_SMT_EXPERIMENTS_CONFIG_H
 #define XAI_SMT_EXPERIMENTS_CONFIG_H
 
-#define HEART_ATTACK
+//- #define OBESITY
 
-#define MARABOU
+//- #define MARABOU
 
 namespace xai::experiments {
 struct Config {

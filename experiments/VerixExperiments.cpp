@@ -69,6 +69,7 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
             row.push_back(std::stof(field));
         }
         float output = row[featureSize];
+        std::cout << "-> expected output: " << output << std::endl;
         datapoint = std::vector<float>(row.begin(), row.begin() + featureSize);
         data.push_back(datapoint);
 
