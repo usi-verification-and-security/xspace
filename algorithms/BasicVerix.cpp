@@ -294,7 +294,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     auto & solver = openSMT.getSolver();
 
     // to get psi:
-    // solver.printFramesAsQuery();
+    // solver.printCurrentAssertionsAsQuery();
 
     if constexpr (Config::interpolation) {
         solver.push();
@@ -324,7 +324,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         solver.pop();
 
         auto const firstIdx = solver.getInsertedFormulasCount();
-        for (PTRef term : unsatCore->getNamedTerms()) {
+        for (PTRef term : unsatCore->getTerms()) {
             solver.insertFormula(term);
         }
         auto const lastIdx = solver.getInsertedFormulasCount()-1;
@@ -346,16 +346,16 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         std::cerr << experiments::fixOpenSMTString(solver.getLogic().pp(itp)) << std::endl << std::endl;
     } else {
         auto & logic = solver.getLogic();
-        PTRef ucore = logic.mkAnd(unsatCore->getNamedTerms());
-        std::cerr << experiments::fixOpenSMTString(logic.pp(ucore)) << std::endl << std::endl;
+        PTRef ucore = logic.mkAnd(unsatCore->getTerms());
+        std::cerr << logic.printTerm(ucore) << std::endl << std::endl;
     }
 
     // to get the whole query:
-    // solver.printFramesAsQuery();
+    // solver.printCurrentAssertionsAsQuery();
 
     if constexpr (Config::samplesOnly) {
         std::vector<NodeIndex> explanation;
-        for (PTRef term : unsatCore->getNamedTerms()) {
+        for (PTRef term : unsatCore->getTerms()) {
             assert(openSMT.containsInputEquality(term));
             explanation.push_back(openSMT.nodeIndexOfInputEquality(term));
         }
@@ -385,7 +385,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         auto const [_, inserted] = boundExplanationSet.insert(node);
         assert(inserted);
     };
-    for (PTRef term : unsatCore->getNamedTerms()) {
+    for (PTRef term : unsatCore->getTerms()) {
         bool const containsLower = openSMT.containsInputLowerBound(term);
         if (containsLower) {
             insertCoreTerm(std::true_type(), term);
