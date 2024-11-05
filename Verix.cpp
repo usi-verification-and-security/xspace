@@ -315,7 +315,7 @@ void Verix::get_explanation(float freedom_factor) {
 
         } else if (r == s_False) {
             printf("unsat\n");
-            mainSolver.printFramesAsQuery();
+            mainSolver.printCurrentAssertionsAsQuery();
             auto itp = mainSolver.getInterpolationContext();
             vec<PTRef> itps;
             ipartitions_t partitions = 1;
