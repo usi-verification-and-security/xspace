@@ -15,6 +15,9 @@ struct Config {
     static constexpr bool minimalUnsatCore = true;
     //- static constexpr bool minimalUnsatCore = false;
 
+    static constexpr bool interpolation = true;
+    //- static constexpr bool interpolation = false;
+
     static constexpr bool reverseFeatures = false;
     //- static constexpr bool reverseFeatures = true;
 };
