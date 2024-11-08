@@ -11,7 +11,7 @@
 int main(int argc, char* argv[])
 {
     std::string verifier = "OpenSMT";
-    std::string filename = "models/heartAttack50.nnet";
+    std::string filename = "models/Heart_attack/heartAttack50.nnet";
     std::string datafile = "data/heartAttack.csv";
     float freedom_factor = 1;
 
