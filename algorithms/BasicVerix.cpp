@@ -216,6 +216,9 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     auto & openSMT = static_cast<verifiers::OpenSMTVerifier &>(*verifier);
     auto & solver = openSMT.getSolver();
 
+    if constexpr (Config::interpolation) {
+        solver.push();
+    }
     for (NodeIndex node : featureOrder) {
         auto const val = inputValues[node];
         assert(val >= inputLowerBounds[node]);
@@ -236,6 +239,32 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     assert(answer == Verifier::Answer::UNSAT);
 
     auto unsatCore = solver.getUnsatCore();
+
+    if constexpr (Config::interpolation) {
+        solver.pop();
+
+        auto const firstIdx = solver.getInsertedFormulasCount();
+        for (PTRef term : unsatCore->getNamedTerms()) {
+            solver.insertFormula(term);
+        }
+        auto const lastIdx = solver.getInsertedFormulasCount()-1;
+
+        auto answer = verifier->check();
+        assert(answer == Verifier::Answer::UNSAT);
+
+        ipartitions_t part = 0;
+        for (auto idx = firstIdx; idx <= lastIdx; ++idx) {
+            setbit(part, idx);
+        }
+
+        vec<PTRef> itps;
+        auto interpolationContext = solver.getInterpolationContext();
+        interpolationContext->getSingleInterpolant(itps, part);
+        assert(itps.size() == 1);
+        PTRef itp = itps[0];
+
+        std::cerr << solver.getLogic().pp(itp) << std::endl << std::endl;
+    }
 
     // solver.printFramesAsQuery();
 

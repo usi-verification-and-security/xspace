@@ -332,6 +332,12 @@ void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
     if constexpr (Config::minimalUnsatCore) {
         config->setOption(SMTConfig::o_minimal_unsat_cores, SMTOption(true), msg);
     }
+    if constexpr (Config::interpolation) {
+        config->setOption(SMTConfig::o_produce_inter, SMTOption(true), msg);
+        config->setLRAInterpolationAlgorithm(itp_lra_alg_weak);
+        config->setReduction(true);
+        config->setSimplifyInterpolant(4);
+    }
     logic = std::make_unique<ArithLogic>(opensmt::Logic_t::QF_LRA);
     solver = std::make_unique<MainSolver>(*logic, *config, "verifier");
     inputVars.clear();
