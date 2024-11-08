@@ -75,7 +75,28 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
                 << constraint.value << '\n';
         }
         std::cout << '\n';
+    } else if constexpr (Config::explanationType == Config::ExplanationType::opensmt) {
+        auto res = algo.computeOpenSMTExplanation(datapoint, freedom_factor, featureOrder);
+        std::cout <<"explanation: ";
+        std::vector<int> explanation(featureSize, 0);
+        for (auto val : res.explanation) {
+            std::cout << val << " ";
+            assert(val < featureSize);
+            explanation.at(val) = 1;
+        }
+        std::cout << std::endl;
 
+        // add results to output file
+        for (int i = 0; i < datapoint.size(); ++i) {
+            outputFile << datapoint[i] << " ";
+        }
+        outputFile << ",";
+        for (int i = 0; i < explanation.size(); ++i) {
+            outputFile << explanation[i];
+            outputFile << ",";
+        }
+        outputFile << output << "," << "\n";
+        std::cout << "size: " << res.explanation.size() << "/" << featureSize << std::endl;
     } else {
         auto res = algo.computeExplanation(datapoint, freedom_factor, featureOrder);
         std::cout <<"explanation: ";

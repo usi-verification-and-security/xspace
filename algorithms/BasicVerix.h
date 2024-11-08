@@ -47,6 +47,10 @@ public:
     GeneralizedExplanation computeGeneralizedExplanation(std::vector<float> const & inputValues,
                                                          std::vector<std::size_t> const & featureOrder);
 
+    // not compatible with `computeGeneralizedExplanation` yet
+    Result computeOpenSMTExplanation(std::vector<float> const & inputValues, float freedom_factor,
+                                     std::vector<std::size_t> const & featureOrder);
+
 private:
     void encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label);
 

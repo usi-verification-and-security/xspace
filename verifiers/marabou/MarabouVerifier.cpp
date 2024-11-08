@@ -81,11 +81,11 @@ void MarabouVerifier::loadModel(NNet const & network) {
     pimpl->loadModel(network);
 }
 
-void MarabouVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value) {
+void MarabouVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value, bool /*namedTerm*/) {
     pimpl->addUpperBound(layer, var, value);
 }
 
-void MarabouVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value) {
+void MarabouVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value, bool /*namedTerm*/) {
     pimpl->addLowerBound(layer, var, value);
 }
 

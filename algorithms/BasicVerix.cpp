@@ -3,12 +3,18 @@
 #include "experiments/Config.h"
 
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <unordered_set>
 #include <algorithm>
 
+#include "verifiers/opensmt/OpenSMTVerifier.h"
+#include "MainSolver.h"
+
 namespace xai::algo {
+
+using namespace opensmt;
 
 using experiments::Config;
 
@@ -175,6 +181,163 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         return first.inputIndex < second.inputIndex or (first.inputIndex == second.inputIndex and first.boundType == GeneralizedExplanation::BoundType::LB and second.boundType != GeneralizedExplanation::BoundType::LB);
     });
     return generalizedExplanation;
+}
+
+BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputValues, float freedom_factor,
+                                                         std::vector<std::size_t> const & featureOrder) {
+    assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
+    if (not network or not verifier)
+        return Result{};
+
+    verifier->loadModel(*network);
+
+    auto output = computeOutput(inputValues, *network);
+    NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
+    auto inputSize = network->getLayerSize(0);
+
+    // Compute lower and upper bounds based on the freedom factor
+    std::vector<float> inputLowerBounds;
+    std::vector<float> inputUpperBounds;
+    for (NodeIndex node = 0; node < inputSize; ++node) {
+        float input_freedom = (network->getInputUpperBound(node) - network->getInputLowerBound(node)) * freedom_factor;
+        inputLowerBounds.push_back(std::max(inputValues[node] - input_freedom, network->getInputLowerBound(node)));
+        inputUpperBounds.push_back(std::min(inputValues[node] + input_freedom, network->getInputUpperBound(node)));
+    }
+
+    assert(inputSize == inputValues.size());
+    assert(featureOrder.size() == inputSize);
+    for (NodeIndex node = 0; node < inputSize; ++node) {
+        verifier->addLowerBound(0, node, inputLowerBounds[node]);
+        verifier->addUpperBound(0, node, inputUpperBounds[node]);
+    }
+    encodeClassificationConstraint(output, label);
+
+    assert(dynamic_cast<verifiers::OpenSMTVerifier *>(verifier.get()));
+    auto & openSMT = static_cast<verifiers::OpenSMTVerifier &>(*verifier);
+    auto & solver = openSMT.getSolver();
+
+    for (NodeIndex node : featureOrder) {
+        auto const val = inputValues[node];
+        assert(val >= inputLowerBounds[node]);
+        assert(val <= inputUpperBounds[node]);
+
+        if constexpr (Config::samplesOnly) {
+            verifier->addEquality(0, node, val, true);
+            continue;
+        }
+
+        bool const isLower = (val == inputLowerBounds[node]);
+        bool const isUpper = (val == inputUpperBounds[node]);
+        // It is worthless to assert bounds that already correspond to the bounds of the domain
+        if (not isLower) { verifier->addLowerBound(0, node, val, true); }
+        if (not isUpper) { verifier->addUpperBound(0, node, val, true); }
+    }
+    auto answer = verifier->check();
+    assert(answer == Verifier::Answer::UNSAT);
+
+    auto unsatCore = solver.getUnsatCore();
+
+    // solver.printFramesAsQuery();
+
+    if constexpr (Config::samplesOnly) {
+        std::vector<NodeIndex> explanation;
+        for (PTRef term : unsatCore->getNamedTerms()) {
+            assert(openSMT.containsInputEquality(term));
+            explanation.push_back(openSMT.nodeIndexOfInputEquality(term));
+        }
+
+        std::sort(explanation.begin(), explanation.end());
+        return Result{.explanation = std::move(explanation)};
+    }
+
+    std::vector<NodeIndex> explanationLower;
+    std::vector<NodeIndex> explanationUpper;
+    std::unordered_set<NodeIndex> explanationLowerSet;
+    std::unordered_set<NodeIndex> explanationUpperSet;
+    auto insertCoreTerm = [&](auto isLower, PTRef term){
+        NodeIndex node = [&]{
+            if constexpr (isLower) { return openSMT.nodeIndexOfInputLowerBound(term); }
+            else { return openSMT.nodeIndexOfInputUpperBound(term); }
+        }();
+        auto & boundExplanation = [&]() -> auto & {
+            if constexpr (isLower) { return explanationLower; }
+            else { return explanationUpper; }
+        }();
+        auto & boundExplanationSet = [&]() -> auto & {
+            if constexpr (isLower) { return explanationLowerSet; }
+            else { return explanationUpperSet; }
+        }();
+        boundExplanation.push_back(node);
+        auto const [_, inserted] = boundExplanationSet.insert(node);
+        assert(inserted);
+    };
+    for (PTRef term : unsatCore->getNamedTerms()) {
+        bool const containsLower = openSMT.containsInputLowerBound(term);
+        if (containsLower) {
+            insertCoreTerm(std::true_type(), term);
+            continue;
+        }
+        bool const containsUpper = openSMT.containsInputUpperBound(term);
+        if (containsUpper) {
+            insertCoreTerm(std::false_type(), term);
+            continue;
+        }
+
+        assert(false);
+    }
+
+    double relVolume = 1;
+    auto processCoreTerm = [&](auto isLower, NodeIndex node){
+        auto & otherBoundExplanation = [&]() -> auto & {
+            if constexpr (isLower) { return explanationUpper; }
+            else { return explanationLower; }
+        }();
+        auto & otherBoundExplanationSet = [&]() -> auto & {
+            if constexpr (isLower) { return explanationUpperSet; }
+            else { return explanationLowerSet; }
+        }();
+
+        auto const val = inputValues[node];
+        auto const lo = inputLowerBounds[node];
+        auto const hi = inputUpperBounds[node];
+        double const size = hi - lo;
+        double const boundedSize = [=]{
+            if constexpr (isLower) { return hi - val; }
+            else { return val - lo; }
+        }();
+        assert(boundedSize >= 0);
+        assert(boundedSize <= size);
+        assert(boundedSize != size or (not isLower and otherBoundExplanationSet.contains(node)));
+
+        if (otherBoundExplanationSet.contains(node)) {
+            return;
+        }
+
+        if (boundedSize == 0) {
+            otherBoundExplanation.push_back(node);
+            return;
+        }
+
+        relVolume *= boundedSize/size;
+    };
+    std::for_each(explanationLower.begin(), explanationLower.end(), [&](NodeIndex node){ processCoreTerm(std::true_type(), node); });
+    std::for_each(explanationUpper.begin(), explanationUpper.end(), [&](NodeIndex node){ processCoreTerm(std::false_type(), node); });
+
+    std::sort(explanationLower.begin(), explanationLower.end());
+    std::sort(explanationUpper.begin(), explanationUpper.end());
+    std::vector<NodeIndex> explanationEqual;
+    std::set_intersection(explanationLower.begin(), explanationLower.end(),
+                          explanationUpper.begin(), explanationUpper.end(),
+                          std::inserter(explanationEqual, explanationEqual.begin()));
+    std::vector<NodeIndex> explanation;
+    std::set_union(explanationLower.begin(), explanationLower.end(),
+                   explanationUpper.begin(), explanationUpper.end(),
+                   std::inserter(explanation, explanation.begin()));
+
+    auto const defaultPrecision = std::cout.precision();
+    std::cout << "fixed features: " << explanationEqual.size() << "/" << inputSize << std::endl;
+    std::cout << "relVolume*: " << std::setprecision(1) << (relVolume*100) << "%" << std::setprecision(defaultPrecision) << std::endl;
+    return Result{.explanation = std::move(explanation)};
 }
 
 } // namespace xai::algo
