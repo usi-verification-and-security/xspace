@@ -13,6 +13,7 @@
 #include <numeric>
 #include <sstream>
 
+namespace xai::experiments {
 void
 VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
                                         std::string outputPath, int featureSize, float freedom_factor=0.5) {
@@ -95,4 +96,5 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
     }
     // Close the file
     file.close();
+}
 }

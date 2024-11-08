@@ -6,11 +6,13 @@
 #define XAI_SMT_VERIXHIDDENLAYEREXPERIMENTS_H
 
 #include <string>
+
+namespace xai::experiments {
 class VerixHiddenLayerExperiments {
 public:
     static void experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
                                       std::string outputPath, int featureSize, float freedom_factor);
 };
-
+}
 
 #endif //XAI_SMT_VERIXHIDDENLAYEREXPERIMENTS_H

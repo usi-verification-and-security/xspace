@@ -11,6 +11,7 @@
 #include <sstream>
 #include <cassert>
 
+namespace xai::experiments {
 void
 VerixHiddenLayerExperiments::experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
                                                    std::string outputPath, int featureSize, float freedom_factor){
@@ -89,4 +90,4 @@ VerixHiddenLayerExperiments::experiment_on_dataset(std::string modelPath, std::s
     // Close the file
     file.close();
 }
-
+}
