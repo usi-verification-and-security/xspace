@@ -19,6 +19,10 @@ public:
 
     virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value) = 0;
     virtual void addLowerBound(LayerIndex layer, NodeIndex var, float value) = 0;
+    virtual void addEquality(LayerIndex layer, NodeIndex var, float value) {
+        addUpperBound(layer, var, value);
+        addLowerBound(layer, var, value);
+    }
     virtual void addClassificationConstraint(NodeIndex node, float threshold) = 0;
 
     virtual void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) = 0;
