@@ -3,6 +3,11 @@
 
 #include "Verifier.h"
 
+namespace opensmt {
+class MainSolver;
+struct PTRef;
+}
+
 namespace xai::verifiers {
 
 class OpenSMTVerifier : public Verifier{
@@ -12,11 +17,11 @@ public:
 
     void loadModel(NNet const & network) override;
 
-    void addUpperBound(LayerIndex layer, NodeIndex var, float value) override;
+    void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 
-    void addLowerBound(LayerIndex layer, NodeIndex var, float value) override;
+    void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 
-    void addEquality(LayerIndex layer, NodeIndex var, float value) override;
+    void addEquality(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 
     void addClassificationConstraint(NodeIndex node, float threshold) override;
 
@@ -25,6 +30,15 @@ public:
     Answer check() override;
 
     void clearAdditionalConstraints() override;
+
+    opensmt::MainSolver & getSolver();
+
+    bool containsInputLowerBound(opensmt::PTRef const & term) const;
+    bool containsInputUpperBound(opensmt::PTRef const & term) const;
+    bool containsInputEquality(opensmt::PTRef const & term) const;
+    NodeIndex nodeIndexOfInputLowerBound(opensmt::PTRef const & term) const;
+    NodeIndex nodeIndexOfInputUpperBound(opensmt::PTRef const & term) const;
+    NodeIndex nodeIndexOfInputEquality(opensmt::PTRef const & term) const;
 
 private:
     class OpenSMTImpl;

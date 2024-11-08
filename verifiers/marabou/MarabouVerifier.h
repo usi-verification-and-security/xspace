@@ -13,9 +13,9 @@ public:
 
     void loadModel(NNet const & network) override;
 
-    void addUpperBound(LayerIndex layer, NodeIndex var, float value) override;
+    void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 
-    void addLowerBound(LayerIndex layer, NodeIndex var, float value) override;
+    void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 
     void addClassificationConstraint(NodeIndex node, float threshold) override;
 
