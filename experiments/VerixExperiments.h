@@ -2,6 +2,7 @@
 // Created by labbaf on 29.05.2024.
 //
 #include <iostream>
+#include "Config.h"
 #include "algorithms/BasicVerix.h"
 
 #ifndef XAI_SMT_VERIXEXPERIMENTS_H

@@ -1,5 +1,7 @@
 #include "BasicVerix.h"
 
+#include "experiments/Config.h"
+
 #include <cassert>
 #include <iostream>
 #include <numeric>
@@ -8,6 +10,7 @@
 
 namespace xai::algo {
 
+using experiments::Config;
 
 namespace {
 using input_t = std::vector<float>;
@@ -52,7 +55,7 @@ void BasicVerix::encodeClassificationConstraint(std::vector<float> const & outpu
 }
 
 BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, float freedom_factor,
-                                                  std::vector<std::size_t> featureOrder) {
+                                                  std::vector<std::size_t> const & featureOrder) {
     assert(freedom_factor <= 1.0 and freedom_factor >= 0.0);
     if (not network or not verifier)
         return Result{};
@@ -75,14 +78,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
     std::unordered_set<NodeIndex> explanationSet;
     std::unordered_set<NodeIndex> freeSet;
     assert(inputSize == inputValues.size());
-    // TODO: Come up with heuristic for feature ordering
-    if (featureOrder.empty()) {
-        for (std::size_t node = 0; node < inputSize; ++node) {
-            featureOrder.push_back(node);
-        }
-    } else {
-        assert(featureOrder.size() == inputSize);
-    }
+    assert(featureOrder.size() == inputSize);
     for (NodeIndex nodeToConsider : featureOrder) {
         for (NodeIndex node = 0; node < inputSize; ++node) {
             if (node == nodeToConsider or freeSet.contains(node)) { // this input feature is free
@@ -94,6 +90,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
             }
         }
         // TODO: General property specification?
+        // TODO: Figure out how to do this only once!
         encodeClassificationConstraint(output, label);
         auto answer = verifier->check();
         if (answer == Verifier::Answer::UNSAT) {
@@ -109,7 +106,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
 }
 
 BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(const std::vector<float> &inputValues,
-                                                                 std::vector<std::size_t> featureOrder) {
+                                                                 std::vector<std::size_t> const & featureOrder) {
     auto output = computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     float freedomFactor = 1.0f;
@@ -129,6 +126,7 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         for (auto ub: upperBounds) {
             verifier->addUpperBound(0, ub.index, ub.value);
         }
+        // TODO: Figure out how to do this only once!
         this->encodeClassificationConstraint(output, label);
         auto answer = verifier->check();
         verifier->clearAdditionalConstraints();

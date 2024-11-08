@@ -45,9 +45,13 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
     getline(file, header);
     outputFile << "datapoint" << "," << header << '\n';
     // Iterate over each line in the file
-//    TODO: reverse order! make it random
+    // TODO: Come up with heuristic for feature ordering, or random?
     std::vector<std::size_t> featureOrder(featureSize);
-    std::iota(featureOrder.rbegin(), featureOrder.rend(), 0);
+    if constexpr (not Config::reverseFeatures) {
+        std::iota(featureOrder.begin(), featureOrder.end(), 0);
+    } else {
+        std::iota(featureOrder.rbegin(), featureOrder.rend(), 0);
+    }
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string field;
@@ -64,35 +68,37 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         data.push_back(datapoint);
 
 
-        auto res = algo.computeGeneralizedExplanation(datapoint);
+    if constexpr (Config::explanationType == Config::ExplanationType::general) {
+        auto res = algo.computeGeneralizedExplanation(datapoint, featureOrder);
         for (auto const & constraint : res.constraints) {
             std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
                 << constraint.value << '\n';
         }
         std::cout << '\n';
 
-//        auto res = algo.computeExplanation(datapoint, freedom_factor);
-//        std::cout << res.explanation.size() << std::endl;
-//        continue;
-//        std::cout <<"explanation: ";
-//        std::vector<int> explanation(featureSize, 0);
-//        for (auto val : res.explanation) {
-//            std::cout << val << " ";
-//            assert(val < featureSize);
-//            explanation.at(val) = 1;
-//        }
-//        std::cout << std::endl;
-//
-//        // add results to output file
-//        for (int i = 0; i < datapoint.size(); ++i) {
-//            outputFile << datapoint[i] << " ";
-//        }
-//        outputFile << ",";
-//        for (int i = 0; i < explanation.size(); ++i) {
-//            outputFile << explanation[i];
-//            outputFile << ",";
-//        }
-//        outputFile << output << "," << "\n";
+    } else {
+        auto res = algo.computeExplanation(datapoint, freedom_factor, featureOrder);
+        std::cout <<"explanation: ";
+        std::vector<int> explanation(featureSize, 0);
+        for (auto val : res.explanation) {
+            std::cout << val << " ";
+            assert(val < featureSize);
+            explanation.at(val) = 1;
+        }
+        std::cout << std::endl;
+
+        // add results to output file
+        for (int i = 0; i < datapoint.size(); ++i) {
+            outputFile << datapoint[i] << " ";
+        }
+        outputFile << ",";
+        for (int i = 0; i < explanation.size(); ++i) {
+            outputFile << explanation[i];
+            outputFile << ",";
+        }
+        outputFile << output << "," << "\n";
+        std::cout << "size: " << res.explanation.size() << "/" << featureSize << std::endl;
+        }
     }
     // Close the file
     file.close();
