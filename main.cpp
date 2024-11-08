@@ -1,7 +1,9 @@
 #include <iostream>
 #include <iomanip>
+#include <string>
+#include <sstream>
 #include "NNModel.h"
-#include "Verix.h"
+// #include "Verix.h"
 #include "algorithms/BasicVerix.h"
 #include "verifiers/opensmt/OpenSMTVerifier.h"
 #include "verifiers/marabou/MarabouVerifier.h"
