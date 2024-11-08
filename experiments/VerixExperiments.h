@@ -7,13 +7,13 @@
 #ifndef XAI_SMT_VERIXEXPERIMENTS_H
 #define XAI_SMT_VERIXEXPERIMENTS_H
 
-
+namespace xai::experiments {
 class VerixExperiments {
 public:
     static void experiment_on_dataset(std::string modelPath, std::string datasetPath, std::string verifier,
                                       std::string outputPath, int featureSize, float freedom_factor);
 
 };
-
+}
 
 #endif //XAI_SMT_VERIXEXPERIMENTS_H

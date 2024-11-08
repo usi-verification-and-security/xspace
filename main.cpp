@@ -9,6 +9,7 @@
 #include "verifiers/marabou/MarabouVerifier.h"
 #include "experiments/VerixExperiments.h"
 
+using namespace xai;
 
 int main(int argc, char* argv[])
 {
@@ -25,5 +26,5 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         filename = argv[1];
     }
-    VerixExperiments::experiment_on_dataset(filename, datafile, verifier, outputfile, 13, freedom_factor);
+    experiments::VerixExperiments::experiment_on_dataset(filename, datafile, verifier, outputfile, 13, freedom_factor);
 }
