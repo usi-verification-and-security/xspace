@@ -39,15 +39,15 @@ public:
     void setVerifier(std::unique_ptr<Verifier> verifier);
 
     Result computeExplanation(std::vector<float> const & inputValues, float freedom_factor,
-                              std::vector<std::size_t> featureOrder = {});
+                              std::vector<std::size_t> const & featureOrder);
 
     /**
      * Computes explanation not only as a subset of features, but also tries to relax the constraints on the relevant features
      */
-    GeneralizedExplanation computeGeneralizedExplanation(std::vector<float> const & inputValues, std::vector<std::size_t> featureOrder = {});
+    GeneralizedExplanation computeGeneralizedExplanation(std::vector<float> const & inputValues,
+                                                         std::vector<std::size_t> const & featureOrder);
 
 private:
-    // TODO: Figure out how to do this only once!
     void encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label);
 
     std::unique_ptr<NNet> network;

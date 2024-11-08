@@ -1,5 +1,7 @@
 #include "OpenSMTVerifier.h"
 
+#include "experiments/Config.h"
+
 #include "ArithLogic.h"
 #include "LogicFactory.h"
 #include "MainSolver.h"
@@ -8,6 +10,8 @@
 namespace xai::verifiers {
 
 using namespace opensmt;
+
+using experiments::Config;
 
 class OpenSMTVerifier::OpenSMTImpl {
 public:
