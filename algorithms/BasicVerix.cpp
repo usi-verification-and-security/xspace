@@ -85,8 +85,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
                 verifier->addLowerBound(0, node, inputLowerBounds[node]);
                 verifier->addUpperBound(0, node, inputUpperBounds[node]);
             } else { // this input feature is fixed
-                verifier->addLowerBound(0, node, inputValues[node]);
-                verifier->addUpperBound(0, node, inputValues[node]);
+                verifier->addEquality(0, node, inputValues[node]);
             }
         }
         // TODO: General property specification?

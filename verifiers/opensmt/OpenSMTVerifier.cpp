@@ -13,12 +13,26 @@ using namespace opensmt;
 
 using experiments::Config;
 
+namespace { // Helper methods
+FastRational floatToRational(float value);
+}
+
 class OpenSMTVerifier::OpenSMTImpl {
 public:
     void loadModel(NNet const & network);
 
-    void addUpperBound(LayerIndex layer, NodeIndex var, float value);
-    void addLowerBound(LayerIndex layer, NodeIndex var, float value);
+    PTRef makeUpperBound(LayerIndex layer, NodeIndex node, float value) {
+        return makeUpperBound(layer, node, floatToRational(value));
+    }
+    PTRef makeLowerBound(LayerIndex layer, NodeIndex node, float value) {
+        return makeLowerBound(layer, node, floatToRational(value));
+    }
+    PTRef makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value);
+    PTRef makeLowerBound(LayerIndex layer, NodeIndex node, FastRational value);
+
+    PTRef addUpperBound(LayerIndex layer, NodeIndex node, float value);
+    PTRef addLowerBound(LayerIndex layer, NodeIndex node, float value);
+    void addEquality(LayerIndex layer, NodeIndex node, float value);
     void addClassificationConstraint(NodeIndex node, float threshold);
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
@@ -53,6 +67,10 @@ void OpenSMTVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value
 
 void OpenSMTVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value) {
     pimpl->addLowerBound(layer, var, value);
+}
+
+void OpenSMTVerifier::addEquality(LayerIndex layer, NodeIndex var, float value) {
+    pimpl->addEquality(layer, var, value);
 }
 
 void OpenSMTVerifier::addClassificationConstraint(NodeIndex node, float threshold=0) {
@@ -170,18 +188,38 @@ void OpenSMTVerifier::OpenSMTImpl::loadModel(NNet const & network) {
     solver->push();
 }
 
-void OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value) {
+PTRef OpenSMTVerifier::OpenSMTImpl::makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value) {
     if (layer != 0 and layer != layerSizes.size() - 1)
         throw std::logic_error("Unimplemented!");
     PTRef var = layer == 0 ? inputVars.at(node) : outputVars.at(node);
-    solver->insertFormula(logic->mkLeq(var, logic->mkRealConst(floatToRational(value))));
+    return logic->mkLeq(var, logic->mkRealConst(value));
 }
 
-void OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex node, float value) {
+PTRef OpenSMTVerifier::OpenSMTImpl::makeLowerBound(LayerIndex layer, NodeIndex node, FastRational value) {
     if (layer != 0 and layer != layerSizes.size() - 1)
         throw std::logic_error("Unimplemented!");
     PTRef var = layer == 0 ? inputVars.at(node) : outputVars.at(node);
-    solver->insertFormula(logic->mkGeq(var, logic->mkRealConst(floatToRational(value))));
+    return logic->mkGeq(var, logic->mkRealConst(value));
+}
+
+PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value) {
+    PTRef term = makeUpperBound(layer, node, value);
+    solver->insertFormula(term);
+    return term;
+}
+
+PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex node, float value) {
+    PTRef term = makeLowerBound(layer, node, value);
+    solver->insertFormula(term);
+    return term;
+}
+
+void OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value) {
+    FastRational rat = floatToRational(value);
+    PTRef lterm = makeLowerBound(layer, node, rat);
+    PTRef uterm = makeUpperBound(layer, node, std::move(rat));
+    PTRef term = logic->mkAnd(lterm, uterm);
+    solver->insertFormula(term);
 }
 
 void OpenSMTVerifier::OpenSMTImpl::addClassificationConstraint(NodeIndex node, float threshold=0.0){
