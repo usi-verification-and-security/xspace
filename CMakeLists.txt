@@ -3,21 +3,6 @@ project(XAI-SMT)
 
 set(CMAKE_CXX_STANDARD 20)
 
-include_directories(.)
-
-add_executable(XAI-SMT
-        main.cpp
-        NNModel.cpp
-        NNModel.h
-        Verix.cpp
-        NNet.cpp
-        algorithms/BasicVerix.cpp
-        # algorithms/HypothesisTesting.cpp
-        experiments/VerixExperiments.cpp
-        # experiments/VerixHiddenLayerExperiments.cpp
-)
-
-
 include(FetchContent)
 
 # Find OpenSMT2
@@ -44,38 +29,15 @@ else(OpenSMT_FOUND)
 endif(OpenSMT_FOUND)
 
 if (NOT OpenSMT_FOUND)
-    target_compile_definitions(XAI-SMT PUBLIC OPENSMT_LOCAL_BUILD)
+    # target_compile_definitions(XAI-SMT PUBLIC OPENSMT_LOCAL_BUILD)
     #message("Directories:${opensmt_SOURCE_DIR}; ${opensmt_BINARY_DIR}")
     target_include_directories(OpenSMT-static PUBLIC
-    ${opensmt_SOURCE_DIR}/src/
-    ${opensmt_SOURCE_DIR}/src/symbols
-    ${opensmt_SOURCE_DIR}/src/common
-    ${opensmt_SOURCE_DIR}/src/sorts
-    ${opensmt_SOURCE_DIR}/src/symbols
-    ${opensmt_SOURCE_DIR}/src/options
-    ${opensmt_SOURCE_DIR}/src/api
-    ${opensmt_SOURCE_DIR}/src/tsolvers
-    ${opensmt_SOURCE_DIR}/src/tsolvers/egraph
-    ${opensmt_SOURCE_DIR}/src/tsolvers/lasolver
-    ${opensmt_SOURCE_DIR}/src/tsolvers/lrasolver
-    ${opensmt_SOURCE_DIR}/src/tsolvers/liasolver
-    ${opensmt_SOURCE_DIR}/src/cnfizers
-    ${opensmt_SOURCE_DIR}/src/pterms
-    ${opensmt_SOURCE_DIR}/src/logics
-    ${opensmt_SOURCE_DIR}/src/smtsolvers
-    ${opensmt_SOURCE_DIR}/src/parsers/smt2new
-    ${opensmt_SOURCE_DIR}/src/simplifiers
-    ${opensmt_SOURCE_DIR}/src/rewriters
-    ${opensmt_SOURCE_DIR}/src/proof
-    ${opensmt_SOURCE_DIR}/src/models
-    ${opensmt_SOURCE_DIR}/src/itehandler
-    ${opensmt_SOURCE_DIR}/src/interpolation
+    ${opensmt_SOURCE_DIR}/src
     )
     #message("GMP dirs:${GMP_INCLUDE_DIR}")
-    target_include_directories(XAI-SMT PUBLIC ${GMP_INCLUDE_DIR})
+    # target_include_directories(XAI-SMT PUBLIC ${GMP_INCLUDE_DIR})
 endif()
 
-target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
 
 FetchContent_Declare(
         Marabou
@@ -87,10 +49,27 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Marabou)
 add_library(Marabou::Marabou ALIAS MarabouHelper)
 get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
-#message(STATUS "Include directories for Marabout: ${MARABOU_INCLUDE_DIRS}")
+#message(STATUS "Include directories for Marabou: ${MARABOU_INCLUDE_DIRS}")
+
+include_directories(src)
+
+add_executable(XAI-SMT
+    src/main.cpp
+    src/NNModel.cpp
+    src/NNModel.h
+    src/Verix.cpp
+    src/NNet.cpp
+    src/algorithms/BasicVerix.cpp
+    # src/algorithms/HypothesisTesting.cpp
+    src/experiments/VerixExperiments.cpp
+    # src/experiments/VerixHiddenLayerExperiments.cpp
+)
+
+target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
+
 target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
 target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
 #get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
 #message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
 
-add_subdirectory(verifiers)
+add_subdirectory(src)

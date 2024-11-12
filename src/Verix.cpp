@@ -2,7 +2,6 @@
 // Created by labbaf on 26.04.2024.
 //
 
-#include <Opensmt.h>
 #include "Verix.h"
 #include <algorithm>
 

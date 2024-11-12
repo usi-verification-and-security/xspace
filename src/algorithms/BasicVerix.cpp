@@ -1,7 +1,7 @@
 #include "BasicVerix.h"
 
-#include "experiments/Config.h"
-#include "experiments/Utils.h"
+#include <experiments/Config.h>
+#include <experiments/Utils.h>
 
 #include <cassert>
 #include <iomanip>
@@ -10,8 +10,8 @@
 #include <unordered_set>
 #include <algorithm>
 
-#include "verifiers/opensmt/OpenSMTVerifier.h"
-#include "MainSolver.h"
+#include <verifiers/opensmt/OpenSMTVerifier.h>
+#include <api/MainSolver.h>
 
 namespace xai::algo {
 

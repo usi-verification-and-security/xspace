@@ -7,7 +7,7 @@
 
 
 #include "NNModel.h"
-#include <Opensmt.h>
+#include <api/Opensmt.h>
 #include <vector>
 #include "Verifier.h"
 

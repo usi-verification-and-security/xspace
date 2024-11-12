@@ -2,7 +2,7 @@
 #include <regex>
 #include <cassert>
 
-#include "StringConv.h"
+#include <common/StringConv.h>
 
 namespace xai::experiments {
 [[nodiscard]]
