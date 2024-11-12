@@ -2,10 +2,9 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
-#include "NNModel.h"
-// #include "Verix.h"
-#include "algorithms/BasicVerix.h"
-#include "experiments/VerixExperiments.h"
+#include <nn/NNModel.h>
+#include <algorithms/BasicVerix.h>
+#include <experiments/VerixExperiments.h>
 
 using namespace xai;
 

@@ -2,7 +2,7 @@
 #define XAI_SMT_BASICVERIX_H
 
 #include <string>
-#include "Verifier.h"
+#include <verifiers/Verifier.h>
 
 namespace xai::algo {
 class BasicVerix {

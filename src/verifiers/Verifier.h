@@ -1,7 +1,7 @@
 #ifndef XAI_SMT_VERIFIER_H
 #define XAI_SMT_VERIFIER_H
 
-#include "NNet.h"
+#include <nn/NNet.h>
 
 #include <string>
 #include <vector>

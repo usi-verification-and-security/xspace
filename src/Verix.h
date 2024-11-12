@@ -6,10 +6,10 @@
 #define XAI_SMT_VERIX_H
 
 
-#include "NNModel.h"
+#include <nn/NNModel.h>
 #include <api/Opensmt.h>
 #include <vector>
-#include "Verifier.h"
+#include <verifiers/Verifier.h>
 
 class Verix {
     private:
