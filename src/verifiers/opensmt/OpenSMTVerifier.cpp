@@ -1,11 +1,11 @@
 #include "OpenSMTVerifier.h"
 
-#include "experiments/Config.h"
+#include <experiments/Config.h>
 
-#include "ArithLogic.h"
-#include "LogicFactory.h"
-#include "MainSolver.h"
-#include "StringConv.h"
+#include <logics/ArithLogic.h>
+#include <logics/LogicFactory.h>
+#include <api/MainSolver.h>
+#include <common/StringConv.h>
 
 #include <string>
 #include <unordered_map>
