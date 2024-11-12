@@ -4,10 +4,10 @@
 
 #include "VerixExperiments.h"
 #include "Utils.h"
-#include "algorithms/BasicVerix.h"
-#include "verifiers/opensmt/OpenSMTVerifier.h"
+#include <algorithms/BasicVerix.h>
+#include <verifiers/opensmt/OpenSMTVerifier.h>
 #ifdef MARABOU
-#include "verifiers/marabou/MarabouVerifier.h"
+#include <verifiers/marabou/MarabouVerifier.h>
 #endif
 
 #include <cassert>

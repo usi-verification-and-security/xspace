@@ -1,7 +1,7 @@
 #ifndef XAI_SMT_OPENSMTVERIFIER_H
 #define XAI_SMT_OPENSMTVERIFIER_H
 
-#include "Verifier.h"
+#include <verifiers/Verifier.h>
 
 namespace opensmt {
 class MainSolver;
