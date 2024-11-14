@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace xai {
+namespace xai::verifiers {
 
 using NodeIndex = std::size_t;
 using LayerIndex = std::size_t;
@@ -15,7 +15,7 @@ class Verifier {
 public:
     enum class Answer {SAT, UNSAT, UNKNOWN, ERROR};
 
-    virtual void loadModel(NNet const &) = 0;
+    virtual void loadModel(nn::NNet const &) = 0;
 
     virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) = 0;
     virtual void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) = 0;

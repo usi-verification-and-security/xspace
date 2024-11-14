@@ -55,8 +55,6 @@ include_directories(src)
 
 add_executable(XAI-SMT
     src/main.cpp
-    src/nn/NNModel.cpp
-    src/nn/NNModel.h
     src/nn/NNet.cpp
     src/algorithms/BasicVerix.cpp
     # src/algorithms/HypothesisTesting.cpp

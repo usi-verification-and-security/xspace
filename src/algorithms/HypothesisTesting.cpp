@@ -11,7 +11,7 @@ namespace xai {
 
 void hypothesisHighRisk() {
     std::string networkPath = "models/heartAttack.nnet";
-    auto network = NNet::fromFile(networkPath);
+    auto network = nn::NNet::fromFile(networkPath);
     auto input = std::vector<float>{39.0f, 0.0f, 2.0f,94.0f,199.0f,0.0f,1.0f,179.0f,0.0f,0.0f,2.0f,0.0f,2.0f};
     auto outputs = computeOutput(input, *network);
     assert(outputs.size() == 1);
@@ -51,7 +51,7 @@ void hypothesisHighRisk() {
 
 void hypothesisLowRisk() {
     std::string networkPath = "models/heartAttack.nnet";
-    auto network = NNet::fromFile(networkPath);
+    auto network = nn::NNet::fromFile(networkPath);
 //    auto input = std::vector<float>{67.0f, 1.0f, 0.0f, 120.0f, 237.0f, 0.0f, 1.0f, 71.0f, 0.0f, 1.0f, 1.0f, 0.0f, 2.0f};
     auto input = std::vector<float>{67.0f, 1.0f, 0.0f, 120.0f, 237.0f, 0.0f, 1.0f, 71.0f, 0.0f, 1.0f, 1.0f, 0.0f, 2.0f};
     auto outputs = computeOutput(input, *network);
@@ -92,7 +92,7 @@ void hypothesisLowRisk() {
 
 void hypothesisLowRiskGeneralized() {
     std::string networkPath = "models/heartAttack.nnet";
-    auto network = NNet::fromFile(networkPath);
+    auto network = nn::NNet::fromFile(networkPath);
     auto input = std::vector<float>{67.0f, 1.0f, 0.0f, 120.0f, 237.0f, 0.0f, 1.0f, 71.0f, 0.0f, 1.0f, 1.0f, 0.0f, 2.0f};
     auto outputs = computeOutput(input, *network);
     assert(outputs.size() == 1);
