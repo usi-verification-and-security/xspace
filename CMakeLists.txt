@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(XAI-SMT)
+project(XAI-SMT LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -51,15 +51,15 @@ add_library(Marabou::Marabou ALIAS MarabouHelper)
 get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
 #message(STATUS "Include directories for Marabou: ${MARABOU_INCLUDE_DIRS}")
 
-include_directories(src)
+set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
+
+include_directories(${SOURCE_DIR})
 
 add_executable(XAI-SMT
-    src/main.cpp
-    src/nn/NNet.cpp
-    src/algorithms/BasicVerix.cpp
-    # src/algorithms/HypothesisTesting.cpp
-    src/experiments/VerixExperiments.cpp
-    # src/experiments/VerixHiddenLayerExperiments.cpp
+    ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/nn/NNet.cpp
+    ${SOURCE_DIR}/algorithms/BasicVerix.cpp
+    ${SOURCE_DIR}/experiments/VerixExperiments.cpp
 )
 
 target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
@@ -69,4 +69,4 @@ target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
 #get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
 #message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
 
-add_subdirectory(src)
+add_subdirectory(${SOURCE_DIR})
