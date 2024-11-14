@@ -3,6 +3,8 @@ project(XAI-SMT LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
+option(ENABLE_MARABOU "Enable Marabou verifier" OFF)
+
 include(FetchContent)
 
 # Find OpenSMT2
@@ -39,17 +41,21 @@ if (NOT OpenSMT_FOUND)
 endif()
 
 
-FetchContent_Declare(
-        Marabou
-        GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
-        GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
-        GIT_SHALLOW true
-        GIT_PROGRESS true
-    )
-FetchContent_MakeAvailable(Marabou)
-add_library(Marabou::Marabou ALIAS MarabouHelper)
-get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
-#message(STATUS "Include directories for Marabou: ${MARABOU_INCLUDE_DIRS}")
+if (ENABLE_MARABOU)
+    FetchContent_Declare(
+            Marabou
+            GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
+            GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
+            GIT_SHALLOW true
+            GIT_PROGRESS true
+        )
+    FetchContent_MakeAvailable(Marabou)
+    add_library(Marabou::Marabou ALIAS MarabouHelper)
+    get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
+    #message(STATUS "Include directories for Marabou: ${MARABOU_INCLUDE_DIRS}")
+
+    add_definitions(-DMARABOU)
+endif()
 
 set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
 
@@ -64,9 +70,11 @@ add_executable(XAI-SMT
 
 target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
 
-target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
-target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
-#get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
-#message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
+if (ENABLE_MARABOU)
+    target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
+    target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
+    #get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
+    #message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
+endif()
 
 add_subdirectory(${SOURCE_DIR})
