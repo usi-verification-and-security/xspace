@@ -22,7 +22,7 @@ FastRational floatToRational(float value);
 
 class OpenSMTVerifier::OpenSMTImpl {
 public:
-    void loadModel(NNet const & network);
+    void loadModel(nn::NNet const & network);
 
     PTRef makeUpperBound(LayerIndex layer, NodeIndex node, float value) {
         return makeUpperBound(layer, node, floatToRational(value));
@@ -77,7 +77,7 @@ OpenSMTVerifier::OpenSMTVerifier() { pimpl = new OpenSMTImpl(); }
 
 OpenSMTVerifier::~OpenSMTVerifier() { delete pimpl; }
 
-void OpenSMTVerifier::loadModel(NNet const & network) {
+void OpenSMTVerifier::loadModel(nn::NNet const & network) {
     pimpl->loadModel(network);
 }
 
@@ -164,7 +164,7 @@ Verifier::Answer toAnswer(sstat res) {
 }
 }
 
-void OpenSMTVerifier::OpenSMTImpl::loadModel(NNet const & network) {
+void OpenSMTVerifier::OpenSMTImpl::loadModel(nn::NNet const & network) {
     resetSolver();
     // create input variables
     for (NodeIndex i = 0u; i < network.getLayerSize(0); ++i) {

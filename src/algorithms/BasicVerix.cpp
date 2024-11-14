@@ -29,7 +29,7 @@ using input_t = std::vector<float>;
  */
 
 BasicVerix::BasicVerix(std::string networkFile) {
-    network = NNet::fromFile(networkFile);
+    network = nn::NNet::fromFile(networkFile);
 }
 
 
@@ -66,7 +66,7 @@ void BasicVerix::encodeClassificationConstraint(std::vector<float> const & outpu
     if (checksCount == 0) { std::cout << std::endl; }
 }
 
-Verifier::Answer BasicVerix::check() {
+verifiers::Verifier::Answer BasicVerix::check() {
     ++checksCount;
     return verifier->check();
 }
@@ -80,7 +80,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
 
     verifier->loadModel(*network);
 
-    auto output = computeOutput(inputValues, *network);
+    auto output = nn::computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     auto inputSize = network->getLayerSize(0);
 
@@ -125,7 +125,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
 BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(const std::vector<float> &inputValues,
                                        std::vector<std::size_t> const & featureOrder, int threshold) {
     checksCount = 0;
-    auto output = computeOutput(inputValues, *network);
+    auto output = nn::computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     float freedomFactor = 1.0f;
     auto result = computeExplanation(inputValues, freedomFactor, featureOrder);
@@ -281,7 +281,7 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
 
     verifier->loadModel(*network);
 
-    auto output = computeOutput(inputValues, *network);
+    auto output = nn::computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
     auto inputSize = network->getLayerSize(0);
 

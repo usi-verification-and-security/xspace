@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace xai {
+namespace xai::nn {
 class NNet {
 public:
     using input_t = std::vector<float>;

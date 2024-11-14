@@ -15,7 +15,7 @@ public:
     OpenSMTVerifier();
     ~OpenSMTVerifier();
 
-    void loadModel(NNet const & network) override;
+    void loadModel(nn::NNet const & network) override;
 
     void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) override;
 

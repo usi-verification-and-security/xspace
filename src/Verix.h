@@ -6,7 +6,6 @@
 #define XAI_SMT_VERIX_H
 
 
-#include <nn/NNModel.h>
 #include <api/Opensmt.h>
 #include <vector>
 #include <verifiers/Verifier.h>

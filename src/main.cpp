@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <string>
 #include <sstream>
-#include <nn/NNModel.h>
 #include <algorithms/BasicVerix.h>
 #include <experiments/VerixExperiments.h>
 

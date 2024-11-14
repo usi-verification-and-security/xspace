@@ -7,6 +7,9 @@
 namespace xai::algo {
 class BasicVerix {
 public:
+    using Verifier = verifiers::Verifier;
+    using NodeIndex = verifiers::NodeIndex;
+
     struct Result {
         std::vector<NodeIndex> explanation;
     };
@@ -58,7 +61,7 @@ protected:
 
     Verifier::Answer check();
 
-    std::unique_ptr<NNet> network;
+    std::unique_ptr<nn::NNet> network;
     std::unique_ptr<Verifier> verifier;
 
     std::size_t checksCount;

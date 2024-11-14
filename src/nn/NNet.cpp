@@ -11,7 +11,7 @@
 
 namespace stdr = std::ranges;
 
-namespace xai {
+namespace xai::nn {
 
 namespace{
 std::vector<std::string> split(std::string const & s, char delimiter) {
@@ -191,4 +191,4 @@ NNet::output_t computeOutput(NNet::input_t const & inputValues, NNet const & net
     return currentLayerValues;
 }
 
-} // namespace xai
+} // namespace xai::nn
