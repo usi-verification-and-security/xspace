@@ -1,4 +1,9 @@
 target_sources(XAI-SMT PUBLIC
-    marabou/MarabouVerifier.cpp
     opensmt/OpenSMTVerifier.cpp
 )
+
+if (ENABLE_MARABOU)
+    target_sources(XAI-SMT PUBLIC
+        marabou/MarabouVerifier.cpp
+    )
+endif()

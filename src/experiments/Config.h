@@ -3,8 +3,6 @@
 
 //- #define OBESITY
 
-//- #define MARABOU
-
 namespace xai::experiments {
 struct Config {
     enum class ExplanationType { simple = 0, general, opensmt };
