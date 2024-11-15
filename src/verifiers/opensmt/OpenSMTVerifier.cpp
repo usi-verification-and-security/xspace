@@ -40,9 +40,10 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
 
-    Answer check();
+    void push();
+    void pop();
 
-    void clearAdditionalConstraints();
+    Answer check();
 
     opensmt::MainSolver & getSolver() { return *solver; }
 
@@ -105,8 +106,12 @@ Verifier::Answer OpenSMTVerifier::check() {
     return pimpl->check();
 }
 
-void OpenSMTVerifier::clearAdditionalConstraints() {
-    pimpl->clearAdditionalConstraints();
+void OpenSMTVerifier::push() {
+    pimpl->push();
+}
+
+void OpenSMTVerifier::pop() {
+    pimpl->pop();
 }
 
 opensmt::MainSolver & OpenSMTVerifier::getSolver() {
@@ -233,7 +238,6 @@ void OpenSMTVerifier::OpenSMTImpl::loadModel(nn::NNet const & network) {
         bounds.push_back(logic->mkLeq(inputVars[i], logic->mkRealConst(floatToRational(ub))));
     }
     solver->insertFormula(logic->mkAnd(bounds));
-    solver->push();
 }
 
 PTRef OpenSMTVerifier::OpenSMTImpl::makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value) {
@@ -320,9 +324,12 @@ Verifier::Answer OpenSMTVerifier::OpenSMTImpl::check() {
     return toAnswer(res);
 }
 
-void OpenSMTVerifier::OpenSMTImpl::clearAdditionalConstraints() {
-    solver->pop();
+void OpenSMTVerifier::OpenSMTImpl::push() {
     solver->push();
+}
+
+void OpenSMTVerifier::OpenSMTImpl::pop() {
+    solver->pop();
 }
 
 void OpenSMTVerifier::OpenSMTImpl::resetSolver() {

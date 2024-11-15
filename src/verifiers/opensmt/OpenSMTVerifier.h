@@ -27,9 +27,10 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
-    Answer check() override;
+    void push() override;
+    void pop() override;
 
-    void clearAdditionalConstraints() override;
+    Answer check() override;
 
     opensmt::MainSolver & getSolver();
 

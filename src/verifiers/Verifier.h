@@ -27,9 +27,10 @@ public:
 
     virtual void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) = 0;
 
-    virtual Answer check() = 0;
+    virtual void push() = 0;
+    virtual void pop() = 0;
 
-    virtual void clearAdditionalConstraints() = 0;
+    virtual Answer check() = 0;
 
     virtual ~Verifier() = default;
 };
