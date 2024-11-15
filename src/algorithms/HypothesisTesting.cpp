@@ -22,6 +22,7 @@ void hypothesisHighRisk() {
     assert(inputSize == input.size());
     auto verifier = std::make_unique<verifiers::MarabouVerifier>();
     verifier->loadModel(*network);
+    verifier->push();
 //    std::vector<NodeIndex> fixedIndices = {3,7,8,9,11};
     std::vector<NodeIndex> fixedLowerBounds = {7};
     std::vector<NodeIndex> fixedUpperBounds = {3,8,9,11};
@@ -63,6 +64,7 @@ void hypothesisLowRisk() {
     assert(inputSize == input.size());
     auto verifier = std::make_unique<verifiers::MarabouVerifier>();
     verifier->loadModel(*network);
+    verifier->push();
 //    std::vector<NodeIndex> fixedIndices = {4,7};
     std::vector<NodeIndex> fixedLowerBounds = {4};
     std::vector<NodeIndex> fixedUpperBounds = {7};
@@ -103,6 +105,7 @@ void hypothesisLowRiskGeneralized() {
     assert(inputSize == input.size());
     auto verifier = std::make_unique<verifiers::MarabouVerifier>();
     verifier->loadModel(*network);
+    verifier->push();
     using bound_t = std::pair<NodeIndex, float>;
 //    std::vector<NodeIndex> fixedLowerBounds = {4};
 //    std::vector<NodeIndex> fixedUpperBounds = {7};

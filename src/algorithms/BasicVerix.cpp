@@ -79,6 +79,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         return Result{};
 
     verifier->loadModel(*network);
+    verifier->push();
 
     auto output = nn::computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
@@ -115,7 +116,8 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
         } else {
             explanationSet.insert(nodeToConsider);
         }
-        verifier->clearAdditionalConstraints();
+        verifier->pop();
+        verifier->push();
     }
     std::vector<NodeIndex> explanation{explanationSet.begin(), explanationSet.end()};
     std::sort(explanation.begin(), explanation.end());
@@ -153,7 +155,8 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
         #endif
         auto answer = check();
         #ifdef MARABOU
-        verifier->clearAdditionalConstraints();
+        verifier->pop();
+        verifier->push();
         #endif
         return answer;
     };
@@ -205,7 +208,8 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
                     it->value = inputValue;
             }
             #ifndef MARABOU
-            verifier->clearAdditionalConstraints();
+            verifier->pop();
+            verifier->push();
             #endif
         }
 
@@ -240,7 +244,8 @@ BasicVerix::GeneralizedExplanation BasicVerix::computeGeneralizedExplanation(con
                   it->value = inputValue;
             }
             #ifndef MARABOU
-            verifier->clearAdditionalConstraints();
+            verifier->pop();
+            verifier->push();
             #endif
         }
     }

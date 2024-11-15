@@ -18,7 +18,8 @@ public:
 
     std::unique_ptr<InputQuery> buildQuery() const;
 
-    void clearAdditionalConstraints();
+    void push();
+    void pop();
 
     void setLowerBound(LayerIndex layerNum, NodeIndex nodeIndex, float);
     void setUpperBound(LayerIndex layerNum, NodeIndex nodeIndex, float);
@@ -65,9 +66,10 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
 
-    Answer check();
+    void push();
+    void pop();
 
-    void clearAdditionalConstraints();
+    Answer check();
 
 private:
     std::unique_ptr<QueryIncrementalWrapper> queryWrapper;
@@ -97,12 +99,16 @@ void MarabouVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<Node
     pimpl->addConstraint(layer, lhs, rhs);
 }
 
-Verifier::Answer MarabouVerifier::check() {
-    return pimpl->check();
+void MarabouVerifier::push() {
+    pimpl->push();
 }
 
-void MarabouVerifier::clearAdditionalConstraints() {
-    pimpl->clearAdditionalConstraints();
+void MarabouVerifier::pop() {
+    pimpl->pop();
+}
+
+Verifier::Answer MarabouVerifier::check() {
+    return pimpl->check();
 }
 
 /*
@@ -290,7 +296,9 @@ std::unique_ptr<InputQuery> QueryIncrementalWrapper::buildQuery() const {
     return query;
 }
 
-void QueryIncrementalWrapper::clearAdditionalConstraints() {
+void QueryIncrementalWrapper::push() {}
+
+void QueryIncrementalWrapper::pop() {
     extraEquations.clear();
     lowerBounds.clear();
     upperBounds.clear();
@@ -306,8 +314,12 @@ void MarabouVerifier::MarabouImpl::loadModel(const nn::NNet & network) {
     queryWrapper = QueryIncrementalWrapper::fromNNet(network);
 }
 
-void MarabouVerifier::MarabouImpl::clearAdditionalConstraints() {
-    queryWrapper->clearAdditionalConstraints();
+void MarabouVerifier::MarabouImpl::push() {
+    queryWrapper->push();
+}
+
+void MarabouVerifier::MarabouImpl::pop() {
+    queryWrapper->pop();
 }
 
 namespace{
