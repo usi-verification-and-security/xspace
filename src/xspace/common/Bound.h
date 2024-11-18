@@ -19,12 +19,18 @@ public:
     struct LtEqTag {};
     struct GtEqTag {};
 
+    using LowerTag = GtEqTag;
+    using UpperTag = LtEqTag;
+
     struct PrintConfig {
         bool reverse = false;
     };
 
+    static constexpr Type lowerType = Type::gteq;
+    static constexpr Type upperType = Type::lteq;
+
     // Run-time type
-    explicit Bound(Type type, Float val)
+    explicit Bound(Type const & type, Float val)
         : Bound(type == Type::eq     ? Bound(EqTag{}, val)
                 : type == Type::lteq ? Bound(LtEqTag{}, val)
                                      : Bound(GtEqTag{}, val)) {}
