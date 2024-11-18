@@ -87,11 +87,11 @@ void MarabouVerifier::loadModel(nn::NNet const & network) {
     pimpl->loadModel(network);
 }
 
-void MarabouVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value, bool /*namedTerm*/) {
+void MarabouVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value, bool /*explanationTerm*/) {
     pimpl->addUpperBound(layer, var, value);
 }
 
-void MarabouVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value, bool /*namedTerm*/) {
+void MarabouVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value, bool /*explanationTerm*/) {
     pimpl->addLowerBound(layer, var, value);
 }
 

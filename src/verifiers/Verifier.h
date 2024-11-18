@@ -17,11 +17,11 @@ public:
 
     virtual void loadModel(nn::NNet const &) = 0;
 
-    virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) = 0;
-    virtual void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) = 0;
-    virtual void addEquality(LayerIndex layer, NodeIndex var, float value, bool namedTerm = false) {
-        addUpperBound(layer, var, value, namedTerm);
-        addLowerBound(layer, var, value, namedTerm);
+    virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) = 0;
+    virtual void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) = 0;
+    virtual void addEquality(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) {
+        addUpperBound(layer, var, value, explanationTerm);
+        addLowerBound(layer, var, value, explanationTerm);
     }
     virtual void addClassificationConstraint(NodeIndex node, float threshold) = 0;
 
