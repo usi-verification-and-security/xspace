@@ -26,10 +26,18 @@ public:
 
     AllVarBounds const & getAllVarBounds() const { return allVarBounds; }
 
+    std::size_t getIdx(std::optional<VarBound> const & elem) const {
+        return &elem - allVarBounds.data();
+    }
+
     std::optional<VarBound> const & tryGetVarBound(VarIdx idx) const {
         assert(idx < allVarBounds.size());
         return allVarBounds[idx];
     }
+
+    void clear();
+
+    void swap(IntervalExplanation &);
 
     void insertBound(VarIdx, Bound);
 

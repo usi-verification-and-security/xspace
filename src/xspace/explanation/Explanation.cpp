@@ -10,6 +10,18 @@ VarBound IntervalExplanation::makeVarBound(VarIdx idx, Bound bnd) const {
     return VarBound{name, std::move(bnd)};
 }
 
+void IntervalExplanation::clear() {
+    for (auto & optVarBnd : allVarBounds) {
+        optVarBnd.reset();
+    }
+    varIdxToVarBoundMap.clear();
+}
+
+void IntervalExplanation::swap(IntervalExplanation & rhs) {
+    allVarBounds.swap(rhs.allVarBounds);
+    varIdxToVarBoundMap.swap(rhs.varIdxToVarBoundMap);
+}
+
 void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
     assert(not allVarBounds.empty());
     assert(allVarBounds.size() == framework.varSize());
