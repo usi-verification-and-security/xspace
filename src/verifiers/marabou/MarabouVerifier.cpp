@@ -71,7 +71,11 @@ public:
 
     Answer check();
 
+    void reset();
+
 private:
+    nn::NNet const * networkPtr{};
+
     std::unique_ptr<QueryIncrementalWrapper> queryWrapper;
 };
 
@@ -109,6 +113,10 @@ void MarabouVerifier::pop() {
 
 Verifier::Answer MarabouVerifier::check() {
     return pimpl->check();
+}
+
+void MarabouVerifier::reset() {
+    pimpl->reset();
 }
 
 /*
@@ -312,6 +320,7 @@ MarabouVerifier::MarabouImpl::MarabouImpl() {
 
 void MarabouVerifier::MarabouImpl::loadModel(const nn::NNet & network) {
     queryWrapper = QueryIncrementalWrapper::fromNNet(network);
+    networkPtr = &network;
 }
 
 void MarabouVerifier::MarabouImpl::push() {
@@ -320,6 +329,11 @@ void MarabouVerifier::MarabouImpl::push() {
 
 void MarabouVerifier::MarabouImpl::pop() {
     queryWrapper->pop();
+}
+
+void MarabouVerifier::MarabouImpl::reset() {
+    assert(networkPtr);
+    loadModel(*networkPtr);
 }
 
 namespace{

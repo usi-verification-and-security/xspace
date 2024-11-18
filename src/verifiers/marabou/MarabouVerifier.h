@@ -26,6 +26,8 @@ public:
 
     Answer check() override;
 
+    void reset() override;
+
 private:
     class MarabouImpl;
     MarabouImpl * pimpl;

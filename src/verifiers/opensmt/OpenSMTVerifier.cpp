@@ -45,6 +45,9 @@ public:
 
     Answer check();
 
+    void resetSample();
+    void reset();
+
     opensmt::MainSolver & getSolver() { return *solver; }
 
     bool containsInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.contains(term); }
@@ -102,16 +105,24 @@ void OpenSMTVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<Node
     pimpl->addConstraint(layer, lhs, rhs);
 }
 
-Verifier::Answer OpenSMTVerifier::check() {
-    return pimpl->check();
-}
-
 void OpenSMTVerifier::push() {
     pimpl->push();
 }
 
 void OpenSMTVerifier::pop() {
     pimpl->pop();
+}
+
+Verifier::Answer OpenSMTVerifier::check() {
+    return pimpl->check();
+}
+
+void OpenSMTVerifier::resetSample() {
+    pimpl->resetSample();
+}
+
+void OpenSMTVerifier::reset() {
+    pimpl->reset();
 }
 
 opensmt::MainSolver & OpenSMTVerifier::getSolver() {
@@ -319,17 +330,27 @@ OpenSMTVerifier::OpenSMTImpl::addConstraint(LayerIndex layer, std::vector<std::p
     throw std::logic_error("Unimplemented!");
 }
 
-Verifier::Answer OpenSMTVerifier::OpenSMTImpl::check() {
-    auto res = solver->check();
-    return toAnswer(res);
-}
-
 void OpenSMTVerifier::OpenSMTImpl::push() {
     solver->push();
 }
 
 void OpenSMTVerifier::OpenSMTImpl::pop() {
     solver->pop();
+}
+
+Verifier::Answer OpenSMTVerifier::OpenSMTImpl::check() {
+    auto res = solver->check();
+    return toAnswer(res);
+}
+
+void OpenSMTVerifier::OpenSMTImpl::resetSample() {
+    inputVarLowerBoundToIndex.clear();
+    inputVarUpperBoundToIndex.clear();
+    inputVarEqualityToIndex.clear();
+}
+
+void OpenSMTVerifier::OpenSMTImpl::reset() {
+    resetSolver();
 }
 
 void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
@@ -349,9 +370,8 @@ void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
     solver = std::make_unique<MainSolver>(*logic, *config, "verifier");
     inputVars.clear();
     outputVars.clear();
-    inputVarLowerBoundToIndex.clear();
-    inputVarUpperBoundToIndex.clear();
-    inputVarEqualityToIndex.clear();
+
+    resetSample();
 }
 
 } // namespace xai::verifiers
