@@ -43,7 +43,10 @@ public:
 
     bool eraseVarBound(VarIdx);
 
-    Float relativeVolume() const { return computeRelativeVolume(); }
+    std::size_t getFixedCount() const { return computeFixedCount(); }
+
+    Float getRelativeVolume() const { return computeRelativeVolumeTp<false>(); }
+    Float getRelativeVolumeSkipFixed() const { return computeRelativeVolumeTp<true>(); }
 
     void print(std::ostream &) const;
 
@@ -54,13 +57,19 @@ protected:
 
     Interval varBoundToInterval(VarIdx, VarBound const &) const;
 
-    Float computeRelativeVolume() const;
+    std::size_t computeFixedCount() const;
+
+    template <bool skipFixed>
+    Float computeRelativeVolumeTp() const;
 
     Framework const & framework;
 
     AllVarBounds allVarBounds;
     VarIdxToVarBoundMap varIdxToVarBoundMap{};
 };
+
+extern template Float IntervalExplanation::computeRelativeVolumeTp<false>() const;
+extern template Float IntervalExplanation::computeRelativeVolumeTp<true>() const;
 } // namespace xspace
 
 #endif // XSPACE_EXPLANATION_H

@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <sstream>
@@ -66,6 +67,7 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
     assertModel();
 
     bool const verbose = framework.getConfig().isVerbose();
+    auto const defaultPrecision = std::cout.precision();
 
     std::size_t const size = explanations.size();
     assert(outputs.size() == size);
@@ -86,7 +88,8 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
         if (not verbose) { continue; }
 
         std::size_t const varSize = framework.varSize();
-        assert(explanation.size() <= varSize);
+        std::size_t const expSize = explanation.size();
+        assert(expSize <= varSize);
 
         auto const & samples = data.getSamples();
         auto const & expOutputs = data.getOutputs();
@@ -95,10 +98,25 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
         auto const & sample = samples[i];
         auto const & expOutput = expOutputs[i];
 
+        std::size_t const fixedCount = explanation.getFixedCount();
+        assert(fixedCount <= expSize);
+
         std::cout << "sample: " << sample << '\n';
         std::cout << "expected output: " << expOutput << '\n';
         std::cout << "computed output: " << output.classifiedIdx << '\n';
-        std::cout << "explanation size: " << explanation.size() << '/' << varSize << std::endl;
+        std::cout << "explanation size: " << expSize << '/' << varSize << std::endl;
+
+        assert(explanation.getRelativeVolumeSkipFixed() > 0);
+        assert(explanation.getRelativeVolumeSkipFixed() <= 1);
+        assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expSize));
+        if (fixedCount < expSize) {
+            Float const relVolume = explanation.getRelativeVolumeSkipFixed();
+
+            std::cout << "fixed features: " << fixedCount << '/' << varSize << std::endl;
+            std::cout << "relVolume*: " << std::setprecision(1) << (relVolume * 100) << "%"
+                      << std::setprecision(defaultPrecision) << std::endl;
+        }
+
         std::cerr << explanation << std::endl;
     }
 }

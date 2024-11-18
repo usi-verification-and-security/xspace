@@ -2,6 +2,8 @@
 
 #include <xspace/framework/Framework.h>
 
+#include <algorithm>
+
 namespace xspace {
 IntervalExplanation::IntervalExplanation(Framework const & fw) : framework{fw}, allVarBounds(fw.varSize()) {}
 
@@ -102,7 +104,15 @@ Interval IntervalExplanation::varBoundToInterval(VarIdx idx, VarBound const & va
     return ival;
 }
 
-Float IntervalExplanation::computeRelativeVolume() const {
+std::size_t IntervalExplanation::computeFixedCount() const {
+    return std::ranges::count_if(*this, [](auto const & pair) {
+        auto & varBnd = pair.second;
+        return varBnd.isPoint();
+    });
+}
+
+template <bool skipFixed>
+Float IntervalExplanation::computeRelativeVolumeTp() const {
     auto & network = framework.getNetwork();
 
     Float relVolume = 1;
@@ -110,7 +120,10 @@ Float IntervalExplanation::computeRelativeVolume() const {
         Interval ival = varBoundToInterval(idx, varBnd);
         Float const size = ival.size();
         assert(size >= 0);
-        if (size == 0) { return 0; }
+        if (size == 0) {
+            if constexpr (skipFixed) { continue; }
+            else { return 0; }
+        }
 
         Float const domainSize = network.getInputUpperBound(idx) - network.getInputLowerBound(idx);
         assert(domainSize > 0);
@@ -123,6 +136,9 @@ Float IntervalExplanation::computeRelativeVolume() const {
     assert(relVolume <= 1);
     return relVolume;
 }
+
+template Float IntervalExplanation::computeRelativeVolumeTp<false>() const;
+template Float IntervalExplanation::computeRelativeVolumeTp<true>() const;
 
 void IntervalExplanation::print(std::ostream & os) const {
     for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
