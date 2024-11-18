@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <algorithm>
 
+#include <verifiers/UnsatCoreVerifier.h>
 #include <verifiers/opensmt/OpenSMTVerifier.h>
 #include <api/MainSolver.h>
 
@@ -336,9 +337,9 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     auto answer = check();
     assert(answer == Verifier::Answer::UNSAT);
 
-    auto unsatCore = solver.getUnsatCore();
-
     if constexpr (Config::interpolation) {
+        auto const unsatCore = solver.getUnsatCore();
+
         solver.pop();
 
         auto const firstIdx = solver.getInsertedFormulasCount();
@@ -362,67 +363,49 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
         PTRef itp = itps[0];
 
         std::cerr << solver.getLogic().printTerm(itp) << std::endl << std::endl;
-    } else {
-        auto & logic = solver.getLogic();
-        PTRef ucore = logic.mkAnd(unsatCore->getTerms());
-        std::cerr << logic.printTerm(ucore) << std::endl << std::endl;
+
+        return {};
     }
+
+    assert(dynamic_cast<verifiers::UnsatCoreVerifier *>(verifier.get()));
+    auto & ucoreVerifier = static_cast<verifiers::UnsatCoreVerifier &>(*verifier);
+
+    verifiers::UnsatCore unsatCore = ucoreVerifier.getUnsatCore();
 
     // to get the whole query:
     // solver.printCurrentAssertionsAsQuery();
 
-    if constexpr (Config::samplesOnly) {
-        std::vector<NodeIndex> explanation;
-        for (PTRef term : unsatCore->getTerms()) {
-            assert(openSMT.containsInputEquality(term));
-            explanation.push_back(openSMT.nodeIndexOfInputEquality(term));
-        }
+    {
+        auto & logic = solver.getLogic();
+        // !! build it for the second time
+        PTRef ucore = logic.mkAnd(solver.getUnsatCore()->getTerms());
+        std::cerr << logic.printTerm(ucore) << std::endl << std::endl;
+    }
 
-        std::sort(explanation.begin(), explanation.end());
+    if constexpr (Config::samplesOnly) {
+        assert(unsatCore.lowerBounds.empty());
+        assert(unsatCore.upperBounds.empty());
+        std::vector<NodeIndex> explanation = std::move(unsatCore.equalities);
+        assert(std::ranges::is_sorted(explanation));
         return Result{.explanation = std::move(explanation)};
     }
 
-    std::vector<NodeIndex> explanationLower;
-    std::vector<NodeIndex> explanationUpper;
+    assert(unsatCore.equalities.empty());
+
     std::unordered_set<NodeIndex> explanationLowerSet;
     std::unordered_set<NodeIndex> explanationUpperSet;
-    auto insertCoreTerm = [&](auto isLower, PTRef term){
-        NodeIndex node = [&]{
-            if constexpr (isLower) { return openSMT.nodeIndexOfInputLowerBound(term); }
-            else { return openSMT.nodeIndexOfInputUpperBound(term); }
-        }();
-        auto & boundExplanation = [&]() -> auto & {
-            if constexpr (isLower) { return explanationLower; }
-            else { return explanationUpper; }
-        }();
-        auto & boundExplanationSet = [&]() -> auto & {
-            if constexpr (isLower) { return explanationLowerSet; }
-            else { return explanationUpperSet; }
-        }();
-        boundExplanation.push_back(node);
-        auto const [_, inserted] = boundExplanationSet.insert(node);
-        assert(inserted);
-    };
-    for (PTRef term : unsatCore->getTerms()) {
-        bool const containsLower = openSMT.containsInputLowerBound(term);
-        if (containsLower) {
-            insertCoreTerm(std::true_type(), term);
-            continue;
-        }
-        bool const containsUpper = openSMT.containsInputUpperBound(term);
-        if (containsUpper) {
-            insertCoreTerm(std::false_type(), term);
-            continue;
-        }
+    for (NodeIndex node : unsatCore.lowerBounds) { explanationLowerSet.insert(node); }
+    for (NodeIndex node : unsatCore.upperBounds) { explanationUpperSet.insert(node); }
+    std::vector<NodeIndex> explanationLower = std::move(unsatCore.lowerBounds);
+    std::vector<NodeIndex> explanationUpper = std::move(unsatCore.upperBounds);
 
-        assert(false);
-    }
-
+    std::vector<NodeIndex> addExplanationLower;
+    std::vector<NodeIndex> addExplanationUpper;
     double relVolume = 1;
     auto processCoreTerm = [&](auto isLower, NodeIndex node){
         auto & otherBoundExplanation = [&]() -> auto & {
-            if constexpr (isLower) { return explanationUpper; }
-            else { return explanationLower; }
+            if constexpr (isLower) { return addExplanationUpper; }
+            else { return addExplanationLower; }
         }();
         auto & otherBoundExplanationSet = [&]() -> auto & {
             if constexpr (isLower) { return explanationUpperSet; }
@@ -452,19 +435,26 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
 
         relVolume *= boundedSize/size;
     };
-    std::for_each(explanationLower.begin(), explanationLower.end(), [&](NodeIndex node){ processCoreTerm(std::true_type(), node); });
-    std::for_each(explanationUpper.begin(), explanationUpper.end(), [&](NodeIndex node){ processCoreTerm(std::false_type(), node); });
+    std::ranges::for_each(explanationLower, [&](NodeIndex node){ processCoreTerm(std::true_type(), node); });
+    std::ranges::for_each(explanationUpper, [&](NodeIndex node){ processCoreTerm(std::false_type(), node); });
 
-    std::sort(explanationLower.begin(), explanationLower.end());
-    std::sort(explanationUpper.begin(), explanationUpper.end());
+    assert(std::ranges::is_sorted(explanationLower));
+    assert(std::ranges::is_sorted(explanationUpper));
+    assert(std::ranges::is_sorted(addExplanationLower));
+    assert(std::ranges::is_sorted(addExplanationUpper));
+    std::vector<NodeIndex> auxExplanationLower;
+    std::vector<NodeIndex> auxExplanationUpper;
+    std::ranges::merge(explanationLower, addExplanationLower, std::back_inserter(auxExplanationLower));
+    std::ranges::merge(explanationUpper, addExplanationUpper, std::back_inserter(auxExplanationUpper));
+    assert(std::ranges::is_sorted(auxExplanationLower));
+    assert(std::ranges::is_sorted(auxExplanationUpper));
+    explanationLower = std::move(auxExplanationLower);
+    explanationUpper = std::move(auxExplanationUpper);
+
     std::vector<NodeIndex> explanationEqual;
-    std::set_intersection(explanationLower.begin(), explanationLower.end(),
-                          explanationUpper.begin(), explanationUpper.end(),
-                          std::inserter(explanationEqual, explanationEqual.begin()));
+    std::ranges::set_intersection(explanationLower, explanationUpper, std::back_inserter(explanationEqual));
     std::vector<NodeIndex> explanation;
-    std::set_union(explanationLower.begin(), explanationLower.end(),
-                   explanationUpper.begin(), explanationUpper.end(),
-                   std::inserter(explanation, explanation.begin()));
+    std::ranges::set_union(explanationLower, explanationUpper, std::back_inserter(explanation));
 
     auto const defaultPrecision = std::cout.precision();
     std::cout << "fixed features: " << explanationEqual.size() << "/" << inputSize << std::endl;

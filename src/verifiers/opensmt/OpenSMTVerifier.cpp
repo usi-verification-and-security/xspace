@@ -7,6 +7,7 @@
 #include <api/MainSolver.h>
 #include <common/StringConv.h>
 
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 
@@ -33,9 +34,9 @@ public:
     PTRef makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value);
     PTRef makeLowerBound(LayerIndex layer, NodeIndex node, FastRational value);
 
-    PTRef addUpperBound(LayerIndex layer, NodeIndex node, float value, bool namedTerm = false);
-    PTRef addLowerBound(LayerIndex layer, NodeIndex node, float value, bool namedTerm = false);
-    void addEquality(LayerIndex layer, NodeIndex node, float value, bool namedTerm = false);
+    PTRef addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
+    PTRef addLowerBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
+    void addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
     void addClassificationConstraint(NodeIndex node, float threshold);
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
@@ -48,14 +49,9 @@ public:
     void resetSample();
     void reset();
 
-    opensmt::MainSolver & getSolver() { return *solver; }
+    UnsatCore getUnsatCore() const;
 
-    bool containsInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.contains(term); }
-    bool containsInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.contains(term); }
-    bool containsInputEquality(PTRef term) const { return inputVarEqualityToIndex.contains(term); }
-    NodeIndex nodeIndexOfInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.at(term); }
-    NodeIndex nodeIndexOfInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.at(term); }
-    NodeIndex nodeIndexOfInputEquality(PTRef term) const { return inputVarEqualityToIndex.at(term); }
+    opensmt::MainSolver & getSolver() { return *solver; }
 
 private:
     void resetSolver();
@@ -64,6 +60,13 @@ private:
         assert(layer == 0);
         return prefix + "n" + std::to_string(node);
     }
+
+    bool containsInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.contains(term); }
+    bool containsInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.contains(term); }
+    bool containsInputEquality(PTRef term) const { return inputVarEqualityToIndex.contains(term); }
+    NodeIndex nodeIndexOfInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.at(term); }
+    NodeIndex nodeIndexOfInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.at(term); }
+    NodeIndex nodeIndexOfInputEquality(PTRef term) const { return inputVarEqualityToIndex.at(term); }
 
     std::unique_ptr<ArithLogic> logic;
     std::unique_ptr<MainSolver> solver;
@@ -85,16 +88,16 @@ void OpenSMTVerifier::loadModel(nn::NNet const & network) {
     pimpl->loadModel(network);
 }
 
-void OpenSMTVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm) {
-    pimpl->addUpperBound(layer, var, value, namedTerm);
+void OpenSMTVerifier::addUpperBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm) {
+    pimpl->addUpperBound(layer, var, value, explanationTerm);
 }
 
-void OpenSMTVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value, bool namedTerm) {
-    pimpl->addLowerBound(layer, var, value, namedTerm);
+void OpenSMTVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm) {
+    pimpl->addLowerBound(layer, var, value, explanationTerm);
 }
 
-void OpenSMTVerifier::addEquality(LayerIndex layer, NodeIndex var, float value, bool namedTerm) {
-    pimpl->addEquality(layer, var, value, namedTerm);
+void OpenSMTVerifier::addEquality(LayerIndex layer, NodeIndex var, float value, bool explanationTerm) {
+    pimpl->addEquality(layer, var, value, explanationTerm);
 }
 
 void OpenSMTVerifier::addClassificationConstraint(NodeIndex node, float threshold=0) {
@@ -125,34 +128,13 @@ void OpenSMTVerifier::reset() {
     pimpl->reset();
 }
 
+UnsatCore OpenSMTVerifier::getUnsatCore() const {
+    return pimpl->getUnsatCore();
+}
+
 opensmt::MainSolver & OpenSMTVerifier::getSolver() {
     return pimpl->getSolver();
 }
-
-bool OpenSMTVerifier::containsInputLowerBound(opensmt::PTRef const & term) const {
-    return pimpl->containsInputLowerBound(term);
-}
-
-bool OpenSMTVerifier::containsInputUpperBound(opensmt::PTRef const & term) const {
-    return pimpl->containsInputUpperBound(term);
-}
-
-bool OpenSMTVerifier::containsInputEquality(opensmt::PTRef const & term) const {
-    return pimpl->containsInputEquality(term);
-}
-
-NodeIndex OpenSMTVerifier::nodeIndexOfInputLowerBound(opensmt::PTRef const & term) const {
-    return pimpl->nodeIndexOfInputLowerBound(term);
-}
-
-NodeIndex OpenSMTVerifier::nodeIndexOfInputUpperBound(opensmt::PTRef const & term) const {
-    return pimpl->nodeIndexOfInputUpperBound(term);
-}
-
-NodeIndex OpenSMTVerifier::nodeIndexOfInputEquality(opensmt::PTRef const & term) const {
-    return pimpl->nodeIndexOfInputEquality(term);
-}
-
 /*
  * Actual implementation
  */
@@ -265,10 +247,10 @@ PTRef OpenSMTVerifier::OpenSMTImpl::makeLowerBound(LayerIndex layer, NodeIndex n
     return logic->mkGeq(var, logic->mkRealConst(value));
 }
 
-PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value, bool namedTerm) {
+PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeUpperBound(layer, node, value);
     solver->insertFormula(term);
-    if (not namedTerm) { return term; }
+    if (not explanationTerm) { return term; }
 
     solver->getTermNames().insert(makeTermName(layer, node, "u_"), term);
     auto const [_, inserted] = inputVarUpperBoundToIndex.emplace(term, node);
@@ -276,10 +258,10 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex no
     return term;
 }
 
-PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex node, float value, bool namedTerm) {
+PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeLowerBound(layer, node, value);
     solver->insertFormula(term);
-    if (not namedTerm) { return term; }
+    if (not explanationTerm) { return term; }
 
     solver->getTermNames().insert(makeTermName(layer, node, "l_"), term);
     auto const [_, inserted] = inputVarLowerBoundToIndex.emplace(term, node);
@@ -287,13 +269,13 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex no
     return term;
 }
 
-void OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value, bool namedTerm) {
+void OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     FastRational rat = floatToRational(value);
     PTRef lterm = makeLowerBound(layer, node, rat);
     PTRef uterm = makeUpperBound(layer, node, std::move(rat));
     PTRef term = logic->mkAnd(lterm, uterm);
     solver->insertFormula(term);
-    if (not namedTerm) { return; }
+    if (not explanationTerm) { return; }
 
     solver->getTermNames().insert(makeTermName(layer, node, "e_"), term);
     auto const [_, inserted] = inputVarEqualityToIndex.emplace(term, node);
@@ -372,6 +354,35 @@ void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
     outputVars.clear();
 
     resetSample();
+}
+
+UnsatCore OpenSMTVerifier::OpenSMTImpl::getUnsatCore() const {
+    auto const unsatCore = solver->getUnsatCore();
+
+    UnsatCore unsatCoreRes;
+
+    for (PTRef term : unsatCore->getTerms()) {
+        bool const containsEquality = containsInputEquality(term);
+        if (containsEquality) {
+            unsatCoreRes.equalities.push_back(nodeIndexOfInputEquality(term));
+            continue;
+        }
+
+        bool const containsLower = containsInputLowerBound(term);
+        if (containsLower) {
+            unsatCoreRes.lowerBounds.push_back(nodeIndexOfInputLowerBound(term));
+            continue;
+        }
+
+        assert(containsInputUpperBound(term));
+        unsatCoreRes.upperBounds.push_back(nodeIndexOfInputUpperBound(term));
+    }
+
+    std::ranges::sort(unsatCoreRes.equalities);
+    std::ranges::sort(unsatCoreRes.lowerBounds);
+    std::ranges::sort(unsatCoreRes.upperBounds);
+
+    return unsatCoreRes;
 }
 
 } // namespace xai::verifiers
