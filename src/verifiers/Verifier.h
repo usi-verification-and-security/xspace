@@ -32,6 +32,9 @@ public:
 
     virtual Answer check() = 0;
 
+    virtual void resetSample() { reset(); }
+    virtual void reset() = 0;
+
     virtual ~Verifier() = default;
 };
 }

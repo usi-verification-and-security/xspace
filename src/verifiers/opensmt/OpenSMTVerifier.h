@@ -32,6 +32,9 @@ public:
 
     Answer check() override;
 
+    void resetSample() override;
+    void reset() override;
+
     opensmt::MainSolver & getSolver();
 
     bool containsInputLowerBound(opensmt::PTRef const & term) const;
