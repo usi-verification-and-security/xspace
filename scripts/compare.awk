@@ -21,44 +21,99 @@ function compare(f1, f2, i) {
 }
 
 FNR == 1 {
-    cnt = idx
+    if (incremented == 0) {
+        idx++
+    }
+
+    cnt = idx-1
     idx = 1
     fidx++
+    incremented = 0
 }
 
 /fixed features:/ {
     split($NF, nums, "/")
+    assert(fix_sizes[fidx, idx] == "", "fix_sizes["fidx", "idx"]  ==  '': " fix_sizes[fidx, idx])
     fix_sizes[fidx, idx] = nums[1]
 
-    sizes[fidx, idx] = nums[2]
-    if (idx == 1) extended[fidx] = 1
+    if (idx == 1) {
+        if (first_is_size[fidx] == "") {
+            first_is_fixed[fidx] = 1
+        }
+    }
+
+    if (first_is_fixed[fidx]) {
+        sizes[fidx, idx] = nums[2]
+    } else {
+        assert(sizes[fidx, idx] == nums[2], "sizes["fidx", "idx"]  ==  nums[2]: " sizes[fidx, idx] " == " nums[2])
+    }
 }
 
 /relVolume\*:/ {
     split($NF, nums, "%")
+    assert(volumes[fidx, idx] == "", "volumes["fidx", "idx"]  ==  '': " volumes[fidx, idx])
     volumes[fidx, idx] = nums[1]
+
+    if (first_is_fixed[fidx]) {
+    } else {
+        idx++
+        incremented = 1
+    }
 }
 
 /size:/ {
-    split($NF, nums, "/")
-    exp_sizes[fidx, idx] = nums[1]
-
-    if (extended[fidx] == 1) {
-        assert(sizes[fidx, idx] == nums[2], "sizes[fidx, idx]  ==  nums[2]: " sizes[fidx, idx] " == " nums[2])
-    } else {
-        fix_sizes[fidx, idx] = nums[1]
-        sizes[fidx, idx] = nums[2]
-        volumes[fidx, idx] = 100
+    if (first_is_fixed[fidx]) {
+    ## this discards the very first encounter
+    } else if (first_is_size[fidx]) {
+        if (!incremented) {
+            idx++
+        }
+        incremented = 0
     }
 
-    idx++
+    split($NF, nums, "/")
+    assert(exp_sizes[fidx, idx] == "", "exp_sizes["fidx", "idx"]  ==  '': " exp_sizes[fidx, idx])
+    exp_sizes[fidx, idx] = nums[1]
+
+    if (idx == 1) {
+        if (first_is_fixed[fidx] == "") {
+            first_is_size[fidx] = 1
+        }
+    }
+
+    if (first_is_fixed[fidx]) {
+        if (sizes[fidx, idx] == "") {
+            sizes[fidx, idx] = nums[2]
+        } else {
+            assert(sizes[fidx, idx] == nums[2], "sizes["fidx", "idx"]  ==  nums[2]: " sizes[fidx, idx] " == " nums[2])
+        }
+        idx++
+        incremented = 1
+    } else {
+        sizes[fidx, idx] = nums[2]
+    }
 }
 
 END {
     if (_assert_exit)
         exit 1
 
-    assert(idx == cnt, "idx == cnt: " idx " == " cnt)
+    if (incremented == 0) {
+        idx++
+    }
+
+    print(cnt)
+    assert(idx-1 == cnt, "idx-1 == cnt: " idx-1 " == " cnt)
+
+    for (f = 1; f <= fidx; f++) {
+        for (i = 1; i <= cnt; i++) {
+            assert(sizes[f, i] > 0, "sizes["f", "i"]  >  0: " sizes[f, i])
+            assert(exp_sizes[f, i] != "", "exp_sizes[f, i]  !=  '': " exp_sizes[f, i])
+            if (fix_sizes[f, i] == "") fix_sizes[f, i] = exp_sizes[f, i]
+            if (volumes[f, i] == "") volumes[f, i] = 100
+        }
+    }
+
     for (f = 1; f < fidx; f++) {
         for (i = 1; i <= cnt; i++) {
             # printf("exp_size: %d vs. %d\n", exp_sizes[f, i], exp_sizes[f+1, i])
@@ -86,5 +141,8 @@ END {
 
         printf("<: %d =: %d >: %d\n", lts[f], eqs[f], gts[f])
         printf("<<: %d <: %d =: %d >: %d >>:%d\n", lts2[f], lts1[f], eqs[f], gts1[f], gts2[f])
+
+        assert(lts[f] + gts[f] + eqs[f] == cnt, "lts["f"] + gts["f"] + eqs["f"] == "cnt)
+        assert(lts2[f] + lts1[f] + gts1[f] + gts2[f] + eqs[f] == cnt, "lts2["f"] + lts1["f"] + gts1["f"] + gts2["f"] + eqs["f"] == "cnt)
     }
 }
