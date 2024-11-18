@@ -8,36 +8,36 @@ function assert(condition, string) {
     }
 }
 
-/^-> expected output:/ {
-   expected = $4
+/expected output:/ {
+   expected = $NF
 }
 
-/^computed output:/ {
-   computed = $3
+/computed output:/ {
+   computed = $NF
    assert(expected != "" && computed != "")
    total_cnt++
    if (computed == expected) correct_cnt++
 }
 
-/^size:/ {
-   split($2, nums, "/")
+/size:/ {
+   split($NF, nums, "/")
    sum_size += nums[1]
    div_sum_size += nums[2]
 }
 
-/^fixed features:/ {
-   split($3, nums, "/")
+/fixed features:/ {
+   split($NF, nums, "/")
    sum_fixed += nums[1]
    div_sum_fixed += nums[2]
 }
 
-/^#checks:/ {
-   sum_checks += $2
+/#checks:/ {
+   sum_checks += $NF
    cnt_checks++
 }
 
-/^relVolume\*:/ {
-   split($2, nums, "%")
+/relVolume\*:/ {
+   split($NF, nums, "%")
    sum_volume += nums[1]
    cnt_volume++
 }
@@ -51,5 +51,5 @@ END {
    if (div_sum_fixed > 0) printf("avg #fixed features: %.1f%%\n", (sum_fixed/div_sum_fixed)*100)
    else printf("avg #fixed features: %.1f%%\n", (sum_size/div_sum_size)*100)
    if (cnt_volume > 0) printf("avg volume: %.2f%%\n", sum_volume/cnt_volume)
-   printf("avg #checks: %.1f\n", (sum_checks/cnt_checks))
+   if (cnt_checks > 0) printf("avg #checks: %.1f\n", (sum_checks/cnt_checks))
 }

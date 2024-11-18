@@ -26,21 +26,21 @@ FNR == 1 {
     fidx++
 }
 
-/^fixed features:/ {
-    split($3, nums, "/")
+/fixed features:/ {
+    split($NF, nums, "/")
     fix_sizes[fidx, idx] = nums[1]
 
     sizes[fidx, idx] = nums[2]
     if (idx == 1) extended[fidx] = 1
 }
 
-/^relVolume\*:/ {
-    split($2, nums, "%")
+/relVolume\*:/ {
+    split($NF, nums, "%")
     volumes[fidx, idx] = nums[1]
 }
 
-/^size:/ {
-    split($2, nums, "/")
+/size:/ {
+    split($NF, nums, "/")
     exp_sizes[fidx, idx] = nums[1]
 
     if (extended[fidx] == 1) {
