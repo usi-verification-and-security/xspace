@@ -22,7 +22,7 @@ Dataset::Dataset(std::string_view fileName) {
 
     std::string line;
     while (std::getline(file, line)) {
-        std::stringstream ss(line);
+        std::istringstream ss{line};
         std::string field;
         Sample sample;
         while (std::getline(ss, field, ',')) {

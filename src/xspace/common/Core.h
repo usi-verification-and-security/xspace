@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 namespace xspace {
 template<typename T>
@@ -20,6 +21,12 @@ std::string toString(printable auto const & arg) {
     std::ostringstream oss;
     arg.print(oss);
     return std::move(oss).str();
+}
+
+std::string_view toStringView(printable auto const & arg) {
+    std::ostringstream oss;
+    arg.print(oss);
+    return std::move(oss).view();
 }
 } // namespace xspace
 

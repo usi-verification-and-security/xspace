@@ -8,6 +8,7 @@
 #include <cassert>
 #include <memory>
 #include <string_view>
+#include <iosfwd>
 #include <vector>
 
 namespace xai::nn {
@@ -37,7 +38,7 @@ public:
 
     void setVerifier(std::string_view name);
 
-    void setExpandStrategies(std::string_view spec);
+    void setExpandStrategies(std::istream &);
 
     xai::nn::NNet const & getNetwork() const {
         assert(networkPtr);

@@ -4,6 +4,8 @@
 #include <xspace/nn/Dataset.h>
 
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <string_view>
 
 void printUsage(std::ostream & os = std::cout) {
@@ -54,7 +56,8 @@ int main(int argc, char * argv[]) try {
     framework.setVerifier(verifierName);
 
     std::string_view strategiesSpec = argv[++i];
-    framework.setExpandStrategies(strategiesSpec);
+    std::istringstream strategiesSpecIss{std::string{strategiesSpec}};
+    framework.setExpandStrategies(strategiesSpecIss);
 
     auto explanations = framework.explain(dataset);
     assert(explanations.size() == size);

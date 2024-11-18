@@ -17,6 +17,8 @@
 #include <cassert>
 #include <iostream>
 #include <numeric>
+#include <sstream>
+#include <string>
 
 namespace xspace {
 std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
@@ -33,9 +35,27 @@ std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::s
     }
 }
 
-void Framework::Expand::setStrategies(std::string_view spec) {
-    // !!!
-    addStrategy(std::make_unique<AbductiveStrategy>(*this));
+void Framework::Expand::setStrategies(std::istream & is) {
+    std::string line;
+    while (std::getline(is, line, ',')) {
+        std::istringstream issLine{std::move(line)};
+        std::string name;
+        issLine >> name;
+        std::vector<std::string> params;
+        for (std::string param; issLine >> param;) {
+            params.push_back(std::move(param));
+        }
+
+        auto const nameLower = tolower(name);
+        if (nameLower == "abductive") {
+            assert(params.empty());
+            addStrategy(std::make_unique<AbductiveStrategy>(*this));
+            continue;
+        }
+
+        //- throw std::runtime_error(std::cerr << "Unrecognized strategy name: " << name << '\n';)
+        assert(false);
+    }
 }
 
 void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanations, Dataset const & data) {

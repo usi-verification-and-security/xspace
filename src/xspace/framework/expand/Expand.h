@@ -42,7 +42,7 @@ public:
 
     void setVerifier(std::string_view name) { setVerifier(makeVerifier(name)); }
 
-    void setStrategies(std::string_view spec);
+    void setStrategies(std::istream &);
 
     void setOutputs(Outputs outs) { outputs = std::move(outs); }
 

@@ -26,8 +26,8 @@ void Framework::setVerifier(std::string_view name) {
     expandPtr->setVerifier(name);
 }
 
-void Framework::setExpandStrategies(std::string_view spec) {
-    expandPtr->setStrategies(spec);
+void Framework::setExpandStrategies(std::istream & is) {
+    expandPtr->setStrategies(is);
 }
 
 std::vector<IntervalExplanation> Framework::explain(Dataset const & data) {
