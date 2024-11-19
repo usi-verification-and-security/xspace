@@ -8,14 +8,17 @@
 #include <string>
 #include <string_view>
 
+#include <getopt.h>
+
 void printUsage(std::ostream & os = std::cout) {
-    os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]" << std::endl;
+    os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]\n"
+       << "OPTIONS:"
+       << "\n\t-h\t\tPrints this help message and exits"
+       << "\n\t-v\t\tRun in verbose mode" << std::endl;
 }
 
 int main(int argc, char * argv[]) try {
     constexpr int minArgs = 4;
-    constexpr int maxArgs = 5;
-    static_assert(minArgs <= maxArgs);
 
     int const nArgs = argc - 1;
     assert(nArgs >= 0);
@@ -29,33 +32,43 @@ int main(int argc, char * argv[]) try {
         printUsage(std::cerr);
         return 1;
     }
-    if (nArgs > maxArgs) {
-        std::cerr << "Expected at most " << maxArgs << " arguments, got: " << nArgs << '\n';
-        printUsage(std::cerr);
-        return 1;
-    }
 
     int i = 0;
-    std::string_view nnModelFn = argv[++i];
+    std::string_view const nnModelFn = argv[++i];
     auto network = xai::nn::NNet::fromFile(nnModelFn);
     if (not network) { return 2; }
 
+    std::string_view const datasetFn = argv[++i];
+
+    std::string_view const verifierName = argv[++i];
+
+    std::string_view const strategiesSpec = argv[++i];
+
     xspace::Framework::Config config;
 
-    // !!!
-    config.setVerbose();
+    while (true) {
+        int const c = getopt(argc, argv, "hv");
+        if (c == -1) { break; }
 
-    std::string_view datasetFn = argv[++i];
+        switch (c) {
+            case 'h':
+                printUsage();
+                return 0;
+            case 'v':
+                config.setVerbose();
+                break;
+            default: /* '?' */
+                printUsage(std::cerr);
+                return 1;
+        }
+    }
+
     auto const dataset = xspace::Dataset{datasetFn};
     std::size_t const size = dataset.size();
 
     xspace::Framework framework{config};
     framework.setNetwork(std::move(network));
-
-    std::string_view verifierName = argv[++i];
     framework.setVerifier(verifierName);
-
-    std::string_view strategiesSpec = argv[++i];
     std::istringstream strategiesSpecIss{std::string{strategiesSpec}};
     framework.setExpandStrategies(strategiesSpecIss);
 
