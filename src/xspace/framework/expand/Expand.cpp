@@ -37,6 +37,11 @@ std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::s
 }
 
 void Framework::Expand::setStrategies(std::istream & is) {
+    auto const & config = framework.getConfig();
+
+    VarOrdering defaultVarOrder{};
+    if (config.isReverseVarOrdering()) { defaultVarOrder.type = VarOrdering::Type::reverse; }
+
     std::string line;
     while (std::getline(is, line, ',')) {
         std::istringstream issLine{std::move(line)};
@@ -50,7 +55,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
         auto const nameLower = toLower(name);
         if (nameLower == "abductive") {
             assert(params.empty());
-            addStrategy(std::make_unique<AbductiveStrategy>(*this));
+            addStrategy(std::make_unique<AbductiveStrategy>(*this, defaultVarOrder));
             continue;
         }
 
@@ -66,7 +71,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
                 assert(paramLower == "spliteq" or paramLower == "interval");
                 conf.splitEq = true;
             }
-            addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf));
+            addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf, defaultVarOrder));
             continue;
         }
 

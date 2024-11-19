@@ -14,7 +14,9 @@ void printUsage(std::ostream & os = std::cout) {
     os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]\n"
        << "OPTIONS:"
        << "\n\t-h\t\tPrints this help message and exits"
-       << "\n\t-v\t\tRun in verbose mode" << std::endl;
+       << "\n\t-v\t\tRun in verbose mode"
+       << "\n\t-r\t\tReverse the order of variables";
+    os << std::endl;
 }
 
 int main(int argc, char * argv[]) try {
@@ -47,7 +49,7 @@ int main(int argc, char * argv[]) try {
     xspace::Framework::Config config;
 
     while (true) {
-        int const c = getopt(argc, argv, "hv");
+        int const c = getopt(argc, argv, "hvr");
         if (c == -1) { break; }
 
         switch (c) {
@@ -55,7 +57,10 @@ int main(int argc, char * argv[]) try {
                 printUsage();
                 return 0;
             case 'v':
-                config.setVerbose();
+                config.beVerbose();
+                break;
+            case 'r':
+                config.reverseVarOrdering();
                 break;
             default: /* '?' */
                 printUsage(std::cerr);
