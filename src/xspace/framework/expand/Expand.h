@@ -78,6 +78,9 @@ protected:
 
     bool checkFormsExplanation();
 
+    void printStatsHead(Dataset const &) const;
+    void printStats(IntervalExplanation const &, Dataset const &, std::size_t i) const;
+
     Framework & framework;
 
     std::unique_ptr<xai::verifiers::Verifier> verifierPtr{};

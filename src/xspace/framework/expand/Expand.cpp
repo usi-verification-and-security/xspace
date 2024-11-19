@@ -1,6 +1,7 @@
 #include "Expand.h"
 
 #include "../Config.h"
+#include "../Print.h"
 #include "strategy/Strategy.h"
 
 #include <xspace/common/String.h>
@@ -16,7 +17,6 @@
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
-#include <iostream>
 #include <numeric>
 #include <sstream>
 #include <string>
@@ -78,15 +78,21 @@ void Framework::Expand::setStrategies(std::istream & is) {
 void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanations, Dataset const & data) {
     assert(not strategies.empty());
 
+    Print & print = *framework.printPtr;
+    bool const printingStats = not print.ignoringStats();
+    auto & cbounds = print.bounds();
+    auto & cphi = print.formulas();
+
+    if (printingStats) { printStatsHead(data); }
+
     initVerifier();
 
     //? This incrementality does not seem to work
     // assertModel();
 
-    bool const verbose = framework.getConfig().isVerbose();
-    auto const defaultPrecision = std::cout.precision();
-
     std::size_t const size = explanations.size();
+    assert(data.getSamples().size() == size);
+    assert(data.getOutputs().size() == size);
     assert(outputs.size() == size);
     for (std::size_t i = 0; i < size; ++i) {
         //+ This should ideally be outside of the loop
@@ -105,39 +111,9 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
         //+ This should not ideally be necessary
         resetModel();
 
-        if (not verbose) { continue; }
-
-        std::size_t const varSize = framework.varSize();
-        std::size_t const expSize = explanation.size();
-        assert(expSize <= varSize);
-
-        auto const & samples = data.getSamples();
-        auto const & expOutputs = data.getOutputs();
-        assert(samples.size() == expOutputs.size());
-        assert(outputs.size() == expOutputs.size());
-        auto const & sample = samples[i];
-        auto const & expOutput = expOutputs[i];
-
-        std::size_t const fixedCount = explanation.getFixedCount();
-        assert(fixedCount <= expSize);
-
-        std::cout << "sample: " << sample << '\n';
-        std::cout << "expected output: " << expOutput << '\n';
-        std::cout << "computed output: " << output.classifiedIdx << '\n';
-        std::cout << "explanation size: " << expSize << '/' << varSize << std::endl;
-
-        assert(explanation.getRelativeVolumeSkipFixed() > 0);
-        assert(explanation.getRelativeVolumeSkipFixed() <= 1);
-        assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expSize));
-        if (fixedCount < expSize) {
-            Float const relVolume = explanation.getRelativeVolumeSkipFixed();
-
-            std::cout << "fixed features: " << fixedCount << '/' << varSize << std::endl;
-            std::cout << "relVolume*: " << std::setprecision(1) << (relVolume * 100) << "%"
-                      << std::setprecision(defaultPrecision) << std::endl;
-        }
-
-        std::cerr << explanation << std::endl;
+        if (printingStats) { printStats(explanation, data, i); }
+        cbounds << explanation << std::endl;
+        cphi << smtLib2Format(explanation) << std::endl;
     }
 }
 
@@ -199,5 +175,58 @@ bool Framework::Expand::checkFormsExplanation() {
     auto answer = verifierPtr->check();
     assert(answer == xai::verifiers::Verifier::Answer::SAT or answer == xai::verifiers::Verifier::Answer::UNSAT);
     return (answer == xai::verifiers::Verifier::Answer::UNSAT);
+}
+
+void Framework::Expand::printStatsHead(Dataset const & data) const {
+    Print const & print = *framework.printPtr;
+    assert(not print.ignoringStats());
+    auto & cstats = print.stats();
+
+    std::size_t const size = data.getSamples().size();
+    assert(size == data.getOutputs().size());
+    assert(size == outputs.size());
+    cstats << "Dataset size: " << size << '\n';
+    cstats << "Number of variables: " << framework.varSize() << '\n';
+    cstats << std::string(60, '-') << '\n';
+}
+
+void Framework::Expand::printStats(IntervalExplanation const & explanation, Dataset const & data, std::size_t i) const {
+    Print const & print = *framework.printPtr;
+    assert(not print.ignoringStats());
+    auto & cstats = print.stats();
+    auto const defaultPrecision = cstats.precision();
+
+    std::size_t const varSize = framework.varSize();
+    std::size_t const expSize = explanation.size();
+    assert(expSize <= varSize);
+
+    auto const & samples = data.getSamples();
+    auto const & expOutputs = data.getOutputs();
+    std::size_t const size = samples.size();
+    assert(size == expOutputs.size());
+    assert(size == outputs.size());
+    auto const & sample = samples[i];
+    auto const & expOutput = expOutputs[i];
+    auto const & output = outputs[i];
+
+    std::size_t const fixedCount = explanation.getFixedCount();
+    assert(fixedCount <= expSize);
+
+    cstats << '\n';
+    cstats << "sample [" << i + 1 << '/' << size << "]: " << sample << '\n';
+    cstats << "expected output: " << expOutput << '\n';
+    cstats << "computed output: " << output.classifiedIdx << '\n';
+    cstats << "explanation size: " << expSize << '/' << varSize << std::endl;
+
+    assert(explanation.getRelativeVolumeSkipFixed() > 0);
+    assert(explanation.getRelativeVolumeSkipFixed() <= 1);
+    assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expSize));
+    if (fixedCount >= expSize) { return; }
+
+    Float const relVolume = explanation.getRelativeVolumeSkipFixed();
+
+    cstats << "fixed features: " << fixedCount << '/' << varSize << std::endl;
+    cstats << "relVolume*: " << std::setprecision(1) << (relVolume * 100) << "%" << std::setprecision(defaultPrecision)
+           << std::endl;
 }
 } // namespace xspace

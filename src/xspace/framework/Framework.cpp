@@ -1,6 +1,7 @@
 #include "Framework.h"
 
 #include "Config.h"
+#include "Print.h"
 #include "expand/Expand.h"
 #include "expand/strategy/Strategy.h"
 
@@ -18,6 +19,7 @@ Framework::Framework() : Framework(Config{}) {}
 
 Framework::Framework(Config const & config) : configPtr{std::make_unique<Config>(config)} {
     expandPtr = std::make_unique<Expand>(*this);
+    printPtr = std::make_unique<Print>(*this);
 }
 
 Framework::~Framework() = default;

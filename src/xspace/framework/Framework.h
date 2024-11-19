@@ -29,7 +29,10 @@ public:
     Framework(Config const &);
     ~Framework();
 
-    Config const & getConfig() const { return *configPtr; }
+    Config const & getConfig() const {
+        assert(configPtr);
+        return *configPtr;
+    }
 
     void setNetwork(std::unique_ptr<xai::nn::NNet> nn) {
         assert(nn);
@@ -54,6 +57,8 @@ public:
 protected:
     class Expand;
 
+    class Print;
+
     using VarNames = std::vector<VarName>;
 
     void setVarNames(Dataset const &);
@@ -64,9 +69,11 @@ protected:
 
     std::unique_ptr<xai::nn::NNet> networkPtr{};
 
+    VarNames varNames{};
+
     std::unique_ptr<Expand> expandPtr{};
 
-    VarNames varNames{};
+    std::unique_ptr<Print> printPtr;
 };
 } // namespace xspace
 

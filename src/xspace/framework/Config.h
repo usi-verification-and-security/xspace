@@ -15,7 +15,7 @@ public:
     bool isVerbose() const { return getVerbosity() > 0; }
 
 protected:
-    Verbosity verbosity = 0;
+    Verbosity verbosity{0};
 };
 } // namespace xspace
 
