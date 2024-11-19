@@ -1,17 +1,32 @@
 #ifndef XSPACE_STRING_H
 #define XSPACE_STRING_H
 
+#include "Print.h"
+
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <string_view>
 
 namespace xspace {
-inline std::string tolower(std::string_view sw) {
+inline std::string toString(printable auto const & arg) {
+    std::ostringstream oss;
+    arg.print(oss);
+    return std::move(oss).str();
+}
+
+inline std::string_view toStringView(printable auto const & arg) {
+    std::ostringstream oss;
+    arg.print(oss);
+    return std::move(oss).view();
+}
+
+inline std::string toLower(std::string_view sw) {
     std::string str{sw};
     std::ranges::transform(str, str.begin(), [](unsigned char c) { return std::tolower(c); });
     return str;
 }
-inline std::string toupper(std::string_view sw) {
+inline std::string toUpper(std::string_view sw) {
     std::string str{sw};
     std::ranges::transform(str, str.begin(), [](unsigned char c) { return std::toupper(c); });
     return str;

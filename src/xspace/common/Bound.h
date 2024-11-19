@@ -22,10 +22,6 @@ public:
     using LowerTag = GtEqTag;
     using UpperTag = LtEqTag;
 
-    struct PrintConfig {
-        bool reverse = false;
-    };
-
     static constexpr Type lowerType = Type::gteq;
     static constexpr Type upperType = Type::lteq;
 
@@ -49,21 +45,28 @@ public:
 
     Float getValue() const { return value; }
 
-    void print(std::ostream &, PrintConfig const &) const;
-    void print(std::ostream & os) const { print(os, PrintConfig{}); }
+    char const * getSymbol() const {
+        return std::visit([](auto & t) { return t.getSymbol(); }, op);
+    }
+    char const * getReverseSymbol() const {
+        return std::visit([](auto & t) { return t.getReverseSymbol(); }, op);
+    }
+
+    void print(std::ostream & os) const { printRegular(os); }
+    void printReverse(std::ostream &) const;
 
 protected:
     struct Eq {
-        void print(std::ostream &) const;
-        void printReverse(std::ostream & os) const { print(os); }
+        char const * getSymbol() const { return "="; }
+        char const * getReverseSymbol() const { return getSymbol(); }
     };
     struct LtEq {
-        void print(std::ostream &) const;
-        void printReverse(std::ostream &) const;
+        char const * getSymbol() const { return "<="; }
+        char const * getReverseSymbol() const { return ">="; }
     };
     struct GtEq : LtEq {
-        void print(std::ostream & os) const { return LtEq::printReverse(os); }
-        void printReverse(std::ostream & os) const { return LtEq::print(os); }
+        char const * getSymbol() const { return LtEq::getReverseSymbol(); }
+        char const * getReverseSymbol() const { return LtEq::getSymbol(); }
     };
 
     template<typename T>
@@ -79,7 +82,6 @@ protected:
                                               value{val} {}
 
     void printRegular(std::ostream &) const;
-    void printReverse(std::ostream &) const;
 
     Op op;
 
@@ -159,10 +161,14 @@ public:
         return static_cast<UpperBound const &>(bnd);
     }
 
-    void print(std::ostream &) const;
+    void print(std::ostream & os) const { printRegular(os); }
+    void printSmtLib2(std::ostream &) const;
 
 protected:
-    void printBound(std::ostream &, Bound const &, Bound::PrintConfig const & = {}) const;
+    void printRegular(std::ostream &) const;
+    void printRegularBound(std::ostream &, Bound const &) const;
+
+    void printSmtLib2Bound(std::ostream &, Bound const &) const;
 
     std::string_view varName;
 

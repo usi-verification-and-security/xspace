@@ -1,5 +1,6 @@
 #include "Explanation.h"
 
+#include <xspace/common/Print.h>
 #include <xspace/framework/Framework.h>
 
 #include <algorithm>
@@ -111,7 +112,7 @@ std::size_t IntervalExplanation::computeFixedCount() const {
     });
 }
 
-template <bool skipFixed>
+template<bool skipFixed>
 Float IntervalExplanation::computeRelativeVolumeTp() const {
     auto & network = framework.getNetwork();
 
@@ -121,8 +122,11 @@ Float IntervalExplanation::computeRelativeVolumeTp() const {
         Float const size = ival.size();
         assert(size >= 0);
         if (size == 0) {
-            if constexpr (skipFixed) { continue; }
-            else { return 0; }
+            if constexpr (skipFixed) {
+                continue;
+            } else {
+                return 0;
+            }
         }
 
         Float const domainSize = network.getInputUpperBound(idx) - network.getInputLowerBound(idx);
@@ -144,5 +148,13 @@ void IntervalExplanation::print(std::ostream & os) const {
     for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
         os << varBnd << '\n';
     }
+}
+
+void IntervalExplanation::printSmtLib2(std::ostream & os) const {
+    os << "(and";
+    for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
+        os << ' ' << smtLib2Format(varBnd);
+    }
+    os << ')';
 }
 } // namespace xspace

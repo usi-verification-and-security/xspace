@@ -23,10 +23,10 @@
 
 namespace xspace {
 std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
-    if (tolower(name) == "opensmt") {
+    if (toLower(name) == "opensmt") {
         return std::make_unique<xai::verifiers::OpenSMTVerifier>();
 #ifdef MARABOU
-    } else if (tolower(name) == "marabou") {
+    } else if (toLower(name) == "marabou") {
         return std::make_unique<xai::verifiers::MarabouVerifier>();
 #endif
     } else {
@@ -47,7 +47,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
             params.push_back(std::move(param));
         }
 
-        auto const nameLower = tolower(name);
+        auto const nameLower = toLower(name);
         if (nameLower == "abductive") {
             assert(params.empty());
             addStrategy(std::make_unique<AbductiveStrategy>(*this));
@@ -57,7 +57,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
         if (nameLower == "ucore") {
             UnsatCoreStrategy::Config conf;
             for (auto & param : params) {
-                auto const paramLower = tolower(param);
+                auto const paramLower = toLower(param);
                 if (paramLower == "eq" or paramLower == "sample") {
                     conf.splitEq = false;
                     continue;

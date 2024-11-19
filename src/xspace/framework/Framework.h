@@ -6,9 +6,9 @@
 #include <nn/NNet.h>
 
 #include <cassert>
+#include <iosfwd>
 #include <memory>
 #include <string_view>
-#include <iosfwd>
 #include <vector>
 
 namespace xai::nn {

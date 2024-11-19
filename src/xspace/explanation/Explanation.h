@@ -49,6 +49,7 @@ public:
     Float getRelativeVolumeSkipFixed() const { return computeRelativeVolumeTp<true>(); }
 
     void print(std::ostream &) const;
+    void printSmtLib2(std::ostream &) const;
 
 protected:
     using VarIdxToVarBoundMap = std::map<VarIdx, VarBound>;

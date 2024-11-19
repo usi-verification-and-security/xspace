@@ -1,47 +1,27 @@
 #include "Bound.h"
 
-namespace xspace {
-void Bound::print(std::ostream & os, PrintConfig const & conf) const {
-    if (not conf.reverse) {
-        printRegular(os);
-    } else {
-        printReverse(os);
-    }
-}
+#include "Print.h"
 
+#include <ostream>
+
+namespace xspace {
 void Bound::printRegular(std::ostream & os) const {
-    std::visit(
-        [&](auto & t) {
-            t.print(os);
-            os << ' ' << value;
-        },
-        op);
+    std::visit([&](auto & t) { os << t.getSymbol() << ' ' << value; }, op);
 }
 
 void Bound::printReverse(std::ostream & os) const {
-    std::visit(
-        [&](auto & t) {
-            os << value << ' ';
-            t.printReverse(os);
-        },
-        op);
+    std::visit([&](auto & t) { os << value << ' ' << t.getReverseSymbol(); }, op);
 }
 
-void Bound::Eq::print(std::ostream & os) const {
-    os << "=";
-}
-void Bound::LtEq::print(std::ostream & os) const {
-    os << "<=";
-}
-void Bound::LtEq::printReverse(std::ostream & os) const {
-    os << ">=";
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Interval::print(std::ostream & os) const {
     os << '[' << lower;
     if (not isPoint()) { os << ',' << upper; }
     os << ']';
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 VarBound::VarBound(std::string_view var, LowerBound lo, UpperBound hi)
     : VarBound(lo.getValue() == hi.getValue() ? VarBound{var, std::move(lo), std::move(hi), ConsPointTag{}}
@@ -53,20 +33,34 @@ VarBound::VarBound(std::string_view var, Bound bnd1, Bound bnd2)
                               : VarBound{var, static_cast<LowerBound &&>(std::move(bnd2)),
                                          static_cast<UpperBound &&>(std::move(bnd1))}) {}
 
-void VarBound::print(std::ostream & os) const {
+void VarBound::printRegular(std::ostream & os) const {
     if (not isInterval()) {
-        printBound(os, firstBound);
+        printRegularBound(os, firstBound);
         return;
     }
 
     // x >= l && x <= u -> l <= x <= u
-    firstBound.print(os, {.reverse = true});
+    firstBound.printReverse(os);
     os << ' ';
-    printBound(os, *optSecondBound);
+    printRegularBound(os, *optSecondBound);
 }
 
-void VarBound::printBound(std::ostream & os, Bound const & bnd, Bound::PrintConfig const & conf) const {
-    os << varName << ' ';
-    bnd.print(os, conf);
+void VarBound::printRegularBound(std::ostream & os, Bound const & bnd) const {
+    os << varName << ' ' << bnd;
+}
+
+void VarBound::printSmtLib2(std::ostream & os) const {
+    bool const ival = isInterval();
+
+    if (ival) { os << "(and "; }
+    printSmtLib2Bound(os, firstBound);
+    if (ival) {
+        printSmtLib2Bound(os, *optSecondBound);
+        os << ')';
+    }
+}
+
+void VarBound::printSmtLib2Bound(std::ostream & os, Bound const & bnd) const {
+    os << '(' << bnd.getSymbol() << ' ' << varName << ' ' << bnd.getValue() << ')';
 }
 } // namespace xspace
