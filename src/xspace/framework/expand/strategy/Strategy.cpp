@@ -57,6 +57,7 @@ void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & exp
         }
         bool const ok = expand.checkFormsExplanation();
         verifier.pop();
+        verifier.resetSample();
         // It is no longer explanation after the removal -> we cannot remove it
         if (not ok) { continue; }
         explanation.eraseVarBound(idxToOmit);

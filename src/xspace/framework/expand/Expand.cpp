@@ -79,11 +79,13 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
 
         auto & explanation = explanations[i];
         for (auto & strategy : strategies) {
+            verifierPtr->push();
             strategy->execute(explanation);
+            verifierPtr->pop();
+            verifierPtr->resetSample();
         }
 
         verifierPtr->pop();
-        verifierPtr->resetSample();
 
         if (not verbose) { continue; }
 
@@ -151,12 +153,12 @@ void Framework::Expand::assertClassification(Output const & output) {
 void Framework::Expand::assertBound(VarIdx idx, Bound const & bnd) {
     Float const val = bnd.getValue();
     if (bnd.isEq()) {
-        verifierPtr->addEquality(0, idx, val);
+        verifierPtr->addEquality(0, idx, val, true);
     } else if (bnd.isLower()) {
-        verifierPtr->addLowerBound(0, idx, val);
+        verifierPtr->addLowerBound(0, idx, val, true);
     } else {
         assert(bnd.isUpper());
-        verifierPtr->addUpperBound(0, idx, val);
+        verifierPtr->addUpperBound(0, idx, val, true);
     }
 }
 
