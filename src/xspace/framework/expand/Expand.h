@@ -66,9 +66,13 @@ protected:
 
     void addStrategy(std::unique_ptr<Strategy> strategy) { strategies.push_back(std::move(strategy)); }
 
+    void initVerifier();
+
     void assertModel();
+    void resetModel();
 
     void assertClassification(Output const &);
+    void resetClassification();
 
     void assertBound(VarIdx, Bound const &);
 

@@ -76,11 +76,12 @@ void Framework::Expand::setStrategies(std::istream & is) {
 }
 
 void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanations, Dataset const & data) {
-    assert(verifierPtr);
     assert(not strategies.empty());
-    assert(not outputs.empty());
 
-    assertModel();
+    initVerifier();
+
+    //? This incrementality does not seem to work
+    // assertModel();
 
     bool const verbose = framework.getConfig().isVerbose();
     auto const defaultPrecision = std::cout.precision();
@@ -88,20 +89,21 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
     std::size_t const size = explanations.size();
     assert(outputs.size() == size);
     for (std::size_t i = 0; i < size; ++i) {
-        verifierPtr->push();
+        //+ This should ideally be outside of the loop
+        assertModel();
 
         auto const & output = outputs[i];
         assertClassification(output);
 
         auto & explanation = explanations[i];
         for (auto & strategy : strategies) {
-            verifierPtr->push();
             strategy->execute(explanation);
-            verifierPtr->pop();
-            verifierPtr->resetSample();
         }
 
-        verifierPtr->pop();
+        resetClassification();
+
+        //+ This should not ideally be necessary
+        resetModel();
 
         if (not verbose) { continue; }
 
@@ -139,12 +141,23 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
     }
 }
 
+void Framework::Expand::initVerifier() {
+    assert(verifierPtr);
+    verifierPtr->init();
+}
+
 void Framework::Expand::assertModel() {
     auto & nn = framework.getNetwork();
     verifierPtr->loadModel(nn);
 }
 
+void Framework::Expand::resetModel() {
+    verifierPtr->reset();
+}
+
 void Framework::Expand::assertClassification(Output const & output) {
+    verifierPtr->push();
+
     auto & network = framework.getNetwork();
     auto const outputLayerIndex = network.getNumLayers() - 1;
     auto const & outputValues = output.values;
@@ -164,6 +177,10 @@ void Framework::Expand::assertClassification(Output const & output) {
     auto const outputLayerSize = network.getLayerSize(outputLayerIndex);
     assert(outputLayerSize == outputValues.size());
     verifierPtr->addClassificationConstraint(output.classifiedIdx, 0);
+}
+
+void Framework::Expand::resetClassification() {
+    verifierPtr->pop();
 }
 
 void Framework::Expand::assertBound(VarIdx idx, Bound const & bnd) {
