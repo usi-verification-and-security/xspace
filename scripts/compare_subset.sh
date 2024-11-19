@@ -28,8 +28,8 @@ FILE2="$3"
 
 MAX_LINES=$4
 
-N_LINES1=$(wc -l <"$FILE1")
-N_LINES2=$(wc -l <"$FILE2")
+N_LINES1=$(sed '/^ *$/d' <"$FILE1" | wc -l)
+N_LINES2=$(sed '/^ *$/d' <"$FILE2" | wc -l)
 (( $N_LINES1 != $N_LINES2 )) && {
     printf "The number of lines of the data files do not match: %d != %d\n" $N_LINES1 $N_LINES2 >&2
     exit 2
@@ -88,8 +88,14 @@ N_PROC=0
 PIDS=()
 
 cnt=0
-while read line1 && read line2 <&3; do
-    [[ -z ${line1// } ]] && continue
+while true; do
+    while read line1 && [[ -z ${line1// } ]]; do :; done
+    while read line2 <&3 && [[ -z ${line2// } ]]; do :; done
+    [[ -z $line1 ]] && break
+    [[ -z $line2 ]] && {
+        printf "Unexpected missing data from the second file at cnt=%d\n" $cnt >&2
+        cleanup 9
+    }
 
     ifile_subset=$(mktemp).smt2
     ofile_subset=${ifile_subset}.out
