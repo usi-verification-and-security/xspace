@@ -41,6 +41,8 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
 
+    void init();
+
     void push();
     void pop();
 
@@ -54,8 +56,6 @@ public:
     opensmt::MainSolver & getSolver() { return *solver; }
 
 private:
-    void resetSolver();
-
     static std::string makeTermName(LayerIndex layer, NodeIndex node, std::string prefix = "") {
         assert(layer == 0);
         return prefix + "n" + std::to_string(node);
@@ -106,6 +106,10 @@ void OpenSMTVerifier::addClassificationConstraint(NodeIndex node, float threshol
 
 void OpenSMTVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) {
     pimpl->addConstraint(layer, lhs, rhs);
+}
+
+void OpenSMTVerifier::init() {
+    pimpl->init();
 }
 
 void OpenSMTVerifier::push() {
@@ -163,7 +167,6 @@ Verifier::Answer toAnswer(sstat res) {
 }
 
 void OpenSMTVerifier::OpenSMTImpl::loadModel(nn::NNet const & network) {
-    resetSolver();
     // create input variables
     for (NodeIndex i = 0u; i < network.getLayerSize(0); ++i) {
         auto name = "input" + std::to_string(i);
@@ -325,17 +328,7 @@ Verifier::Answer OpenSMTVerifier::OpenSMTImpl::check() {
     return toAnswer(res);
 }
 
-void OpenSMTVerifier::OpenSMTImpl::resetSample() {
-    inputVarLowerBoundToIndex.clear();
-    inputVarUpperBoundToIndex.clear();
-    inputVarEqualityToIndex.clear();
-}
-
-void OpenSMTVerifier::OpenSMTImpl::reset() {
-    resetSolver();
-}
-
-void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
+void OpenSMTVerifier::OpenSMTImpl::init() {
     config = std::make_unique<SMTConfig>();
     const char* msg = "ok";
     config->setOption(SMTConfig::o_produce_unsat_cores, SMTOption(true), msg);
@@ -348,6 +341,17 @@ void OpenSMTVerifier::OpenSMTImpl::resetSolver() {
         config->setReduction(true);
         config->setSimplifyInterpolant(4);
     }
+
+    reset();
+}
+
+void OpenSMTVerifier::OpenSMTImpl::resetSample() {
+    inputVarLowerBoundToIndex.clear();
+    inputVarUpperBoundToIndex.clear();
+    inputVarEqualityToIndex.clear();
+}
+
+void OpenSMTVerifier::OpenSMTImpl::reset() {
     logic = std::make_unique<ArithLogic>(opensmt::Logic_t::QF_LRA);
     solver = std::make_unique<MainSolver>(*logic, *config, "verifier");
     inputVars.clear();

@@ -13,7 +13,7 @@ using LayerIndex = std::size_t;
 
 class Verifier {
 public:
-    enum class Answer {SAT, UNSAT, UNKNOWN, ERROR};
+    enum class Answer { SAT, UNSAT, UNKNOWN, ERROR };
 
     virtual void loadModel(nn::NNet const &) = 0;
 
@@ -27,16 +27,18 @@ public:
 
     virtual void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) = 0;
 
+    virtual void init() {}
+
     virtual void push() = 0;
     virtual void pop() = 0;
 
     virtual Answer check() = 0;
 
     virtual void resetSample() { reset(); }
-    virtual void reset() = 0;
+    virtual void reset() {}
 
     virtual ~Verifier() = default;
 };
-}
+} // namespace xai::verifiers
 
-#endif //XAI_SMT_VERIFIER_H
+#endif // XAI_SMT_VERIFIER_H
