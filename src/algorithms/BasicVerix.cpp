@@ -79,6 +79,7 @@ BasicVerix::Result BasicVerix::computeExplanation(input_t const & inputValues, f
     if (not network or not verifier)
         return Result{};
 
+    verifier->init();
     verifier->loadModel(*network);
     verifier->push();
 
@@ -285,7 +286,12 @@ BasicVerix::Result BasicVerix::computeOpenSMTExplanation(input_t const & inputVa
     if (not network or not verifier)
         return Result{};
 
+    verifier->init();
     verifier->loadModel(*network);
+    if constexpr (Config::interpolation) {
+        // to reproduce the same itps ...
+        verifier->push();
+    }
 
     auto output = nn::computeOutput(inputValues, *network);
     NodeIndex label = std::max_element(output.begin(), output.end()) - output.begin();
