@@ -3,6 +3,7 @@
 #include <xspace/explanation/Explanation.h>
 
 #include <verifiers/Verifier.h>
+#include <verifiers/UnsatCoreVerifier.h>
 
 #include <cassert>
 #include <numeric>
@@ -62,5 +63,70 @@ void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & exp
         if (not ok) { continue; }
         explanation.eraseVarBound(idxToOmit);
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & explanation) {
+    assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(expand.verifierPtr.get()));
+    auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
+
+    auto & framework = expand.framework;
+    auto & network = framework.getNetwork();
+    std::size_t const varSize = framework.varSize();
+    auto const & varOrder = varOrdering.manualOrder;
+    bool const splitEq = config.splitEq;
+
+    auto & allVarBounds = explanation.getAllVarBounds();
+    for (VarIdx idx : varOrder) {
+        auto & optVarBnd = allVarBounds[idx];
+        if (not optVarBnd.has_value()) { continue; }
+
+        auto & varBnd = *optVarBnd;
+        if (varBnd.isInterval()) {
+            expand.assertBound(idx, varBnd.getLowerBound());
+            expand.assertBound(idx, varBnd.getUpperBound());
+            continue;
+        }
+
+        auto & bnd = varBnd.getBound();
+        if (not splitEq or not bnd.isEq()) {
+            expand.assertBound(idx, bnd);
+            continue;
+        }
+
+        assert(varBnd.isPoint());
+        assert(bnd.isEq());
+        Float const val = bnd.getValue();
+        bool const isLower = (val == network.getInputLowerBound(idx));
+        bool const isUpper = (val == network.getInputUpperBound(idx));
+        assert(not isLower or not isUpper);
+        if (isLower or isUpper) {
+            expand.assertBound(idx, bnd);
+            continue;
+        }
+
+        expand.assertBound(idx, LowerBound{val});
+        expand.assertBound(idx, UpperBound{val});
+    }
+
+    [[maybe_unused]] bool const ok = expand.checkFormsExplanation();
+    assert(ok);
+
+    xai::verifiers::UnsatCore unsatCore = verifier.getUnsatCore();
+
+    IntervalExplanation newExplanation{framework};
+
+    for (VarIdx idx : unsatCore.equalities) {
+        newExplanation.insertBound(idx, EqBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+    }
+    for (VarIdx idx : unsatCore.lowerBounds) {
+        newExplanation.insertBound(idx, LowerBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+    }
+    for (VarIdx idx : unsatCore.upperBounds) {
+        newExplanation.insertBound(idx, UpperBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+    }
+
+    explanation.swap(newExplanation);
 }
 } // namespace xspace

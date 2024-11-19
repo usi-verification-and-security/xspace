@@ -54,6 +54,22 @@ void Framework::Expand::setStrategies(std::istream & is) {
             continue;
         }
 
+        if (nameLower == "ucore") {
+            UnsatCoreStrategy::Config conf;
+            for (auto & param : params) {
+                auto const paramLower = tolower(param);
+                if (paramLower == "eq" or paramLower == "sample") {
+                    conf.splitEq = false;
+                    continue;
+                }
+
+                assert(paramLower == "spliteq" or paramLower == "interval");
+                conf.splitEq = true;
+            }
+            addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf));
+            continue;
+        }
+
         //- throw std::runtime_error(std::cerr << "Unrecognized strategy name: " << name << '\n';)
         assert(false);
     }

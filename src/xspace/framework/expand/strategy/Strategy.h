@@ -30,6 +30,23 @@ public:
 protected:
     void executeBody(IntervalExplanation &) override;
 };
+
+class Framework::Expand::UnsatCoreStrategy : public Strategy {
+public:
+    struct Config {
+        bool splitEq = false;
+    };
+
+    using Strategy::Strategy;
+    UnsatCoreStrategy(Expand & exp, Config const & conf, VarOrdering order = {})
+        : Strategy{exp, std::move(order)},
+          config{conf} {}
+
+protected:
+    void executeBody(IntervalExplanation &) override;
+
+    Config config{};
+};
 } // namespace xspace
 
 #endif // XSPACE_EXPAND_STRATEGY_H
