@@ -99,8 +99,11 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
 
     Print & print = *framework.printPtr;
     bool const printingStats = not print.ignoringStats();
-    auto & cbounds = print.bounds();
-    auto & cphi = print.formulas();
+    bool const printingExplanations = not print.ignoringExplanations();
+    auto & cexp = print.explanations();
+
+    auto const & config = framework.getConfig();
+    auto const & expPrintFormat = config.getPrintingExplanationsFormat();
 
     if (printingStats) { printStatsHead(data); }
 
@@ -131,8 +134,10 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
         resetModel();
 
         if (printingStats) { printStats(explanation, data, i); }
-        cbounds << explanation << std::endl;
-        cphi << smtLib2Format(explanation) << std::endl;
+        if (printingExplanations) {
+            explanation.print(cexp, expPrintFormat);
+            cexp << std::endl;
+        }
     }
 }
 

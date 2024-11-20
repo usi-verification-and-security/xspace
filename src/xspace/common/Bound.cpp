@@ -16,9 +16,7 @@ void Bound::printReverse(std::ostream & os) const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Interval::print(std::ostream & os) const {
-    os << '[' << lower;
-    if (not isPoint()) { os << ',' << upper; }
-    os << ']';
+    os << '[' << lower << ',' << upper << ']';
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +30,12 @@ VarBound::VarBound(std::string_view var, Bound bnd1, Bound bnd2)
                                          static_cast<UpperBound &&>(std::move(bnd2))}
                               : VarBound{var, static_cast<LowerBound &&>(std::move(bnd2)),
                                          static_cast<UpperBound &&>(std::move(bnd1))}) {}
+
+std::optional<Interval> VarBound::tryGetInterval() const {
+    if (isInterval()) { return Interval{firstBound.getValue(), optSecondBound->getValue()}; }
+    if (isPoint()) { return Interval{firstBound.getValue()}; }
+    return std::nullopt;
+}
 
 void VarBound::printRegular(std::ostream & os) const {
     if (not isInterval()) {

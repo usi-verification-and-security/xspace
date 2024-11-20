@@ -11,7 +11,11 @@
 namespace xspace {
 class Dataset {
 public:
-    struct Sample;
+    struct Sample : std::vector<Float> {
+        using vector::vector;
+
+        void print(std::ostream &) const;
+    };
 
     using Samples = std::vector<Sample>;
     using Outputs = std::vector<VarIdx>;
@@ -26,12 +30,6 @@ public:
 protected:
     Samples samples{};
     Outputs outputs{};
-};
-
-struct Dataset::Sample : std::vector<Float> {
-    using vector::vector;
-
-    void print(std::ostream &) const;
 };
 } // namespace xspace
 

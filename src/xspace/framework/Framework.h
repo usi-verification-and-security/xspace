@@ -52,7 +52,7 @@ public:
 
     // Valid only after calling `explain`
     std::size_t varSize() const { return varNames.size(); }
-    VarName const & varName(VarIdx idx) const { return varNames[idx]; }
+    VarName const & getVarName(VarIdx idx) const { return varNames[idx]; }
 
 protected:
     class Expand;

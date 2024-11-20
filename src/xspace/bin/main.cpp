@@ -45,6 +45,8 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 'h', "Prints this help message and exits");
     printUsageOptRow(os, 'v', "Run in verbose mode");
     printUsageOptRow(os, 'r', "Reverse the order of variables");
+    printUsageOptRow(os, 's', "Print the resulting explanations in the SMT-LIB2 format");
+    printUsageOptRow(os, 'i', "Print the resulting explanations in the form of intervals");
     os.flush();
 }
 } // namespace
@@ -79,7 +81,7 @@ int main(int argc, char * argv[]) try {
     xspace::Framework::Config config;
 
     while (true) {
-        int const c = getopt(argc, argv, "hvr");
+        int const c = getopt(argc, argv, ":hvrsi");
         if (c == -1) { break; }
 
         switch (c) {
@@ -92,7 +94,15 @@ int main(int argc, char * argv[]) try {
             case 'r':
                 config.reverseVarOrdering();
                 break;
-            default: /* '?' */
+            case 's':
+                config.printExplanationsInSmtLib2Format();
+                break;
+            case 'i':
+                config.printExplanationsInIntervalFormat();
+                break;
+            default:
+                assert(c == '?');
+                std::cerr << "Unrecognized option: '-" << char(optopt) << "'\n\n";
                 printUsage(std::cerr);
                 return 1;
         }

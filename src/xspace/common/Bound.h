@@ -161,6 +161,8 @@ public:
         return static_cast<UpperBound const &>(bnd);
     }
 
+    std::optional<Interval> tryGetInterval() const;
+
     void print(std::ostream & os) const { printRegular(os); }
     void printSmtLib2(std::ostream &) const;
 

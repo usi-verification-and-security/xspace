@@ -15,6 +15,13 @@ class Framework;
 
 class IntervalExplanation {
 public:
+    enum class PrintFormat { bounds, smtlib2, intervals };
+
+    struct PrintConfig {
+        char delim = '\n';
+        bool includeAll = false;
+    };
+
     using AllVarBounds = std::vector<std::optional<VarBound>>;
 
     IntervalExplanation(Framework const &);
@@ -26,9 +33,7 @@ public:
 
     AllVarBounds const & getAllVarBounds() const { return allVarBounds; }
 
-    std::size_t getIdx(std::optional<VarBound> const & elem) const {
-        return &elem - allVarBounds.data();
-    }
+    VarIdx getIdx(std::optional<VarBound> const & elem) const { return &elem - allVarBounds.data(); }
 
     std::optional<VarBound> const & tryGetVarBound(VarIdx idx) const {
         assert(idx < allVarBounds.size());
@@ -45,32 +50,51 @@ public:
 
     std::size_t getFixedCount() const { return computeFixedCount(); }
 
-    Float getRelativeVolume() const { return computeRelativeVolumeTp<false>(); }
-    Float getRelativeVolumeSkipFixed() const { return computeRelativeVolumeTp<true>(); }
+    Float getRelativeVolume() const;
+    Float getRelativeVolumeSkipFixed() const;
 
-    void print(std::ostream &) const;
-    void printSmtLib2(std::ostream &) const;
+    void print(std::ostream &, PrintFormat const &, PrintConfig const &) const;
+    void print(std::ostream &, PrintFormat const &) const;
+    void print(std::ostream &, PrintConfig const &) const;
+    void printSmtLib2(std::ostream &, PrintConfig const &) const;
+    void printIntervals(std::ostream &, PrintConfig const &) const;
+    void print(std::ostream & os) const { print(os, PrintConfig{}); }
+    void printSmtLib2(std::ostream & os) const { printSmtLib2(os, defaultSmtLib2PrintConfig); }
+    void printIntervals(std::ostream & os) const { printIntervals(os, defaultIntervalsPrintConfig); }
 
 protected:
     using VarIdxToVarBoundMap = std::map<VarIdx, VarBound>;
 
-    VarBound makeVarBound(VarIdx, Bound) const;
+    static constexpr PrintConfig defaultSmtLib2PrintConfig{.delim = ' ', .includeAll = false};
+    static constexpr PrintConfig defaultIntervalsPrintConfig{.delim = ' ', .includeAll = true};
 
+    Interval makeDomainInterval(VarIdx) const;
+
+    Interval optVarBoundToInterval(VarIdx, std::optional<VarBound> const &) const;
     Interval varBoundToInterval(VarIdx, VarBound const &) const;
 
     std::size_t computeFixedCount() const;
-
-    template <bool skipFixed>
-    Float computeRelativeVolumeTp() const;
 
     Framework const & framework;
 
     AllVarBounds allVarBounds;
     VarIdxToVarBoundMap varIdxToVarBoundMap{};
-};
 
-extern template Float IntervalExplanation::computeRelativeVolumeTp<false>() const;
-extern template Float IntervalExplanation::computeRelativeVolumeTp<true>() const;
+private:
+    VarBound makeVarBound(VarIdx, auto &&...) const;
+
+    template<bool skipFixed>
+    Float computeRelativeVolumeTp() const;
+
+    template<PrintFormat>
+    void printTp(std::ostream &, PrintConfig const &) const;
+    static void printElem(std::ostream &, PrintConfig const &, VarBound const &);
+    static void printElemSmtLib2(std::ostream &, PrintConfig const &, VarBound const &);
+    void printElemInterval(std::ostream &, PrintConfig const &, VarIdx, VarBound const &) const;
+    void printElem(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
+    void printElemSmtLib2(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
+    void printElemInterval(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
+};
 } // namespace xspace
 
 #endif // XSPACE_EXPLANATION_H

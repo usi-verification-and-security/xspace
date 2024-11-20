@@ -13,21 +13,16 @@ class Framework::Print {
 public:
     Print(Framework const &);
 
+    bool ignoringExplanations() const { return ignoring(explanationsOsPtr); }
     bool ignoringStats() const { return ignoring(statsOsPtr); }
-    bool ignoringBounds() const { return ignoring(boundsOsPtr); }
-    bool ignoringFormulas() const { return ignoring(phiOsPtr); }
 
+    std::ostream & explanations() const {
+        assert(explanationsOsPtr);
+        return *explanationsOsPtr;
+    }
     std::ostream & stats() const {
         assert(statsOsPtr);
         return *statsOsPtr;
-    }
-    std::ostream & bounds() const {
-        assert(boundsOsPtr);
-        return *boundsOsPtr;
-    }
-    std::ostream & formulas() const {
-        assert(phiOsPtr);
-        return *phiOsPtr;
     }
 
 protected:
@@ -42,9 +37,8 @@ protected:
 
     Framework const & framework;
 
+    std::ostream * explanationsOsPtr{&absorb};
     std::ostream * statsOsPtr{&absorb};
-    std::ostream * boundsOsPtr{&absorb};
-    std::ostream * phiOsPtr{&absorb};
 
     Absorb absorb{};
 };

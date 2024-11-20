@@ -8,9 +8,9 @@
 namespace xspace {
 IntervalExplanation::IntervalExplanation(Framework const & fw) : framework{fw}, allVarBounds(fw.varSize()) {}
 
-VarBound IntervalExplanation::makeVarBound(VarIdx idx, Bound bnd) const {
-    auto & name = framework.varName(idx);
-    return VarBound{name, std::move(bnd)};
+VarBound IntervalExplanation::makeVarBound(VarIdx idx, auto &&... args) const {
+    auto & name = framework.getVarName(idx);
+    return VarBound{name, FORWARD(args)...};
 }
 
 void IntervalExplanation::clear() {
@@ -59,7 +59,7 @@ void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
     }
 
     VarBound & varBnd = *optVarBound;
-    assert(varBnd.getVarName() == framework.varName(idx));
+    assert(varBnd.getVarName() == framework.getVarName(idx));
     assert(not varBnd.isInterval());
     assert(not varBnd.isPoint());
     Bound const & oldBnd = varBnd.getBound();
@@ -88,19 +88,32 @@ bool IntervalExplanation::eraseVarBound(VarIdx idx) {
     return contained;
 }
 
+Interval IntervalExplanation::makeDomainInterval(VarIdx idx) const {
+    auto & network = framework.getNetwork();
+    return {network.getInputLowerBound(idx), network.getInputUpperBound(idx)};
+}
+
+Interval IntervalExplanation::optVarBoundToInterval(VarIdx idx, std::optional<VarBound> const & optVarBnd) const {
+    if (optVarBnd.has_value()) { return varBoundToInterval(idx, *optVarBnd); }
+
+    auto & network = framework.getNetwork();
+    return makeDomainInterval(idx);
+}
+
 Interval IntervalExplanation::varBoundToInterval(VarIdx idx, VarBound const & varBnd) const {
-    if (varBnd.isPoint()) { return varBnd.getBound().getValue(); }
-    if (varBnd.isInterval()) { return {varBnd.getLowerBound().getValue(), varBnd.getUpperBound().getValue()}; }
+    if (auto optIval = varBnd.tryGetInterval()) { return std::move(*optIval); }
+    assert(not varBnd.isPoint());
+    assert(not varBnd.isInterval());
 
     auto & bnd = varBnd.getBound();
     assert(bnd.isLower() xor bnd.isUpper());
     bool const isLower = bnd.isLower();
 
     auto & network = framework.getNetwork();
-    Float const val = bnd.getValue();
+    Float val = bnd.getValue();
     auto ival =
         isLower ? Interval{val, network.getInputUpperBound(idx)} : Interval{network.getInputLowerBound(idx), val};
-    assert(ival.size() > 0);
+    assert(not ival.isPoint());
 
     return ival;
 }
@@ -110,6 +123,13 @@ std::size_t IntervalExplanation::computeFixedCount() const {
         auto & varBnd = pair.second;
         return varBnd.isPoint();
     });
+}
+
+Float IntervalExplanation::getRelativeVolume() const {
+    return computeRelativeVolumeTp<false>();
+}
+Float IntervalExplanation::getRelativeVolumeSkipFixed() const {
+    return computeRelativeVolumeTp<true>();
 }
 
 template<bool skipFixed>
@@ -141,20 +161,123 @@ Float IntervalExplanation::computeRelativeVolumeTp() const {
     return relVolume;
 }
 
-template Float IntervalExplanation::computeRelativeVolumeTp<false>() const;
-template Float IntervalExplanation::computeRelativeVolumeTp<true>() const;
-
-void IntervalExplanation::print(std::ostream & os) const {
-    for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
-        os << varBnd << '\n';
+void IntervalExplanation::print(std::ostream & os, PrintFormat const & type, PrintConfig const & conf) const {
+    using enum PrintFormat;
+    switch (type) {
+        default:
+        case bounds:
+            print(os, conf);
+            return;
+        case smtlib2:
+            printSmtLib2(os, conf);
+            return;
+        case intervals:
+            printIntervals(os, conf);
+            return;
     }
 }
 
-void IntervalExplanation::printSmtLib2(std::ostream & os) const {
-    os << "(and";
-    for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
-        os << ' ' << smtLib2Format(varBnd);
+void IntervalExplanation::print(std::ostream & os, PrintFormat const & type) const {
+    using enum PrintFormat;
+    switch (type) {
+        default:
+        case bounds:
+            print(os, PrintConfig{});
+            return;
+        case smtlib2:
+            printSmtLib2(os, defaultSmtLib2PrintConfig);
+            return;
+        case intervals:
+            printIntervals(os, defaultIntervalsPrintConfig);
+            return;
     }
-    os << ')';
+}
+
+void IntervalExplanation::print(std::ostream & os, PrintConfig const & conf) const {
+    printTp<PrintFormat::bounds>(os, conf);
+}
+
+void IntervalExplanation::printSmtLib2(std::ostream & os, PrintConfig const & conf) const {
+    printTp<PrintFormat::smtlib2>(os, conf);
+}
+
+void IntervalExplanation::printIntervals(std::ostream & os, PrintConfig const & conf) const {
+    printTp<PrintFormat::intervals>(os, conf);
+}
+
+template<IntervalExplanation::PrintFormat type>
+void IntervalExplanation::printTp(std::ostream & os, PrintConfig const & conf) const {
+    constexpr bool isBounds = (type == PrintFormat::bounds);
+    constexpr bool isSmtLib2 = (type == PrintFormat::smtlib2);
+    constexpr bool isIntervals = (type == PrintFormat::intervals);
+
+    if constexpr (isSmtLib2) { os << "(and"; }
+
+    if (not conf.includeAll) {
+        for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
+            if constexpr (isBounds) {
+                printElem(os, conf, varBnd);
+            } else if constexpr (isSmtLib2) {
+                printElemSmtLib2(os, conf, varBnd);
+            } else {
+                static_assert(isIntervals);
+                printElemInterval(os, conf, idx, varBnd);
+            }
+        }
+    } else {
+        for (auto & optVarBnd : allVarBounds) {
+            [[maybe_unused]] VarIdx const idx = getIdx(optVarBnd);
+            if constexpr (isBounds) {
+                printElem(os, conf, idx, optVarBnd);
+            } else if constexpr (isSmtLib2) {
+                printElemSmtLib2(os, conf, idx, optVarBnd);
+            } else {
+                static_assert(isIntervals);
+                printElemInterval(os, conf, idx, optVarBnd);
+            }
+        }
+    }
+
+    if constexpr (isSmtLib2) { os << ')'; }
+}
+
+void IntervalExplanation::printElem(std::ostream & os, PrintConfig const & conf, VarBound const & varBnd) {
+    os << varBnd << conf.delim;
+}
+
+void IntervalExplanation::printElemSmtLib2(std::ostream & os, PrintConfig const & conf, VarBound const & varBnd) {
+    os << conf.delim << smtLib2Format(varBnd);
+}
+
+void IntervalExplanation::printElemInterval(std::ostream & os, PrintConfig const & conf, VarIdx idx,
+                                            VarBound const & varBnd) const {
+    os << varBoundToInterval(idx, varBnd) << conf.delim;
+}
+
+void IntervalExplanation::printElem(std::ostream & os, PrintConfig const & conf, VarIdx idx,
+                                    std::optional<VarBound> const & optVarBnd) const {
+    if (optVarBnd.has_value()) {
+        printElem(os, conf, *optVarBnd);
+    } else {
+        os << framework.getVarName(idx) << " free" << conf.delim;
+    }
+}
+
+void IntervalExplanation::printElemSmtLib2(std::ostream & os, PrintConfig const & conf, VarIdx idx,
+                                           std::optional<VarBound> const & optVarBnd) const {
+    if (optVarBnd.has_value()) {
+        printElemSmtLib2(os, conf, *optVarBnd);
+        return;
+    }
+
+    auto & network = framework.getNetwork();
+    Interval ival = makeDomainInterval(idx);
+    VarBound varBnd = makeVarBound(idx, std::move(ival));
+    printElemSmtLib2(os, conf, varBnd);
+}
+
+void IntervalExplanation::printElemInterval(std::ostream & os, PrintConfig const & conf, VarIdx idx,
+                                            std::optional<VarBound> const & optVarBnd) const {
+    os << optVarBoundToInterval(idx, optVarBnd) << conf.delim;
 }
 } // namespace xspace
