@@ -169,7 +169,7 @@ Verifier::Answer toAnswer(sstat res) {
 void OpenSMTVerifier::OpenSMTImpl::loadModel(nn::NNet const & network) {
     // create input variables
     for (NodeIndex i = 0u; i < network.getLayerSize(0); ++i) {
-        auto name = "input" + std::to_string(i);
+        auto name = "x" + std::to_string(i + 1);
         PTRef var = logic->mkRealVar(name.c_str());
         inputVars.push_back(var);
     }
