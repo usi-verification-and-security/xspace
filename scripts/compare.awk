@@ -61,7 +61,7 @@ FNR == 1 {
     }
 }
 
-/size:/ {
+/size:/ && $1 != "Dataset" {
     if (first_is_fixed[fidx]) {
     ## this discards the very first encounter
     } else if (first_is_size[fidx]) {
@@ -102,8 +102,8 @@ END {
         idx++
     }
 
-    print(cnt)
     assert(idx-1 == cnt, "idx-1 == cnt: " idx-1 " == " cnt)
+    print("Total: " cnt)
 
     for (f = 1; f <= fidx; f++) {
         for (i = 1; i <= cnt; i++) {

@@ -133,6 +133,17 @@ while true; do
     (( $cnt >= $MAX_LINES )) && break
 done <"$FILE1" 3<"$FILE2"
 
+[[ -z $MAX_LINES ]] && cnt=${#IFILES_SUBSET[@]}
+
+[[ -z $MAX_LINES && $cnt != $N_LINES ]] && {
+    printf "Unexpected mismatch of the # processed files: %d != %d\n" $cnt $N_LINES >&2
+    cleanup 9
+}
+[[ -n $MAX_LINES && $cnt != $MAX_LINES ]] && {
+    printf "Unexpected mismatch of the bounded # processed files: %d != %d\n" $cnt $MAX_LINES >&2
+    cleanup 9
+}
+
 wait || {
     printf "Error when waiting on the rest of processes.\n" >&2
     cleanup 4
@@ -176,6 +187,7 @@ for idx in ${!IFILES_SUBSET[@]}; do
     fi
 done
 
+printf "Total: %d\n" $cnt
 printf "<: %d =: %d >: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $UNCOMPARABLE_CNT
 
 cleanup 0

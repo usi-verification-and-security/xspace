@@ -19,7 +19,7 @@ function assert(condition, string) {
    if (computed == expected) correct_cnt++
 }
 
-/size:/ {
+/size:/ && $1 != "Dataset" {
    split($NF, nums, "/")
    sum_size += nums[1]
    div_sum_size += nums[2]
