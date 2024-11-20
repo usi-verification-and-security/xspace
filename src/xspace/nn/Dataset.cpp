@@ -2,19 +2,16 @@
 
 #include <cassert>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
+#include <ranges>
 #include <sstream>
 #include <string>
-#include <ranges>
 
 namespace xspace {
 Dataset::Dataset(std::string_view fileName) {
     std::ifstream file{std::string{fileName}};
-    if (not file.good()) {
-        // !!!
-        //- throw std::runtime_error("Could not open dataset file " << fileName << std::endl;
-        return;
-    }
+    if (not file.good()) { throw std::ifstream::failure{"Could not open dataset file "s + std::string{fileName}}; }
 
     // Read the first line to skip the header
     std::string header;

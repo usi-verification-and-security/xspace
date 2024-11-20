@@ -18,7 +18,9 @@
 #include <cassert>
 #include <iomanip>
 #include <numeric>
+#include <queue>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace xspace {
@@ -29,14 +31,20 @@ std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::s
     } else if (toLower(name) == "marabou") {
         return std::make_unique<xai::verifiers::MarabouVerifier>();
 #endif
-    } else {
-        // !!!
-        //- throw std::runtime_error(std::cerr << "Unrecognized verifier name: " << name << '\n';)
-        return {};
     }
+
+    throw std::invalid_argument{"Unrecognized verifier name: "s + std::string{name}};
 }
 
 void Framework::Expand::setStrategies(std::istream & is) {
+    static auto const checkAdditionalParameters = [](std::string const & line, auto const & params) {
+        if (params.empty()) return;
+        throw std::invalid_argument{"Additional parameters of strategy: "s + line};
+    };
+    static auto const throwInvalidParameter = [](std::string const & name, auto const & param) {
+        throw std::invalid_argument{"Invalid parameter of strategy "s + name + ": " + param};
+    };
+
     auto const & config = framework.getConfig();
 
     VarOrdering defaultVarOrder{};
@@ -44,39 +52,45 @@ void Framework::Expand::setStrategies(std::istream & is) {
 
     std::string line;
     while (std::getline(is, line, ',')) {
-        std::istringstream issLine{std::move(line)};
+        std::istringstream issLine{line};
         std::string name;
         issLine >> name;
-        std::vector<std::string> params;
+        std::queue<std::string> params;
         for (std::string param; issLine >> param;) {
-            params.push_back(std::move(param));
+            params.push(std::move(param));
         }
 
         auto const nameLower = toLower(name);
         if (nameLower == "abductive") {
-            assert(params.empty());
+            checkAdditionalParameters(line, params);
             addStrategy(std::make_unique<AbductiveStrategy>(*this, defaultVarOrder));
             continue;
         }
 
         if (nameLower == "ucore") {
             UnsatCoreStrategy::Config conf;
-            for (auto & param : params) {
+            while (not params.empty()) {
+                auto param = std::move(params.front());
+                params.pop();
                 auto const paramLower = toLower(param);
-                if (paramLower == "eq" or paramLower == "sample") {
+                if (paramLower == "sample") {
                     conf.splitEq = false;
-                    continue;
+                    break;
                 }
 
-                assert(paramLower == "spliteq" or paramLower == "interval");
-                conf.splitEq = true;
+                if (paramLower == "interval") {
+                    conf.splitEq = true;
+                    break;
+                }
+
+                throwInvalidParameter(name, param);
             }
+            checkAdditionalParameters(line, params);
             addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf, defaultVarOrder));
             continue;
         }
 
-        //- throw std::runtime_error(std::cerr << "Unrecognized strategy name: " << name << '\n';)
-        assert(false);
+        throw std::invalid_argument{"Unrecognized strategy name: "s + name};
     }
 }
 

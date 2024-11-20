@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -28,11 +29,18 @@ void printUsageOptRow(std::ostream & os, char opt, std::string_view desc) {
 
 void printUsage(std::ostream & os = std::cout) {
     os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]\n";
-    os << "VERIFIERS: opensmt\n";
+
+    os << "VERIFIERS: opensmt";
+#ifdef MARABOU
+    os << " marabou";
+#endif
+    os << '\n';
+
     os << "STRATEGIES SPEC: '<spec1>[,<spec2>]...'\n";
     os << "Each spec: '<name>[ <param>]...'\n";
     printUsageStrategyRow(os, "abductive");
     printUsageStrategyRow(os, "ucore", {"sample", "interval"});
+
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "Prints this help message and exits");
     printUsageOptRow(os, 'v', "Run in verbose mode");
@@ -103,7 +111,12 @@ int main(int argc, char * argv[]) try {
     assert(explanations.size() == size);
 
     return 0;
-} catch (std::exception const &) {
-    // !!!
-    //- ...
+} catch (std::system_error const & e) {
+    std::cerr << e.what() << '\n' << std::endl;
+    printUsage(std::cerr);
+    return e.code().value();
+} catch (std::exception const & e) {
+    std::cerr << e.what() << '\n' << std::endl;
+    printUsage(std::cerr);
+    return 1;
 }
