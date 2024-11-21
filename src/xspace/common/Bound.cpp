@@ -2,6 +2,10 @@
 
 #include "Print.h"
 
+//+ ideally get rid of these
+#include <common/FastRational.h>
+#include <common/StringConv.h>
+
 #include <ostream>
 
 namespace xspace {
@@ -65,6 +69,28 @@ void VarBound::printSmtLib2(std::ostream & os) const {
 }
 
 void VarBound::printSmtLib2Bound(std::ostream & os, Bound const & bnd) const {
-    os << '(' << bnd.getSymbol() << ' ' << varName << ' ' << bnd.getValue() << ')';
+    os << '(' << bnd.getSymbol() << ' ' << varName << ' ';
+    printSmtLib2AsRational(os, bnd.getValue());
+    os << ')';
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+    //+ to be consistent with BasicVerix, but ideally should not depend on OpenSMT
+    opensmt::FastRational floatToFastRational(Float value) {
+        //! approximation
+        auto s = std::to_string(value);
+        char * rationalString;
+        opensmt::stringToRational(rationalString, s.c_str());
+        auto res = opensmt::FastRational(rationalString);
+        free(rationalString);
+        return res;
+    }
+} // namespace
+
+void printSmtLib2AsRational(std::ostream & os, Float val) {
+    auto const rat = floatToFastRational(val);
+    os << rat;
 }
 } // namespace xspace

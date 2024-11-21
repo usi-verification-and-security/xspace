@@ -201,6 +201,8 @@ private:
 
     bool isPointImpl() const { return getBound().isEq(); }
 };
+
+void printSmtLib2AsRational(std::ostream &, Float);
 } // namespace xspace
 
 #endif // XSPACE_BOUND_H
