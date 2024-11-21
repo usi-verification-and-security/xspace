@@ -30,18 +30,34 @@ MAX_LINES=$4
 
 N_LINES1=$(sed '/^ *$/d' <"$FILE1" | wc -l)
 N_LINES2=$(sed '/^ *$/d' <"$FILE2" | wc -l)
-(( $N_LINES1 != $N_LINES2 )) && {
-    printf "The number of lines of the data files do not match: %d != %d\n" $N_LINES1 $N_LINES2 >&2
-    exit 2
-}
-N_LINES=$N_LINES1
 
-[[ -n $MAX_LINES ]] && {
-    (( $MAX_LINES > $N_LINES )) && {
-        printf "The entered max. no. lines is greater than the actual no. lines: %d > %d\n" $MAX_LINES $N_LINES >&2
+if [[ -z $MAX_LINES ]]; then
+    (( $N_LINES1 != $N_LINES2 )) && {
+        printf "The number of lines of the data files do not match: %d != %d\n" $N_LINES1 $N_LINES2 >&2
         exit 2
     }
-}
+    N_LINES=$N_LINES1
+else
+    if (( $N_LINES1 <= $N_LINES2 )); then
+        N_LINES=$N_LINES1
+    else
+        N_LINES=$N_LINES2
+    fi
+
+    if [[ $MAX_LINES == max ]]; then
+        MAX_LINES=$N_LINES
+    else
+        [[ $MAX_LINES =~ ^[1-9][0-9]*$ ]] || {
+            printf "Expected max. no. lines, got: %s\n" "$MAX_LINES" >&2
+            exit 2
+        }
+
+        (( $MAX_LINES > $N_LINES )) && {
+            printf "The entered max. no. lines is greater than the min. no. lines of the files: %d > %d\n" $MAX_LINES $N_LINES >&2
+            exit 2
+        }
+    fi
+fi
 
 SOLVER=z3
 # SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
@@ -97,11 +113,11 @@ while true; do
         cleanup 9
     }
 
-    ifile_subset=$(mktemp).smt2
+    ifile_subset=$(mktemp --suffix=.smt2)
     ofile_subset=${ifile_subset}.out
     IFILES_SUBSET+=($ifile_subset)
     OFILES_SUBSET+=($ofile_subset)
-    ifile_supset=$(mktemp).smt2
+    ifile_supset=$(mktemp --suffix=.smt2)
     ofile_supset=${ifile_supset}.out
     IFILES_SUPSET+=($ifile_supset)
     OFILES_SUPSET+=($ofile_supset)
