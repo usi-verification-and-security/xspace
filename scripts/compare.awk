@@ -140,7 +140,7 @@ END {
         }
 
         printf("<: %d =: %d >: %d\n", lts[f], eqs[f], gts[f])
-        printf("<<: %d <: %d =: %d >: %d >>:%d\n", lts2[f], lts1[f], eqs[f], gts1[f], gts2[f])
+        printf("<<: %d <: %d =: %d >: %d >>: %d\n", lts2[f], lts1[f], eqs[f], gts1[f], gts2[f])
 
         assert(lts[f] + gts[f] + eqs[f] == cnt, "lts["f"] + gts["f"] + eqs["f"] == "cnt)
         assert(lts2[f] + lts1[f] + gts1[f] + gts2[f] + eqs[f] == cnt, "lts2["f"] + lts1["f"] + gts1["f"] + gts2["f"] + eqs["f"] == "cnt)

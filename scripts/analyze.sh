@@ -121,7 +121,7 @@ N_PROC=0
 PIDS=()
 
 [[ $ACTION == count-fixed ]] && {
-    VARIABLES=($(sed -rn '/declare-fun/s/.*declare-fun ([^ ]*) .*/\1/p' <$PSI_FILE))
+    VARIABLES=($(sed -rn 's/.*declare-fun ([^ ]*) .*/\1/p' <$PSI_FILE))
 }
 
 case $ACTION in

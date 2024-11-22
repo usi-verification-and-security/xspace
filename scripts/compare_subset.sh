@@ -1,5 +1,16 @@
 #!/bin/bash
 
+## Compare two formulas whether they are a subset of another
+## > F_1 \subseteq F_2
+## > \forall x . [D(x) \land \phi_1(x)] => [D(x) \land \phi_2(x)]
+## > \neg \exists x . D(x) \land \phi_1(x) \land [D(x) => \neg \phi_2(x)]
+## > \neg \exists x . D(x) \land \phi_1(x) \land \neg \phi_2(x)
+
+## In "relaxed" mode, consider subset relationship also under translation
+## > \exists k . F_1 + k \subseteq F_2
+## > \exists k \forall x . [D(x) \land \phi_1(x)] => [D(x + k) \land \phi_2(x + k)]
+## > (\neg \forall k \exists x . D(x) \land \phi_1(x) \land [D(x + k) => \neg \phi_2(x + k)])
+
 [[ -z $1 ]] && {
     printf "USAGE: %s <psi_d> <f1> <f2> [<max_rows>]\n" "$0"
     exit 0
@@ -59,7 +70,53 @@ else
     fi
 fi
 
-SOLVER=z3
+####################################################################################################
+
+function sub_vars {
+    local -n str=$1
+    local -n array_sub=$2
+
+    for i in ${!VARIABLES[@]}; do
+        j=$(( ${#VARIABLES[@]} - $i - 1 ))
+        local var=${VARIABLES[$j]}
+        local sub="${array_sub[$j]}"
+        sub="${sub/$var/${var^^}}"
+        str="${str//$var/$sub}"
+    done
+    for i in ${!VARIABLES[@]}; do
+        j=$(( ${#VARIABLES[@]} - $i - 1 ))
+        local var=${VARIABLES[$j]}
+        str="${str//${var^^}/$var}"
+    done
+}
+
+PSI_D_WITH_K_FILE=$(mktemp --suffix=.smt2)
+sed 's/QF_LRA/LRA/;s/assert/& (forall ()\n(=> (and/;$d' <"$PSI_D_FILE" >$PSI_D_WITH_K_FILE
+
+DOMAINS=$(sed -n '/and/,$p' <"$PSI_D_FILE")
+DOMAINS="${DOMAINS%)}"
+
+VARIABLES=($(sed -rn 's/.*declare-fun ([^ ]*) .*/\1/p' <"$PSI_D_FILE"))
+for var in ${VARIABLES[@]}; do
+    VAR_Q_PAIRS+=("($var Real)")
+
+    kvar=${var/x/k}
+    K_VARIABLES+=($kvar)
+    sed -i "/declare-fun/s/$var /$kvar /" $PSI_D_WITH_K_FILE
+
+    relaxed_vterm="(+ $var $kvar)"
+    RELAXED_VAR_TERMS+=("$relaxed_vterm")
+done
+
+RELAXED_DOMAINS="$DOMAINS"
+sub_vars RELAXED_DOMAINS RELAXED_VAR_TERMS
+
+sed -i "s/forall (/&${VAR_Q_PAIRS[*]}/" $PSI_D_WITH_K_FILE
+
+####################################################################################################
+
+SOLVER=cvc5
+# SOLVER=z3
 # SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
 
 command -v $SOLVER &>/dev/null || {
@@ -72,6 +129,12 @@ IFILES_SUPSET=()
 
 OFILES_SUBSET=()
 OFILES_SUPSET=()
+
+IFILES_SUBSET_RELAXED=()
+IFILES_SUPSET_RELAXED=()
+
+OFILES_SUBSET_RELAXED=()
+OFILES_SUPSET_RELAXED=()
 
 # set -e
 
@@ -88,20 +151,41 @@ function cleanup {
         local ofile_subset=${OFILES_SUBSET[$idx]}
         local ifile_supset=${IFILES_SUPSET[$idx]}
         local ofile_supset=${OFILES_SUPSET[$idx]}
+        local ifile_subset_relaxed=${IFILES_SUBSET_RELAXED[$idx]}
+        local ofile_subset_relaxed=${OFILES_SUBSET_RELAXED[$idx]}
+        local ifile_supset_relaxed=${IFILES_SUPSET_RELAXED[$idx]}
+        local ofile_supset_relaxed=${OFILES_SUPSET_RELAXED[$idx]}
         rm -f $ifile_subset
         rm -f $ofile_subset
         rm -f $ifile_supset
         rm -f $ofile_supset
+        rm -f $ifile_subset_relaxed
+        rm -f $ofile_subset_relaxed
+        rm -f $ifile_supset_relaxed
+        rm -f $ofile_supset_relaxed
     done
+
+    rm -f $PSI_D_WITH_K_FILE
 
     [[ -n $code ]] && exit $code
 }
+
+trap 'cleanup 1' INT TERM QUIT
 
 N_CPU=$(nproc --all)
 MAX_PROC=$(( 1 + $N_CPU/2 ))
 N_PROC=0
 
 PIDS=()
+
+function relax {
+    local -n line=$1
+    local -n line_relaxed=$2
+
+    line_relaxed=$'(and\n'"$line"
+    sub_vars line_relaxed RELAXED_VAR_TERMS
+    line_relaxed+=$'\n'"$RELAXED_DOMAINS)"
+}
 
 cnt=0
 while true; do
@@ -122,10 +206,29 @@ while true; do
     IFILES_SUPSET+=($ifile_supset)
     OFILES_SUPSET+=($ofile_supset)
 
+    ifile_subset_relaxed=$(mktemp --suffix=.smt2)
+    ofile_subset_relaxed=${ifile_subset_relaxed}.out
+    IFILES_SUBSET_RELAXED+=($ifile_subset_relaxed)
+    OFILES_SUBSET_RELAXED+=($ofile_subset_relaxed)
+    ifile_supset_relaxed=$(mktemp --suffix=.smt2)
+    ofile_supset_relaxed=${ifile_supset_relaxed}.out
+    IFILES_SUPSET_RELAXED+=($ifile_supset_relaxed)
+    OFILES_SUPSET_RELAXED+=($ofile_supset_relaxed)
+
     cp "$PSI_D_FILE" $ifile_subset
     cp "$PSI_D_FILE" $ifile_supset
-    printf "(assert (and %s (not %s)))\n(check-sat)\n" "$line1" "$line2" >>$ifile_subset
-    printf "(assert (and (not %s) %s))\n(check-sat)\n" "$line1" "$line2" >>$ifile_supset
+
+    cp $PSI_D_WITH_K_FILE $ifile_subset_relaxed
+    cp $PSI_D_WITH_K_FILE $ifile_supset_relaxed
+
+    printf "(assert (and\n%s\n(not %s)\n))\n(check-sat)\n" "$line1" "$line2" >>$ifile_subset
+    printf "(assert (and\n%s\n(not %s)\n))\n(check-sat)\n" "$line2" "$line1" >>$ifile_supset
+
+    relax line1 line1_relaxed
+    relax line2 line2_relaxed
+
+    printf "%s\n)\n%s\n)))\n(check-sat)\n" "$line1" "$line2_relaxed" >>$ifile_subset_relaxed
+    printf "%s\n)\n%s\n)))\n(check-sat)\n" "$line2" "$line1_relaxed" >>$ifile_supset_relaxed
 
     while (( $N_PROC >= $MAX_PROC )); do
         # wait -n -p pid || {
@@ -141,6 +244,13 @@ while true; do
     PIDS+=($!)
     (( ++N_PROC ))
     $SOLVER $ifile_supset &>$ofile_supset &
+    PIDS+=($!)
+    (( ++N_PROC ))
+
+    $SOLVER $ifile_subset_relaxed &>$ofile_subset_relaxed &
+    PIDS+=($!)
+    (( ++N_PROC ))
+    $SOLVER $ifile_supset_relaxed &>$ofile_supset_relaxed &
     PIDS+=($!)
     (( ++N_PROC ))
 
@@ -165,45 +275,120 @@ wait || {
     cleanup 4
 }
 
-SUBSET_CNT=0
-SUPSET_CNT=0
-EQUAL_CNT=0
-UNCOMPARABLE_CNT=0
-for idx in ${!IFILES_SUBSET[@]}; do
-    ofile_subset=${OFILES_SUBSET[$idx]}
-    ofile_supset=${OFILES_SUPSET[$idx]}
+function get_result {
+    local ofile_subset_id=$1
+    local ofile_supset_id=$2
+    local -n subset_res=$3
+    local -n supset_res=$4
+    local negate=$5
 
-    subset_result=$(cat $ofile_subset)
-    supset_result=$(cat $ofile_supset)
+    for s in subset supset; do
+        local -n ofile_id=ofile_${s}_id
+        local -n ofile=$ofile_id
 
-    if [[ $subset_result == unsat ]]; then
-        if [[ $supset_result == unsat ]]; then
-            (( ++EQUAL_CNT ))
-        elif [[ $supset_result == sat ]]; then
-            (( ++SUBSET_CNT ))
-        else
-            printf "Unexpected output of supset query: %s\n" $supset_result >&2
-            less $ofile_supset
+        local sat_res=$(cat $ofile)
+        local -n res=${s}_res
+        [[ $sat_res =~ ^(un|)sat$ ]] || {
+            printf "Unexpected output of $s query: %s\n" $sat_res >&2
+            less $ofile
             cleanup 3
-        fi
-    elif [[ $subset_result == sat ]]; then
-        if [[ $supset_result == unsat ]]; then
-            (( ++SUPSET_CNT ))
-        elif [[ $supset_result == sat ]]; then
-            (( ++UNCOMPARABLE_CNT ))
+        }
+        if [[ $sat_res == sat ]]; then
+            res=$(( ! negate ))
         else
-            printf "Unexpected output of supset query: %s\n" $supset_result >&2
-            less $ofile_supset
-            cleanup 3
+            res=$(( negate ))
         fi
-    else
-        printf "Unexpected output of subset query: %s\n" $subset_result >&2
-        less $ofile_subset
-        cleanup 3
-    fi
-done
+    done
+}
+
+function count_results {
+    local -n subset_cnt=$1
+    local -n supset_cnt=$2
+    local -n equal_cnt=$3
+    local -n uncomparable_cnt=$4
+    local -n ofiles_subset=$5
+    local -n ofiles_supset=$6
+
+    local relaxed=0
+    [[ $1 =~ _RELAXED ]] && relaxed=1
+
+    local negate=$(( ! relaxed ))
+
+    subset_cnt=0
+    supset_cnt=0
+    equal_cnt=0
+    uncomparable_cnt=0
+    for idx in ${!ofiles_subset[@]}; do
+        local ofile_subset=${ofiles_subset[$idx]}
+        local ofile_supset=${ofiles_supset[$idx]}
+
+        local subset_result
+        local supset_result
+        get_result ofile_subset ofile_supset subset_result supset_result $negate
+
+        local subset_result_only=$(( subset_result && !supset_result ))
+        local supset_result_only=$(( supset_result && !subset_result ))
+        local equal_result=$(( subset_result && supset_result ))
+
+        (( relaxed )) && {
+            local ofile_subset_strict=${OFILES_SUBSET[$idx]}
+            local ofile_supset_strict=${OFILES_SUPSET[$idx]}
+
+            local ifile_subset_strict=${IFILES_SUBSET[$idx]}
+            local ifile_supset_strict=${IFILES_SUPSET[$idx]}
+            local ifile_subset_relaxed=${IFILES_SUBSET_RELAXED[$idx]}
+            local ifile_supset_relaxed=${IFILES_SUPSET_RELAXED[$idx]}
+
+            local subset_result_strict
+            local supset_result_strict
+            get_result ofile_subset_strict ofile_supset_strict subset_result_strict supset_result_strict $((!negate))
+
+            local subset_result_strict_only=$(( subset_result_strict && !supset_result_strict ))
+            local supset_result_strict_only=$(( supset_result_strict && !subset_result_strict ))
+            local equal_result_strict=$(( subset_result_strict && supset_result_strict ))
+
+            for res_name in subset supset equal; do
+                local res_strict_id=${res_name}_result_strict_only
+                local res_id=${res_name}_result_only
+                [[ $res_name == equal ]] && {
+                    res_strict_id=${res_strict_id%_only}
+                    res_id=${res_id%_only}
+                }
+                local -n res_strict=$res_strict_id
+                local -n res=$res_id
+
+                (( !res_strict || $res )) && continue
+
+                printf "Detected strict $res_name but non-relaxed $res_name: %d !=> %d\n" $res_strict $res >&2
+                printf "relaxed subset:%d supset:%d\n" $subset_result $supset_result
+                cp -v $ifile_subset_strict tmp.ifile_subset_strict.smt2 >&2
+                cp -v $ifile_supset_strict tmp.ifile_supset_strict.smt2 >&2
+                cp -v $ifile_subset_relaxed tmp.ifile_subset_relaxed.smt2 >&2
+                cp -v $ifile_supset_relaxed tmp.ifile_supset_relaxed.smt2 >&2
+                cleanup 8
+            done
+        }
+
+        if (( subset_result_only )); then
+            (( ++subset_cnt ))
+        elif (( supset_result_only )); then
+            (( ++supset_cnt ))
+        elif (( equal_result )); then
+            (( ++equal_cnt ))
+        else
+            (( ++uncomparable_cnt ))
+        fi
+    done
+}
+
+count_results SUBSET_CNT SUPSET_CNT EQUAL_CNT UNCOMPARABLE_CNT OFILES_SUBSET OFILES_SUPSET
+count_results SUBSET_CNT_RELAXED SUPSET_CNT_RELAXED EQUAL_CNT_RELAXED UNCOMPARABLE_CNT_RELAXED OFILES_SUBSET_RELAXED OFILES_SUPSET_RELAXED
+
+SUBSET_CNT_RELAXED_ONLY=$(( SUBSET_CNT_RELAXED - SUBSET_CNT ))
+SUPSET_CNT_RELAXED_ONLY=$(( SUPSET_CNT_RELAXED - SUPSET_CNT ))
 
 printf "Total: %d\n" $cnt
-printf "<: %d =: %d >: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $UNCOMPARABLE_CNT
+printf "<<: %d =: %d >>: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $UNCOMPARABLE_CNT
+printf "<<: %d <: %d =: %d >: %d >>: %d | ?: %d\n" $SUBSET_CNT $SUBSET_CNT_RELAXED_ONLY $EQUAL_CNT_RELAXED $SUPSET_CNT_RELAXED_ONLY $SUPSET_CNT $UNCOMPARABLE_CNT_RELAXED
 
 cleanup 0
