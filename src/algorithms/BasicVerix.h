@@ -54,17 +54,13 @@ public:
     Result computeOpenSMTExplanation(std::vector<float> const & inputValues, float freedom_factor,
                                      std::vector<std::size_t> const & featureOrder);
 
-    std::size_t getChecksCount() const { return checksCount; }
+    std::size_t getChecksCount() const { return verifier->getChecksCount(); }
 
 protected:
     void encodeClassificationConstraint(std::vector<float> const & output, NodeIndex label);
 
-    Verifier::Answer check();
-
     std::unique_ptr<nn::NNet> network;
     std::unique_ptr<Verifier> verifier;
-
-    std::size_t checksCount;
 };
 
 } // namespace xai::algo

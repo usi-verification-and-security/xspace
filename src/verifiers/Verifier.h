@@ -27,17 +27,32 @@ public:
 
     virtual void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) = 0;
 
-    virtual void init() {}
+    virtual void init() {
+        initImpl();
+        reset();
+    }
 
     virtual void push() = 0;
     virtual void pop() = 0;
 
-    virtual Answer check() = 0;
+    virtual Answer check() {
+        ++checksCount;
+        return checkImpl();
+    }
 
-    virtual void resetSample() { reset(); }
-    virtual void reset() {}
+    std::size_t getChecksCount() const { return checksCount; }
+
+    virtual void resetSample() { checksCount = 0; }
+    virtual void reset() { resetSample(); }
 
     virtual ~Verifier() = default;
+
+protected:
+    virtual void initImpl() {}
+
+    virtual Answer checkImpl() = 0;
+
+    std::size_t checksCount{};
 };
 } // namespace xai::verifiers
 

@@ -27,12 +27,8 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
-    void init() override;
-
     void push() override;
     void pop() override;
-
-    Answer check() override;
 
     void resetSample() override;
     void reset() override;
@@ -40,6 +36,11 @@ public:
     UnsatCore getUnsatCore() const override;
 
     opensmt::MainSolver & getSolver();
+
+protected:
+    void initImpl() override;
+
+    Answer checkImpl() override;
 
 private:
     class OpenSMTImpl;

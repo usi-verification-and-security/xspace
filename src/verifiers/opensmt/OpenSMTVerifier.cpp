@@ -108,7 +108,7 @@ void OpenSMTVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<Node
     pimpl->addConstraint(layer, lhs, rhs);
 }
 
-void OpenSMTVerifier::init() {
+void OpenSMTVerifier::initImpl() {
     pimpl->init();
 }
 
@@ -120,16 +120,18 @@ void OpenSMTVerifier::pop() {
     pimpl->pop();
 }
 
-Verifier::Answer OpenSMTVerifier::check() {
+Verifier::Answer OpenSMTVerifier::checkImpl() {
     return pimpl->check();
 }
 
 void OpenSMTVerifier::resetSample() {
     pimpl->resetSample();
+    UnsatCoreVerifier::resetSample();
 }
 
 void OpenSMTVerifier::reset() {
     pimpl->reset();
+    UnsatCoreVerifier::reset();
 }
 
 UnsatCore OpenSMTVerifier::getUnsatCore() const {
@@ -342,7 +344,7 @@ void OpenSMTVerifier::OpenSMTImpl::init() {
         config->setSimplifyInterpolant(4);
     }
 
-    reset();
+    // reset() is called by Verifier
 }
 
 void OpenSMTVerifier::OpenSMTImpl::resetSample() {
@@ -357,7 +359,7 @@ void OpenSMTVerifier::OpenSMTImpl::reset() {
     inputVars.clear();
     outputVars.clear();
 
-    resetSample();
+    // resetSample() is called by Verifier
 }
 
 UnsatCore OpenSMTVerifier::OpenSMTImpl::getUnsatCore() const {

@@ -24,9 +24,8 @@ public:
     void push() override;
     void pop() override;
 
-    Answer check() override;
-
-    void reset() override;
+protected:
+    Answer checkImpl() override;
 
 private:
     class MarabouImpl;

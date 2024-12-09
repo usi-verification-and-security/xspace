@@ -107,7 +107,7 @@ void MarabouVerifier::pop() {
     pimpl->pop();
 }
 
-Verifier::Answer MarabouVerifier::check() {
+Verifier::Answer MarabouVerifier::checkImpl() {
     return pimpl->check();
 }
 
