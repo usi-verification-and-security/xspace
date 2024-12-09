@@ -128,16 +128,16 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
             strategy->execute(explanation);
         }
 
-        resetClassification();
-
-        //+ This should not ideally be necessary
-        resetModel();
-
         if (printingStats) { printStats(explanation, data, i); }
         if (printingExplanations) {
             explanation.print(cexp, expPrintFormat);
             cexp << std::endl;
         }
+
+        resetClassification();
+
+        //+ This should not ideally be necessary
+        resetModel();
     }
 }
 
@@ -240,6 +240,7 @@ void Framework::Expand::printStats(IntervalExplanation const & explanation, Data
     cstats << "sample [" << i + 1 << '/' << size << "]: " << sample << '\n';
     cstats << "expected output: " << expOutput << '\n';
     cstats << "computed output: " << output.classifiedIdx << '\n';
+    cstats << "#checks: " << verifierPtr->getChecksCount() << '\n';
     cstats << "explanation size: " << expSize << '/' << varSize << std::endl;
 
     assert(explanation.getRelativeVolumeSkipFixed() > 0);
@@ -249,7 +250,7 @@ void Framework::Expand::printStats(IntervalExplanation const & explanation, Data
 
     Float const relVolume = explanation.getRelativeVolumeSkipFixed();
 
-    cstats << "fixed features: " << fixedCount << '/' << varSize << std::endl;
+    cstats << "fixed features: " << fixedCount << '/' << varSize << '\n';
     cstats << "relVolume*: " << std::setprecision(1) << (relVolume * 100) << "%" << std::setprecision(defaultPrecision)
            << std::endl;
 }
