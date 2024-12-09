@@ -2,6 +2,7 @@
 
 #include <xspace/common/Print.h>
 #include <xspace/framework/Framework.h>
+#include <xspace/framework/Utils.h>
 
 #include <algorithm>
 
@@ -88,36 +89,6 @@ bool IntervalExplanation::eraseVarBound(VarIdx idx) {
     return contained;
 }
 
-Interval IntervalExplanation::makeDomainInterval(VarIdx idx) const {
-    auto & network = framework.getNetwork();
-    return {network.getInputLowerBound(idx), network.getInputUpperBound(idx)};
-}
-
-Interval IntervalExplanation::optVarBoundToInterval(VarIdx idx, std::optional<VarBound> const & optVarBnd) const {
-    if (optVarBnd.has_value()) { return varBoundToInterval(idx, *optVarBnd); }
-
-    auto & network = framework.getNetwork();
-    return makeDomainInterval(idx);
-}
-
-Interval IntervalExplanation::varBoundToInterval(VarIdx idx, VarBound const & varBnd) const {
-    if (auto optIval = varBnd.tryGetInterval()) { return std::move(*optIval); }
-    assert(not varBnd.isPoint());
-    assert(not varBnd.isInterval());
-
-    auto & bnd = varBnd.getBound();
-    assert(bnd.isLower() xor bnd.isUpper());
-    bool const isLower = bnd.isLower();
-
-    auto & network = framework.getNetwork();
-    Float val = bnd.getValue();
-    auto ival =
-        isLower ? Interval{val, network.getInputUpperBound(idx)} : Interval{network.getInputLowerBound(idx), val};
-    assert(not ival.isPoint());
-
-    return ival;
-}
-
 std::size_t IntervalExplanation::computeFixedCount() const {
     return std::ranges::count_if(*this, [](auto const & pair) {
         auto & varBnd = pair.second;
@@ -134,11 +105,9 @@ Float IntervalExplanation::getRelativeVolumeSkipFixed() const {
 
 template<bool skipFixed>
 Float IntervalExplanation::computeRelativeVolumeTp() const {
-    auto & network = framework.getNetwork();
-
     Float relVolume = 1;
     for (auto & [idx, varBnd] : varIdxToVarBoundMap) {
-        Interval ival = varBoundToInterval(idx, varBnd);
+        Interval ival = varBoundToInterval(framework, idx, varBnd);
         Float const size = ival.size();
         assert(size >= 0);
         if (size == 0) {
@@ -149,7 +118,7 @@ Float IntervalExplanation::computeRelativeVolumeTp() const {
             }
         }
 
-        Float const domainSize = network.getInputUpperBound(idx) - network.getInputLowerBound(idx);
+        Float const domainSize = framework.getDomainInterval(idx).size();
         assert(domainSize > 0);
         assert(size < domainSize);
 
@@ -251,7 +220,7 @@ void IntervalExplanation::printElemSmtLib2(std::ostream & os, PrintConfig const 
 
 void IntervalExplanation::printElemInterval(std::ostream & os, PrintConfig const & conf, VarIdx idx,
                                             VarBound const & varBnd) const {
-    os << varBoundToInterval(idx, varBnd) << conf.delim;
+    os << varBoundToInterval(framework, idx, varBnd) << conf.delim;
 }
 
 void IntervalExplanation::printElem(std::ostream & os, PrintConfig const & conf, VarIdx idx,
@@ -270,14 +239,13 @@ void IntervalExplanation::printElemSmtLib2(std::ostream & os, PrintConfig const 
         return;
     }
 
-    auto & network = framework.getNetwork();
-    Interval ival = makeDomainInterval(idx);
+    Interval ival = framework.getDomainInterval(idx);
     VarBound varBnd = makeVarBound(idx, std::move(ival));
     printElemSmtLib2(os, conf, varBnd);
 }
 
 void IntervalExplanation::printElemInterval(std::ostream & os, PrintConfig const & conf, VarIdx idx,
                                             std::optional<VarBound> const & optVarBnd) const {
-    os << optVarBoundToInterval(idx, optVarBnd) << conf.delim;
+    os << optVarBoundToInterval(framework, idx, optVarBnd) << conf.delim;
 }
 } // namespace xspace

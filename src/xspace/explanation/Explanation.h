@@ -68,11 +68,6 @@ protected:
     static constexpr PrintConfig defaultSmtLib2PrintConfig{.delim = ' ', .includeAll = false};
     static constexpr PrintConfig defaultIntervalsPrintConfig{.delim = ' ', .includeAll = true};
 
-    Interval makeDomainInterval(VarIdx) const;
-
-    Interval optVarBoundToInterval(VarIdx, std::optional<VarBound> const &) const;
-    Interval varBoundToInterval(VarIdx, VarBound const &) const;
-
     std::size_t computeFixedCount() const;
 
     Framework const & framework;

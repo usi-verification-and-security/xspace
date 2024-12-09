@@ -5,7 +5,6 @@
 #include "expand/Expand.h"
 #include "expand/strategy/Strategy.h"
 
-#include <xspace/common/Bound.h>
 #include <xspace/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
@@ -24,6 +23,20 @@ Framework::Framework(Config const & config) : configPtr{std::make_unique<Config>
 
 Framework::~Framework() = default;
 
+void Framework::setNetwork(std::unique_ptr<xai::nn::NNet> nn) {
+    assert(nn);
+    networkPtr = std::move(nn);
+
+    auto & network = *networkPtr;
+    std::size_t const size = network.getInputSize();
+    varNames.reserve(size);
+    domainIntervals.reserve(size);
+    for (VarIdx idx = 0; idx < size; ++idx) {
+        varNames.emplace_back(makeVarName(idx));
+        domainIntervals.emplace_back(network.getInputLowerBound(idx), network.getInputUpperBound(idx));
+    }
+}
+
 void Framework::setVerifier(std::string_view name) {
     expandPtr->setVerifier(name);
 }
@@ -35,23 +48,9 @@ void Framework::setExpandStrategies(std::istream & is) {
 std::vector<IntervalExplanation> Framework::explain(Dataset const & data) {
     auto & expand = *expandPtr;
 
-    setVarNames(data);
     std::vector<IntervalExplanation> explanations = encodeSamples(data);
     expand(explanations, data);
     return explanations;
-}
-
-void Framework::setVarNames(Dataset const & data) {
-    auto & samples = data.getSamples();
-    assert(not samples.empty());
-    assert(varNames.empty());
-
-    auto const & sample = samples.front();
-    std::size_t const vSize = sample.size();
-    varNames.reserve(vSize);
-    for (VarIdx idx = 0; idx < vSize; ++idx) {
-        varNames.emplace_back(makeVarName(idx));
-    }
 }
 
 std::vector<IntervalExplanation> Framework::encodeSamples(Dataset const & data) {
