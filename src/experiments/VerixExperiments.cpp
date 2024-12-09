@@ -84,7 +84,7 @@ VerixExperiments::experiment_on_dataset(std::string modelPath, std::string datas
         for (auto const & constraint : res.constraints) {
             // std::cout << "Feature " << constraint.inputIndex << ' ' << constraint.opString() << ' '
             //    << constraint.value << '\n';
-            std::cerr << " (" << constraint.opString() << " input" << constraint.inputIndex << " " << floatToRationalString(constraint.value) << ")";
+            std::cerr << " (" << constraint.opString() << " x" << constraint.inputIndex + 1 << " " << floatToRationalString(constraint.value) << ")";
         }
         // std::cout << '\n';
         std::cerr << ")" << std::endl << std::endl;
