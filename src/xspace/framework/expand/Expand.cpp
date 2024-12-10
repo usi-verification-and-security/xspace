@@ -94,6 +94,12 @@ void Framework::Expand::setStrategies(std::istream & is) {
     }
 }
 
+void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
+    isAbductiveOnly &= strategy->isAbductiveOnly();
+
+    strategies.push_back(std::move(strategy));
+}
+
 void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanations, Dataset const & data) {
     assert(not strategies.empty());
 
@@ -246,7 +252,7 @@ void Framework::Expand::printStats(IntervalExplanation const & explanation, Data
     assert(explanation.getRelativeVolumeSkipFixed() > 0);
     assert(explanation.getRelativeVolumeSkipFixed() <= 1);
     assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expSize));
-    if (fixedCount >= expSize) { return; }
+    if (isAbductiveOnly) { return; }
 
     Float const relVolume = explanation.getRelativeVolumeSkipFixed();
 

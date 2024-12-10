@@ -11,6 +11,8 @@ public:
     Strategy(Expand &, VarOrdering = {});
     virtual ~Strategy() = default;
 
+    virtual bool isAbductiveOnly() const { return true; }
+
     virtual void execute(IntervalExplanation &);
 
 protected:
@@ -41,6 +43,8 @@ public:
     UnsatCoreStrategy(Expand & exp, Config const & conf, VarOrdering order = {})
         : Strategy{exp, std::move(order)},
           config{conf} {}
+
+    bool isAbductiveOnly() const override { return not config.splitEq; }
 
 protected:
     void executeBody(IntervalExplanation &) override;

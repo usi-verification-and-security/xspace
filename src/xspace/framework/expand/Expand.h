@@ -64,7 +64,7 @@ protected:
         verifierPtr = std::move(vf);
     }
 
-    void addStrategy(std::unique_ptr<Strategy> strategy) { strategies.push_back(std::move(strategy)); }
+    void addStrategy(std::unique_ptr<Strategy>);
 
     void initVerifier();
 
@@ -88,6 +88,8 @@ protected:
     std::vector<std::unique_ptr<Strategy>> strategies{};
 
     Outputs outputs{};
+
+    bool isAbductiveOnly{true};
 };
 } // namespace xspace
 
