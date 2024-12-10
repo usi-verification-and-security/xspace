@@ -18,6 +18,18 @@ PUBLIC
     ${opensmt_SOURCE_DIR}/src
 )
 
+target_compile_options(xspace
+PRIVATE
+    -Wall -Wextra -pedantic -Wshadow
+)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+target_compile_options(xspace
+PRIVATE
+    -Weffc++ -Wno-non-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wmissing-declarations
+)
+endif()
+
 add_executable(XSpace-bin
     bin/main.cpp
     ${SOURCE_DIR}/nn/NNet.cpp

@@ -42,9 +42,9 @@ void Framework::Expand::Strategy::executeInit(IntervalExplanation &) {
 
 void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & explanation) {
     auto & verifier = *expand.verifierPtr;
+
     std::size_t const varSize = expand.framework.varSize();
-    auto const & varOrder = varOrdering.manualOrder;
-    for (VarIdx idxToOmit : varOrder) {
+    for (VarIdx idxToOmit : varOrdering.manualOrder) {
         verifier.push();
         for (VarIdx idx = 0; idx < varSize; ++idx) {
             if (idx == idxToOmit) { continue; }
@@ -71,15 +71,12 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
     assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(expand.verifierPtr.get()));
     auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
 
-    auto & framework = expand.framework;
-    auto & network = framework.getNetwork();
-    std::size_t const varSize = framework.varSize();
-    auto const & varOrder = varOrdering.manualOrder;
+    auto & fw = expand.framework;
+    auto & network = fw.getNetwork();
     bool const splitEq = config.splitEq;
 
-    auto & allVarBounds = explanation.getAllVarBounds();
-    for (VarIdx idx : varOrder) {
-        auto & optVarBnd = allVarBounds[idx];
+    for (VarIdx idx : varOrdering.manualOrder) {
+        auto & optVarBnd = explanation.tryGetVarBound(idx);
         if (not optVarBnd.has_value()) { continue; }
 
         auto & varBnd = *optVarBnd;
@@ -115,7 +112,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
 
     xai::verifiers::UnsatCore unsatCore = verifier.getUnsatCore();
 
-    IntervalExplanation newExplanation{framework};
+    IntervalExplanation newExplanation{fw};
 
     for (VarIdx idx : unsatCore.equalities) {
         newExplanation.insertBound(idx, EqBound{explanation.tryGetVarBound(idx)->getBound().getValue()});

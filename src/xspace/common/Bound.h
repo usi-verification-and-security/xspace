@@ -182,7 +182,7 @@ private:
     struct ConsIntervalTag {};
     struct ConsPointTag {};
 
-    explicit VarBound(std::string_view var, LowerBound && lo, UpperBound && hi, ConsPointTag)
+    explicit VarBound(std::string_view var, LowerBound && lo, [[maybe_unused]] UpperBound && hi, ConsPointTag)
         : VarBound(var, lo.getValue()) {
         assert(lo.isLower());
         assert(hi.isUpper());

@@ -174,7 +174,7 @@ void Framework::Expand::assertClassification(Output const & output) {
         return;
     }
 
-    auto const outputLayerSize = network.getLayerSize(outputLayerIndex);
+    [[maybe_unused]] auto const outputLayerSize = network.getLayerSize(outputLayerIndex);
     assert(outputLayerSize == outputValues.size());
     verifierPtr->addClassificationConstraint(output.classifiedIdx, 0);
 }
