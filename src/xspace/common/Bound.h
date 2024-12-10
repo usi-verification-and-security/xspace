@@ -103,23 +103,30 @@ using UpperBound = LtEqBound;
 
 class Interval {
 public:
-    Interval(Float lo, Float hi) : lower{lo}, upper{hi} { assert(lo <= hi); }
+    struct Range {
+        Float lower;
+        Float upper;
+    };
+
+    Interval(Range rng) : range{std::move(rng)} { assert(size() >= 0); }
+    Interval(Float lo, Float hi) : Interval(Range{lo, hi}) {}
     Interval(Float val) : Interval(val, val) {}
 
-    bool isPoint() const { return lower == upper; }
+    constexpr bool isPoint() const { return size() == 0; }
 
-    Float getLower() const { return lower; }
-    Float getUpper() const { return upper; }
+    constexpr Range const & getRange() const { return range; }
 
-    Float getValue() const { return lower; }
+    constexpr Float getLower() const { return range.lower; }
+    constexpr Float getUpper() const { return range.upper; }
 
-    Float size() const { return upper - lower; }
+    Float getValue() const { return getLower(); }
+
+    constexpr Float size() const { return getUpper() - getLower(); }
 
     void print(std::ostream &) const;
 
 protected:
-    Float lower;
-    Float upper;
+    Range range;
 };
 
 class VarBound {

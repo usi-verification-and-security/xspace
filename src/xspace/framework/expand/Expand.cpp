@@ -189,16 +189,123 @@ void Framework::Expand::resetClassification() {
     verifierPtr->pop();
 }
 
+void Framework::Expand::assertVarBound(VarIdx idx, VarBound const & varBnd, bool splitEq) {
+    if (varBnd.isInterval()) {
+        assertInnerInterval(idx, varBnd.getLowerBound(), varBnd.getUpperBound());
+        return;
+    }
+
+    auto & bnd = varBnd.getBound();
+    if (varBnd.isPoint()) {
+        assert(bnd.isEq());
+        assertPoint(idx, static_cast<EqBound const &>(bnd), splitEq);
+        return;
+    }
+
+    assert(not bnd.isEq());
+    assertBound(idx, bnd);
+}
+
+void Framework::Expand::assertInterval(VarIdx idx, Interval const & ival) {
+    if (ival.isPoint()) {
+        assertPoint(idx, ival.getValue());
+        return;
+    }
+
+    auto const [lo, hi] = ival.getRange();
+    auto & network = framework.getNetwork();
+    assert(lo >= network.getInputLowerBound(idx));
+    assert(hi <= network.getInputUpperBound(idx));
+    bool const isLower = (lo == network.getInputLowerBound(idx));
+    bool const isUpper = (hi == network.getInputUpperBound(idx));
+    assert(not isLower or not isUpper);
+    if (not isLower and not isUpper) {
+        assertInnerInterval(idx, ival);
+        return;
+    }
+
+    assert(isLower xor isUpper);
+    if (isLower) {
+        assertUpperBound(idx, UpperBound{hi});
+    } else {
+        assertLowerBound(idx, LowerBound{lo});
+    }
+}
+
+void Framework::Expand::assertInnerInterval(VarIdx idx, Interval const & ival) {
+    LowerBound lo{ival.getLower()};
+    UpperBound hi{ival.getUpper()};
+    assertInnerInterval(idx, lo, hi);
+}
+
+void Framework::Expand::assertInnerInterval(VarIdx idx, LowerBound const & lo, UpperBound const & hi) {
+    assert(lo.getValue() < hi.getValue());
+
+    assertLowerBound(idx, lo);
+    assertUpperBound(idx, hi);
+}
+
+void Framework::Expand::assertPoint(VarIdx idx, Float val) {
+    assertPointNoSplit(idx, EqBound{val});
+}
+
+void Framework::Expand::assertPoint(VarIdx idx, EqBound const & eq, bool splitEq) {
+    if (not splitEq) {
+        assertPointNoSplit(idx, eq);
+    } else {
+        assertPointSplit(idx, eq);
+    }
+}
+
+void Framework::Expand::assertPointNoSplit(VarIdx idx, EqBound const & eq) {
+    assertEquality(idx, eq);
+}
+
+void Framework::Expand::assertPointSplit(VarIdx idx, EqBound const & eq) {
+    Float const val = eq.getValue();
+    auto & network = framework.getNetwork();
+    bool const isLower = (val == network.getInputLowerBound(idx));
+    bool const isUpper = (val == network.getInputUpperBound(idx));
+    assert(not isLower or not isUpper);
+    if (isLower or isUpper) {
+        assertEquality(idx, eq);
+        return;
+    }
+
+    assertLowerBound(idx, LowerBound{val});
+    assertUpperBound(idx, UpperBound{val});
+}
+
 void Framework::Expand::assertBound(VarIdx idx, Bound const & bnd) {
-    Float const val = bnd.getValue();
     if (bnd.isEq()) {
-        verifierPtr->addEquality(0, idx, val, true);
+        assertEquality(idx, static_cast<EqBound const &>(bnd));
     } else if (bnd.isLower()) {
-        verifierPtr->addLowerBound(0, idx, val, true);
+        assertLowerBound(idx, static_cast<LowerBound const &>(bnd));
     } else {
         assert(bnd.isUpper());
-        verifierPtr->addUpperBound(0, idx, val, true);
+        assertUpperBound(idx, static_cast<UpperBound const &>(bnd));
     }
+}
+
+void Framework::Expand::assertEquality(VarIdx idx, EqBound const & eq) {
+    Float const val = eq.getValue();
+    assert(val >= framework.getNetwork().getInputLowerBound(idx));
+    assert(val <= framework.getNetwork().getInputUpperBound(idx));
+    verifierPtr->addEquality(0, idx, val, true);
+}
+
+void Framework::Expand::assertLowerBound(VarIdx idx, LowerBound const & lo) {
+    Float const val = lo.getValue();
+    assert(val > framework.getNetwork().getInputLowerBound(idx));
+    assert(val < framework.getNetwork().getInputUpperBound(idx));
+    verifierPtr->addLowerBound(0, idx, val, true);
+}
+
+void Framework::Expand::assertUpperBound(VarIdx idx, UpperBound const & hi) {
+    Float const val = hi.getValue();
+    assert(val > framework.getNetwork().getInputLowerBound(idx));
+    assert(val < framework.getNetwork().getInputUpperBound(idx));
+    verifierPtr->addUpperBound(0, idx, val, true);
 }
 
 bool Framework::Expand::checkFormsExplanation() {

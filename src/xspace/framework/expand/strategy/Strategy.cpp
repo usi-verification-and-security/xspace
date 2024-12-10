@@ -52,9 +52,7 @@ void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & exp
             if (not optVarBnd.has_value()) { continue; }
 
             auto & varBnd = *optVarBnd;
-            assert(not varBnd.isInterval());
-            auto & bnd = varBnd.getBound();
-            expand.assertBound(idx, bnd);
+            expand.assertVarBound(idx, varBnd);
         }
         bool const ok = expand.checkFormsExplanation();
         verifier.pop();
@@ -72,7 +70,6 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
     auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
 
     auto & fw = expand.framework;
-    auto & network = fw.getNetwork();
     bool const splitEq = config.splitEq;
 
     for (VarIdx idx : varOrdering.manualOrder) {
@@ -80,31 +77,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
         if (not optVarBnd.has_value()) { continue; }
 
         auto & varBnd = *optVarBnd;
-        if (varBnd.isInterval()) {
-            expand.assertBound(idx, varBnd.getLowerBound());
-            expand.assertBound(idx, varBnd.getUpperBound());
-            continue;
-        }
-
-        auto & bnd = varBnd.getBound();
-        if (not splitEq or not bnd.isEq()) {
-            expand.assertBound(idx, bnd);
-            continue;
-        }
-
-        assert(varBnd.isPoint());
-        assert(bnd.isEq());
-        Float const val = bnd.getValue();
-        bool const isLower = (val == network.getInputLowerBound(idx));
-        bool const isUpper = (val == network.getInputUpperBound(idx));
-        assert(not isLower or not isUpper);
-        if (isLower or isUpper) {
-            expand.assertBound(idx, bnd);
-            continue;
-        }
-
-        expand.assertBound(idx, LowerBound{val});
-        expand.assertBound(idx, UpperBound{val});
+        expand.assertVarBound(idx, varBnd, splitEq);
     }
 
     [[maybe_unused]] bool const ok = expand.checkFormsExplanation();
