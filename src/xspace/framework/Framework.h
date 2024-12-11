@@ -66,7 +66,7 @@ protected:
 
     std::unique_ptr<Expand> expandPtr{};
 
-    std::unique_ptr<Print> printPtr;
+    std::unique_ptr<Print> printPtr{};
 };
 } // namespace xspace
 

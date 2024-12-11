@@ -75,7 +75,7 @@ protected:
     void assertClassification(Output const &);
     void resetClassification();
 
-    void assertVarBound(VarIdx, VarBound const &, bool splitEq = false);
+    void assertVarBound(VarBound const &, bool splitEq = false);
     void assertInterval(VarIdx, Interval const &);
     void assertInnerInterval(VarIdx, Interval const &);
     void assertInnerInterval(VarIdx, LowerBound const &, UpperBound const &);

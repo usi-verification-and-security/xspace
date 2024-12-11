@@ -53,7 +53,7 @@ void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & exp
             if (not optVarBnd.has_value()) { continue; }
 
             auto & varBnd = *optVarBnd;
-            expand.assertVarBound(idx, varBnd);
+            expand.assertVarBound(varBnd);
         }
         bool const ok = expand.checkFormsExplanation();
         verifier.pop();
@@ -77,7 +77,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
         if (not optVarBnd.has_value()) { continue; }
 
         auto & varBnd = *optVarBnd;
-        expand.assertVarBound(idx, varBnd, splitEq);
+        expand.assertVarBound(varBnd, splitEq);
     }
 
     [[maybe_unused]] bool const ok = expand.checkFormsExplanation();

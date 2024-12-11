@@ -191,7 +191,8 @@ void Framework::Expand::resetClassification() {
     verifierPtr->resetSample();
 }
 
-void Framework::Expand::assertVarBound(VarIdx idx, VarBound const & varBnd, bool splitEq) {
+void Framework::Expand::assertVarBound(VarBound const & varBnd, bool splitEq) {
+    VarIdx const idx = varBnd.getVarIdx();
     if (varBnd.isInterval()) {
         assertInnerInterval(idx, varBnd.getIntervalLower(), varBnd.getIntervalUpper());
         return;

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <map>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace xspace {
@@ -34,6 +35,8 @@ public:
 
     std::size_t size() const { return varIdxToVarBoundMap.size(); }
 
+    bool contains(VarIdx idx) const { return tryGetVarBound(idx).has_value(); }
+
     AllVarBounds const & getAllVarBounds() const { return allVarBounds; }
 
     VarIdx getIdx(std::optional<VarBound> const & elem) const { return &elem - allVarBounds.data(); }
@@ -47,9 +50,13 @@ public:
 
     void swap(IntervalExplanation &);
 
+    void insertVarBound(VarBound);
     void insertBound(VarIdx, Bound);
 
     bool eraseVarBound(VarIdx);
+
+    void setVarBound(VarBound);
+    void setVarBound(VarIdx, std::optional<VarBound>);
 
     std::size_t getFixedCount() const { return computeFixedCount(); }
 
@@ -71,6 +78,11 @@ protected:
     static constexpr PrintConfig defaultSmtLib2PrintConfig{.delim = ' ', .includeAll = false};
     static constexpr PrintConfig defaultIntervalsPrintConfig{.delim = ' ', .includeAll = true};
 
+    std::optional<VarBound> & _tryGetVarBound(VarIdx idx) {
+        auto & optVarBnd = tryGetVarBound(idx);
+        return const_cast<std::remove_cvref_t<decltype(optVarBnd)> &>(optVarBnd);
+    }
+
     std::size_t computeFixedCount() const;
 
     Framework const & framework;
@@ -79,8 +91,6 @@ protected:
     VarIdxToVarBoundMap varIdxToVarBoundMap{};
 
 private:
-    VarBound makeVarBound(VarIdx, auto &&...) const;
-
     template<bool skipFixed>
     Float computeRelativeVolumeTp() const;
 
@@ -88,7 +98,7 @@ private:
     void printTp(std::ostream &, PrintConfig const &) const;
     static void printElem(std::ostream &, PrintConfig const &, VarBound const &);
     static void printElemSmtLib2(std::ostream &, PrintConfig const &, VarBound const &);
-    void printElemInterval(std::ostream &, PrintConfig const &, VarIdx, VarBound const &) const;
+    void printElemInterval(std::ostream &, PrintConfig const &, VarBound const &) const;
     void printElem(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
     void printElemSmtLib2(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
     void printElemInterval(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;

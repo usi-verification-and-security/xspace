@@ -3,24 +3,28 @@
 
 #include <xspace/common/Bound.h>
 #include <xspace/common/Interval.h>
+#include <xspace/common/Var.h>
 
 #include <cassert>
 #include <iosfwd>
 #include <optional>
-#include <string_view>
 #include <type_traits>
 #include <variant>
 
 namespace xspace {
+class Framework;
+
 class VarBound {
 public:
-    explicit VarBound(std::string_view var, Float val) : VarBound(var, EqBound{val}) {}
-    explicit VarBound(std::string_view var, Interval ival)
-        : VarBound(ival.isPoint() ? VarBound{var, ival.getValue()}
-                                  : VarBound{var, LowerBound{ival.getLower()}, UpperBound{ival.getUpper()}}) {}
-    explicit VarBound(std::string_view var, Bound bnd) : varName{var}, firstBound{std::move(bnd)} { assert(isValid()); }
-    explicit VarBound(std::string_view var, LowerBound, UpperBound);
-    explicit VarBound(std::string_view var, Bound, Bound);
+    explicit VarBound(Framework const & fw, VarIdx idx, Float val) : VarBound(fw, idx, EqBound{val}) {}
+    explicit VarBound(Framework const & fw, VarIdx idx, Interval const & ival)
+        : VarBound(fw, idx, LowerBound{ival.getLower()}, UpperBound{ival.getUpper()}) {}
+    explicit VarBound(Framework const &, VarIdx, EqBound);
+    explicit VarBound(Framework const &, VarIdx, LowerBound);
+    explicit VarBound(Framework const &, VarIdx, UpperBound);
+    explicit VarBound(Framework const &, VarIdx, Bound);
+    explicit VarBound(Framework const &, VarIdx, LowerBound, UpperBound);
+    explicit VarBound(Framework const &, VarIdx, Bound, Bound);
 
     bool isInterval() const {
         assert(not isIntervalImpl() or firstBound.isLower());
@@ -34,7 +38,7 @@ public:
         return isPointImpl();
     }
 
-    std::string_view getVarName() const { return varName; }
+    VarIdx getVarIdx() const { return varIdx; }
 
     // If it holds just a single LowerBound or UpperBound, it must be accessed from here
     Bound const & getBound() const { return firstBound; }
@@ -59,45 +63,47 @@ public:
         return static_cast<EqBound const &>(getBound());
     }
 
+    Float size() const { return toInterval().size(); }
+
     Interval getInterval() const;
     std::optional<Interval> tryGetIntervalOrPoint() const;
+
+    Interval toInterval() const;
+
+    void insertBound(Bound);
+    void insertLowerBound(LowerBound);
+    void insertUpperBound(UpperBound);
+
+    void eraseLowerBound();
+    void eraseUpperBound();
 
     void print(std::ostream & os) const { printRegular(os); }
     void printSmtLib2(std::ostream &) const;
 
 protected:
-    // These include additional assertions
-    bool isValid() const { return isInterval() or isPoint() or not isInterval(); }
+    bool isValid() const;
 
     void printRegular(std::ostream &) const;
     void printRegularBound(std::ostream &, Bound const &) const;
 
     void printSmtLib2Bound(std::ostream &, Bound const &) const;
 
-    std::string_view varName;
+    Framework const * frameworkPtr;
+
+    VarIdx varIdx;
 
     //+ it should be more efficient to either store `Interval` or a single `Bound`
     Bound firstBound;
     std::optional<Bound> optSecondBound{};
 
 private:
-    struct ConsIntervalTag {};
+    struct ConsOneBoundTag {};
     struct ConsPointTag {};
+    struct ConsIntervalTag {};
 
-    explicit VarBound(std::string_view var, LowerBound && lo, [[maybe_unused]] UpperBound && hi, ConsPointTag)
-        : VarBound(var, lo.getValue()) {
-        assert(lo.isLower());
-        assert(hi.isUpper());
-        assert(lo.getValue() == hi.getValue());
-    }
-    explicit VarBound(std::string_view var, LowerBound && lo, UpperBound && hi, ConsIntervalTag)
-        : varName{var},
-          firstBound{std::move(lo)},
-          optSecondBound{std::move(hi)} {
-        assert(firstBound.isLower());
-        assert(optSecondBound->isUpper());
-        assert(firstBound.getValue() < optSecondBound->getValue());
-    }
+    explicit VarBound(Framework const &, VarIdx, Bound &&, ConsOneBoundTag);
+    explicit VarBound(Framework const &, VarIdx, LowerBound &&, UpperBound &&, ConsPointTag);
+    explicit VarBound(Framework const &, VarIdx, LowerBound &&, UpperBound &&, ConsIntervalTag);
 
     bool isIntervalImpl() const { return optSecondBound.has_value(); }
 
