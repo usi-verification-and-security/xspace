@@ -2,8 +2,7 @@
 #define XSPACE_CONFIG_H
 
 #include "Framework.h"
-
-#include <xspace/explanation/Explanation.h>
+#include "explanation/Explanation.h"
 
 namespace xspace {
 class Framework::Config {

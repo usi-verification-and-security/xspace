@@ -5,8 +5,6 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <optional>
-#include <string_view>
 #include <type_traits>
 #include <variant>
 
@@ -100,116 +98,6 @@ struct GtEqBound : public Bound {
 
 using LowerBound = GtEqBound;
 using UpperBound = LtEqBound;
-
-class Interval {
-public:
-    struct Range {
-        Float lower;
-        Float upper;
-    };
-
-    Interval(Range rng) : range{std::move(rng)} { assert(size() >= 0); }
-    Interval(Float lo, Float hi) : Interval(Range{lo, hi}) {}
-    Interval(Float val) : Interval(val, val) {}
-
-    constexpr bool isPoint() const { return size() == 0; }
-
-    constexpr Range const & getRange() const { return range; }
-
-    constexpr Float getLower() const { return range.lower; }
-    constexpr Float getUpper() const { return range.upper; }
-
-    Float getValue() const { return getLower(); }
-
-    constexpr Float size() const { return getUpper() - getLower(); }
-
-    void print(std::ostream &) const;
-
-protected:
-    Range range;
-};
-
-class VarBound {
-public:
-    explicit VarBound(std::string_view var, Float val) : VarBound(var, EqBound{val}) {}
-    explicit VarBound(std::string_view var, Interval ival)
-        : VarBound(ival.isPoint() ? VarBound{var, ival.getValue()}
-                                  : VarBound{var, LowerBound{ival.getLower()}, UpperBound{ival.getUpper()}}) {}
-    explicit VarBound(std::string_view var, Bound bnd) : varName{var}, firstBound{std::move(bnd)} {}
-    explicit VarBound(std::string_view var, LowerBound, UpperBound);
-    explicit VarBound(std::string_view var, Bound, Bound);
-
-    bool isInterval() const {
-        assert(not isIntervalImpl() or firstBound.isLower());
-        assert(not isIntervalImpl() or optSecondBound->isUpper());
-        assert(not isIntervalImpl() or firstBound.getValue() != optSecondBound->getValue());
-        return isIntervalImpl();
-    }
-
-    bool isPoint() const {
-        assert(not isPointImpl() or not isInterval());
-        return isPointImpl();
-    }
-
-    std::string_view getVarName() const { return varName; }
-
-    Bound const & getBound() const { return firstBound; }
-
-    LowerBound const & getLowerBound() const {
-        auto & bnd = getBound();
-        assert(bnd.isLower());
-        return static_cast<LowerBound const &>(bnd);
-    }
-
-    UpperBound const & getUpperBound() const {
-        assert(isInterval());
-        auto & bnd = *optSecondBound;
-        assert(bnd.isUpper());
-        return static_cast<UpperBound const &>(bnd);
-    }
-
-    std::optional<Interval> tryGetInterval() const;
-
-    void print(std::ostream & os) const { printRegular(os); }
-    void printSmtLib2(std::ostream &) const;
-
-protected:
-    void printRegular(std::ostream &) const;
-    void printRegularBound(std::ostream &, Bound const &) const;
-
-    void printSmtLib2Bound(std::ostream &, Bound const &) const;
-
-    std::string_view varName;
-
-    //+ it should be more efficient to either store `Interval` or a single `Bound`
-    Bound firstBound;
-    std::optional<Bound> optSecondBound{};
-
-private:
-    struct ConsIntervalTag {};
-    struct ConsPointTag {};
-
-    explicit VarBound(std::string_view var, LowerBound && lo, [[maybe_unused]] UpperBound && hi, ConsPointTag)
-        : VarBound(var, lo.getValue()) {
-        assert(lo.isLower());
-        assert(hi.isUpper());
-        assert(lo.getValue() == hi.getValue());
-    }
-    explicit VarBound(std::string_view var, LowerBound && lo, UpperBound && hi, ConsIntervalTag)
-        : varName{var},
-          firstBound{std::move(lo)},
-          optSecondBound{std::move(hi)} {
-        assert(firstBound.isLower());
-        assert(optSecondBound->isUpper());
-        assert(firstBound.getValue() < optSecondBound->getValue());
-    }
-
-    bool isIntervalImpl() const { return optSecondBound.has_value(); }
-
-    bool isPointImpl() const { return getBound().isEq(); }
-};
-
-void printSmtLib2AsRational(std::ostream &, Float);
 } // namespace xspace
 
 #endif // XSPACE_BOUND_H

@@ -3,6 +3,7 @@
 
 #include "../Framework.h"
 
+#include <xspace/common/Bound.h>
 #include <xspace/common/Core.h>
 #include <xspace/common/Var.h>
 
@@ -14,7 +15,6 @@ class Verifier;
 }
 
 namespace xspace {
-class Bound;
 class VarBound;
 class Dataset;
 class IntervalExplanation;

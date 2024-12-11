@@ -4,8 +4,8 @@
 #include "Print.h"
 #include "expand/Expand.h"
 #include "expand/strategy/Strategy.h"
+#include "explanation/Explanation.h"
 
-#include <xspace/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
 #include <verifiers/Verifier.h>

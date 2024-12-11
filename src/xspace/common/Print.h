@@ -1,6 +1,8 @@
 #ifndef XSPACE_PRINT_H
 #define XSPACE_PRINT_H
 
+#include "Core.h"
+
 #include <iosfwd>
 
 namespace xspace {
@@ -29,6 +31,8 @@ template<printable_in_smtlib2 T>
 inline auto smtLib2Format(T const & arg) {
     return PrintSmtLib2Proxy<T>{arg};
 }
+
+void printSmtLib2AsRational(std::ostream &, Float);
 } // namespace xspace
 
 #endif // XSPACE_PRINT_H

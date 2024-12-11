@@ -1,9 +1,10 @@
 #include "Strategy.h"
 
-#include <xspace/explanation/Explanation.h>
+#include <xspace/framework/VarBound.h>
+#include <xspace/framework/explanation/Explanation.h>
 
-#include <verifiers/Verifier.h>
 #include <verifiers/UnsatCoreVerifier.h>
+#include <verifiers/Verifier.h>
 
 #include <cassert>
 #include <numeric>

@@ -1,7 +1,7 @@
 #ifndef XSPACE_FRAMEWORK_H
 #define XSPACE_FRAMEWORK_H
 
-#include <xspace/common/Bound.h>
+#include <xspace/common/Interval.h>
 #include <xspace/common/Var.h>
 
 #include <nn/NNet.h>

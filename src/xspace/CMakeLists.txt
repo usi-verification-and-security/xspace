@@ -3,12 +3,15 @@ add_library(xspace OBJECT)
 target_sources(xspace
 PRIVATE
     common/Bound.cpp
-    explanation/Explanation.cpp
+    common/Interval.cpp
+    common/Print.cpp
     framework/Framework.cpp
     framework/Print.cpp
     framework/Utils.cpp
+    framework/VarBound.cpp
     framework/expand/Expand.cpp
     framework/expand/strategy/Strategy.cpp
+    framework/explanation/Explanation.cpp
     nn/Dataset.cpp
 PUBLIC
 )

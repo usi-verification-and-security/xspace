@@ -2,10 +2,11 @@
 
 #include "../Config.h"
 #include "../Print.h"
+#include "../VarBound.h"
+#include "../explanation/Explanation.h"
 #include "strategy/Strategy.h"
 
 #include <xspace/common/String.h>
-#include <xspace/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
 #include <verifiers/Verifier.h>
@@ -192,17 +193,16 @@ void Framework::Expand::resetClassification() {
 
 void Framework::Expand::assertVarBound(VarIdx idx, VarBound const & varBnd, bool splitEq) {
     if (varBnd.isInterval()) {
-        assertInnerInterval(idx, varBnd.getLowerBound(), varBnd.getUpperBound());
+        assertInnerInterval(idx, varBnd.getIntervalLower(), varBnd.getIntervalUpper());
+        return;
+    }
+
+    if (varBnd.isPoint()) {
+        assertPoint(idx, varBnd.getPoint(), splitEq);
         return;
     }
 
     auto & bnd = varBnd.getBound();
-    if (varBnd.isPoint()) {
-        assert(bnd.isEq());
-        assertPoint(idx, static_cast<EqBound const &>(bnd), splitEq);
-        return;
-    }
-
     assert(not bnd.isEq());
     assertBound(idx, bnd);
 }
@@ -213,7 +213,7 @@ void Framework::Expand::assertInterval(VarIdx idx, Interval const & ival) {
         return;
     }
 
-    auto const [lo, hi] = ival.getRange();
+    auto const [lo, hi] = ival.getBounds();
     auto & network = framework.getNetwork();
     assert(lo >= network.getInputLowerBound(idx));
     assert(hi <= network.getInputUpperBound(idx));

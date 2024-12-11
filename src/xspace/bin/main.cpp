@@ -1,6 +1,6 @@
-#include <xspace/explanation/Explanation.h>
 #include <xspace/framework/Config.h>
 #include <xspace/framework/Framework.h>
+#include <xspace/framework/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
 #include <iostream>

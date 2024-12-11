@@ -2,7 +2,7 @@
 
 namespace xspace {
 Interval varBoundToInterval(Framework const & framework, VarIdx idx, VarBound const & varBnd) {
-    if (auto optIval = varBnd.tryGetInterval()) { return std::move(*optIval); }
+    if (auto optIval = varBnd.tryGetIntervalOrPoint()) { return std::move(*optIval); }
     assert(not varBnd.isPoint());
     assert(not varBnd.isInterval());
 

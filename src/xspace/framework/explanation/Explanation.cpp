@@ -1,8 +1,9 @@
 #include "Explanation.h"
 
+#include "../Framework.h"
+#include "../Utils.h"
+
 #include <xspace/common/Print.h>
-#include <xspace/framework/Framework.h>
-#include <xspace/framework/Utils.h>
 
 #include <algorithm>
 
