@@ -59,7 +59,8 @@ else
     fi
 fi
 
-SOLVER=z3
+SOLVER=cvc5
+# SOLVER=z3
 # SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
 
 command -v $SOLVER &>/dev/null || {
