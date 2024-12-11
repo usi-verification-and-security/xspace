@@ -187,6 +187,7 @@ void Framework::Expand::assertClassification(Output const & output) {
 
 void Framework::Expand::resetClassification() {
     verifierPtr->pop();
+    verifierPtr->resetSample();
 }
 
 void Framework::Expand::assertVarBound(VarIdx idx, VarBound const & varBnd, bool splitEq) {
