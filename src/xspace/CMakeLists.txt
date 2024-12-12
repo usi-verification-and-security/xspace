@@ -8,10 +8,10 @@ PRIVATE
     framework/Framework.cpp
     framework/Print.cpp
     framework/Utils.cpp
-    framework/VarBound.cpp
     framework/expand/Expand.cpp
     framework/expand/strategy/Strategy.cpp
     framework/explanation/Explanation.cpp
+    framework/explanation/VarBound.cpp
     nn/Dataset.cpp
 PUBLIC
 )

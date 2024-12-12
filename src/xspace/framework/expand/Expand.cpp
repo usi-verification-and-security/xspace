@@ -2,8 +2,8 @@
 
 #include "../Config.h"
 #include "../Print.h"
-#include "../VarBound.h"
 #include "../explanation/Explanation.h"
+#include "../explanation/VarBound.h"
 #include "strategy/Strategy.h"
 
 #include <xspace/common/String.h>

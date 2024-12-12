@@ -1,10 +1,9 @@
 #ifndef XSPACE_EXPLANATION_H
 #define XSPACE_EXPLANATION_H
 
-#include "../VarBound.h"
+#include "VarBound.h"
 
 #include <xspace/common/Bound.h>
-#include <xspace/common/Core.h>
 #include <xspace/common/Interval.h>
 #include <xspace/common/Var.h>
 
