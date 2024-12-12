@@ -68,6 +68,8 @@ VarBound::VarBound(Framework const & fw, VarIdx idx, LowerBound && lo, UpperBoun
         } else {
             eraseUpperBound();
         }
+        assert(not isInterval());
+        assert(not isPoint());
     }
 
     assert(isValid());
@@ -106,7 +108,7 @@ std::optional<Interval> VarBound::tryGetIntervalOrPoint() const {
 }
 
 Interval VarBound::toInterval() const {
-    if (auto optIval = tryGetIntervalOrPoint()) { return std::move(*optIval); }
+    if (auto optIval = tryGetIntervalOrPoint()) { return *std::move(optIval); }
     assert(not isPoint());
     assert(not isInterval());
 
@@ -167,7 +169,9 @@ void VarBound::insertUpperBound(UpperBound hi) {
 
 void VarBound::eraseLowerBound() {
     assert(isInterval());
-    firstBound = *std::move(optSecondBound);
+    firstBound = std::move(*optSecondBound);
+    assert(optSecondBound.has_value());
+    optSecondBound.reset();
     assert(not isInterval());
     assert(not isPoint());
     assert(isValid());
