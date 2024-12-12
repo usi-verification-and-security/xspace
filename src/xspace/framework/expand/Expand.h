@@ -3,7 +3,6 @@
 
 #include "../Framework.h"
 
-#include <xspace/common/Bound.h>
 #include <xspace/common/Core.h>
 #include <xspace/common/Var.h>
 
@@ -15,7 +14,6 @@ class Verifier;
 }
 
 namespace xspace {
-class VarBound;
 class Dataset;
 class IntervalExplanation;
 
@@ -74,22 +72,6 @@ protected:
 
     void assertClassification(Output const &);
     void resetClassification();
-
-    void assertVarBound(VarBound const &, bool splitEq = false);
-    void assertInterval(VarIdx, Interval const &);
-    void assertInnerInterval(VarIdx, Interval const &);
-    void assertInnerInterval(VarIdx, LowerBound const &, UpperBound const &);
-    void assertPoint(VarIdx, Float);
-    void assertPoint(VarIdx, EqBound const &, bool splitEq);
-    void assertPointNoSplit(VarIdx, EqBound const &);
-    void assertPointSplit(VarIdx, EqBound const &);
-
-    void assertBound(VarIdx, Bound const &);
-    void assertEquality(VarIdx, EqBound const &);
-    void assertLowerBound(VarIdx, LowerBound const &);
-    void assertUpperBound(VarIdx, UpperBound const &);
-
-    bool checkFormsExplanation();
 
     void printStatsHead(Dataset const &) const;
     void printStats(IntervalExplanation const &, Dataset const &, std::size_t i) const;
