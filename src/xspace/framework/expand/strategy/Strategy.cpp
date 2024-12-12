@@ -200,7 +200,7 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(IntervalExplanation &
     assert(maxAttempts > 0);
 
     std::size_t const varSize = fw.varSize();
-    for (VarIdx idxToRelax = 0; idxToRelax < varSize; ++idxToRelax) {
+    for (VarIdx idxToRelax : varOrdering.manualOrder) {
         auto & optVarBndToRelax = explanation.tryGetVarBound(idxToRelax);
         if (not optVarBndToRelax.has_value()) { continue; }
 
