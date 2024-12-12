@@ -61,6 +61,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
         }
 
         auto const nameLower = toLower(name);
+
         if (nameLower == "abductive") {
             checkAdditionalParameters(line, params);
             addStrategy(std::make_unique<AbductiveStrategy>(*this, defaultVarOrder));
@@ -87,6 +88,29 @@ void Framework::Expand::setStrategies(std::istream & is) {
             }
             checkAdditionalParameters(line, params);
             addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf, defaultVarOrder));
+            continue;
+        }
+
+        if (nameLower == "trial") {
+            TrialAndErrorStrategy::Config conf;
+            bool maxAttemptsFollows = false;
+            while (not params.empty()) {
+                auto param = std::move(params.front());
+                params.pop();
+                if (maxAttemptsFollows) {
+                    conf.maxAttempts = std::stoi(param);
+                    break;
+                }
+                auto const paramLower = toLower(param);
+                if (paramLower == "n") {
+                    maxAttemptsFollows = true;
+                    continue;
+                }
+
+                throwInvalidParameter(name, param);
+            }
+            checkAdditionalParameters(line, params);
+            addStrategy(std::make_unique<TrialAndErrorStrategy>(*this, conf, defaultVarOrder));
             continue;
         }
 

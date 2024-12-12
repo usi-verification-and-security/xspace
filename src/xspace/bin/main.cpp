@@ -17,7 +17,7 @@ void printUsageStrategyRow(std::ostream & os, std::string_view name, std::vector
     if (not params.empty()) {
         os << "\tPARAMS:";
         for (auto param : params) {
-            os << ' ' << param;
+            os << "  " << param;
         }
     }
     os << '\n';
@@ -40,6 +40,7 @@ void printUsage(std::ostream & os = std::cout) {
     os << "Each spec: '<name>[ <param>]...'\n";
     printUsageStrategyRow(os, "abductive");
     printUsageStrategyRow(os, "ucore", {"sample", "interval"});
+    printUsageStrategyRow(os, "trial", {"n <int>"});
 
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "Prints this help message and exits");

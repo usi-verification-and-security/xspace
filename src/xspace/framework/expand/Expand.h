@@ -55,6 +55,7 @@ public:
 protected:
     class Strategy;
     class AbductiveStrategy;
+    class TrialAndErrorStrategy;
     class UnsatCoreStrategy;
 
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
