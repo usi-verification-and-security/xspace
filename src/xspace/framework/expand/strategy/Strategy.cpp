@@ -142,21 +142,21 @@ void Framework::Expand::Strategy::assertEquality(VarIdx idx, EqBound const & eq)
     Float const val = eq.getValue();
     assert(val >= expand.framework.getNetwork().getInputLowerBound(idx));
     assert(val <= expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addEquality(0, idx, val, true);
+    expand.verifierPtr->addEquality(0, idx, val, storeNamedTerms());
 }
 
 void Framework::Expand::Strategy::assertLowerBound(VarIdx idx, LowerBound const & lo) {
     Float const val = lo.getValue();
     assert(val > expand.framework.getNetwork().getInputLowerBound(idx));
     assert(val < expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addLowerBound(0, idx, val, true);
+    expand.verifierPtr->addLowerBound(0, idx, val, storeNamedTerms());
 }
 
 void Framework::Expand::Strategy::assertUpperBound(VarIdx idx, UpperBound const & hi) {
     Float const val = hi.getValue();
     assert(val > expand.framework.getNetwork().getInputLowerBound(idx));
     assert(val < expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addUpperBound(0, idx, val, true);
+    expand.verifierPtr->addUpperBound(0, idx, val, storeNamedTerms());
 }
 
 bool Framework::Expand::Strategy::checkFormsExplanation() {

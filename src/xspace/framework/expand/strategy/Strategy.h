@@ -20,6 +20,8 @@ public:
     virtual void execute(IntervalExplanation &);
 
 protected:
+    virtual bool storeNamedTerms() const { return false; }
+
     virtual void executeInit(IntervalExplanation &);
     virtual void executeBody(IntervalExplanation &) = 0;
     virtual void executeFinish(IntervalExplanation &) {}
@@ -67,6 +69,8 @@ public:
     bool isAbductiveOnly() const override { return not config.splitEq; }
 
 protected:
+    bool storeNamedTerms() const override { return true; }
+
     void executeBody(IntervalExplanation &) override;
 
     Config config{};
