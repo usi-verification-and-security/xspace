@@ -155,7 +155,9 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
 
         auto & explanation = explanations[i];
         for (auto & strategy : strategies) {
+            verifierPtr->push();
             strategy->execute(explanation);
+            verifierPtr->pop();
         }
 
         if (printingStats) { printStats(explanation, data, i); }
