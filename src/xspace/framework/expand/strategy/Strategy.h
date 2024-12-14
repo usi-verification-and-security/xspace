@@ -46,54 +46,6 @@ protected:
 
     VarOrdering varOrdering;
 };
-
-class Framework::Expand::AbductiveStrategy : public Strategy {
-public:
-    using Strategy::Strategy;
-
-protected:
-    void executeBody(Explanation &) override;
-};
-
-class Framework::Expand::TrialAndErrorStrategy : public Strategy {
-public:
-    struct Config {
-        int maxAttempts = 4;
-    };
-
-    using Strategy::Strategy;
-    TrialAndErrorStrategy(Expand & exp, Config const & conf, VarOrdering order = {})
-        : Strategy{exp, std::move(order)},
-          config{conf} {}
-
-    bool isAbductiveOnly() const override { return false; }
-
-protected:
-    void executeBody(Explanation &) override;
-
-    Config config{};
-};
-
-class Framework::Expand::UnsatCoreStrategy : public Strategy {
-public:
-    struct Config {
-        bool splitEq = false;
-    };
-
-    using Strategy::Strategy;
-    UnsatCoreStrategy(Expand & exp, Config const & conf, VarOrdering order = {})
-        : Strategy{exp, std::move(order)},
-          config{conf} {}
-
-    bool isAbductiveOnly() const override { return not config.splitEq; }
-
-protected:
-    bool storeNamedTerms() const override { return true; }
-
-    void executeBody(Explanation &) override;
-
-    Config config{};
-};
 } // namespace xspace
 
 #endif // XSPACE_EXPAND_STRATEGY_H

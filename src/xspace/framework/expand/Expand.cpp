@@ -3,7 +3,7 @@
 #include "../Config.h"
 #include "../Print.h"
 #include "../explanation/Explanation.h"
-#include "strategy/Strategy.h"
+#include "strategy/Strategies.h"
 
 #include <xspace/common/String.h>
 #include <xspace/nn/Dataset.h>
