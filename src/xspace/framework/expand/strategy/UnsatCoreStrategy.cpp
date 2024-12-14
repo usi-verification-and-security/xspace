@@ -1,6 +1,6 @@
 #include "UnsatCoreStrategy.h"
 
-#include <xspace/framework/explanation/Explanation.h>
+#include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/VarBound.h>
 
 #include <verifiers/UnsatCoreVerifier.h>

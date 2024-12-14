@@ -5,6 +5,7 @@
 #include "expand/Expand.h"
 #include "expand/strategy/Strategy.h"
 #include "explanation/Explanation.h"
+#include "explanation/IntervalExplanation.h"
 
 #include <xspace/common/Macro.h>
 #include <xspace/nn/Dataset.h>

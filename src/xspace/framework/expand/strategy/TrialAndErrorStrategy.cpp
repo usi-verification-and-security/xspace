@@ -1,7 +1,7 @@
 #include "TrialAndErrorStrategy.h"
 
 #include <xspace/framework/Utils.h>
-#include <xspace/framework/explanation/Explanation.h>
+#include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/VarBound.h>
 
 #include <verifiers/Verifier.h>

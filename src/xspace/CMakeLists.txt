@@ -14,6 +14,7 @@ PRIVATE
     framework/expand/strategy/TrialAndErrorStrategy.cpp
     framework/expand/strategy/UnsatCoreStrategy.cpp
     framework/explanation/Explanation.cpp
+    framework/explanation/IntervalExplanation.cpp
     framework/explanation/VarBound.cpp
     nn/Dataset.cpp
 PUBLIC

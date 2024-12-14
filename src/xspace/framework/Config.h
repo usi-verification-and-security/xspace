@@ -2,7 +2,7 @@
 #define XSPACE_CONFIG_H
 
 #include "Framework.h"
-#include "explanation/Explanation.h"
+#include "explanation/IntervalExplanation.h"
 
 namespace xspace {
 //+ move parsing cmdline options here
