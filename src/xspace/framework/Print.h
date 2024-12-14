@@ -37,10 +37,10 @@ protected:
 
     Framework const & framework;
 
+    static inline Absorb absorb{};
+
     std::ostream * explanationsOsPtr{&absorb};
     std::ostream * statsOsPtr{&absorb};
-
-    Absorb absorb{};
 };
 } // namespace xspace
 

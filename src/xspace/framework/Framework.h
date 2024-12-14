@@ -14,7 +14,9 @@
 
 namespace xspace {
 class Dataset;
-class IntervalExplanation;
+class Explanation;
+
+using Explanations = std::vector<std::unique_ptr<Explanation>>;
 
 // Class that represents the Space Explanation Framework
 class Framework {
@@ -47,7 +49,7 @@ public:
 
     Interval const & getDomainInterval(VarIdx idx) const { return domainIntervals[idx]; }
 
-    std::vector<IntervalExplanation> explain(Dataset const &);
+    Explanations explain(Dataset const &);
 
 protected:
     class Expand;
@@ -56,7 +58,7 @@ protected:
 
     using VarNames = std::vector<VarName>;
 
-    std::vector<IntervalExplanation> encodeSamples(Dataset const &);
+    Explanations encodeSamples(Dataset const &);
 
     std::unique_ptr<Config> configPtr;
 

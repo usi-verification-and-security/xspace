@@ -16,25 +16,55 @@
 namespace xspace {
 class Framework;
 
-class IntervalExplanation {
+class Explanation {
 public:
-    enum class PrintFormat { bounds, smtlib2, intervals };
+    Explanation(Framework const & fw) : frameworkPtr{&fw} {}
+
+    virtual std::size_t varSize() const = 0;
+
+    virtual bool contains(VarIdx) const = 0;
+
+    virtual void clear() {}
+
+    void swap(Explanation &);
+
+    std::size_t getFixedCount() const { return computeFixedCount(); }
+
+    virtual Float getRelativeVolume() const = 0;
+    virtual Float getRelativeVolumeSkipFixed() const = 0;
+
+    virtual void print(std::ostream & os) const { printSmtLib2(os); }
+    virtual void printSmtLib2(std::ostream &) const = 0;
+
+protected:
+    virtual std::size_t computeFixedCount() const = 0;
+
+    Framework const * frameworkPtr;
+};
+
+class IntervalExplanation : public Explanation {
+public:
+    enum class PrintFormat { smtlib2, bounds, intervals };
 
     struct PrintConfig {
-        char delim = '\n';
-        bool includeAll = false;
+        char delim;
+        bool includeAll;
     };
 
     using AllVarBounds = std::vector<std::optional<VarBound>>;
+
+    static constexpr PrintConfig defaultSmtLib2PrintConfig{.delim = ' ', .includeAll = false};
+    static constexpr PrintConfig defaultBoundsPrintConfig{.delim = '\n', .includeAll = false};
+    static constexpr PrintConfig defaultIntervalsPrintConfig{.delim = ' ', .includeAll = true};
 
     IntervalExplanation(Framework const &);
 
     auto begin() const { return varIdxToVarBoundMap.cbegin(); }
     auto end() const { return varIdxToVarBoundMap.cend(); }
 
-    std::size_t size() const { return varIdxToVarBoundMap.size(); }
+    std::size_t varSize() const override { return varIdxToVarBoundMap.size(); }
 
-    bool contains(VarIdx idx) const { return tryGetVarBound(idx).has_value(); }
+    bool contains(VarIdx idx) const override { return tryGetVarBound(idx).has_value(); }
 
     AllVarBounds const & getAllVarBounds() const { return allVarBounds; }
 
@@ -45,7 +75,7 @@ public:
         return allVarBounds[idx];
     }
 
-    void clear();
+    void clear() override;
 
     void swap(IntervalExplanation &);
 
@@ -57,34 +87,29 @@ public:
     void setVarBound(VarBound);
     void setVarBound(VarIdx, std::optional<VarBound>);
 
-    std::size_t getFixedCount() const { return computeFixedCount(); }
+    Float getRelativeVolume() const override;
+    Float getRelativeVolumeSkipFixed() const override;
 
-    Float getRelativeVolume() const;
-    Float getRelativeVolumeSkipFixed() const;
-
-    void print(std::ostream &, PrintFormat const &, PrintConfig const &) const;
-    void print(std::ostream &, PrintFormat const &) const;
+    void print(std::ostream & os) const override;
+    void printSmtLib2(std::ostream & os) const override { printSmtLib2(os, defaultSmtLib2PrintConfig); }
+    void printBounds(std::ostream & os) const { printBounds(os, defaultBoundsPrintConfig); }
+    void printIntervals(std::ostream & os) const { printIntervals(os, defaultIntervalsPrintConfig); }
     void print(std::ostream &, PrintConfig const &) const;
     void printSmtLib2(std::ostream &, PrintConfig const &) const;
+    void printBounds(std::ostream &, PrintConfig const &) const;
     void printIntervals(std::ostream &, PrintConfig const &) const;
-    void print(std::ostream & os) const { print(os, PrintConfig{}); }
-    void printSmtLib2(std::ostream & os) const { printSmtLib2(os, defaultSmtLib2PrintConfig); }
-    void printIntervals(std::ostream & os) const { printIntervals(os, defaultIntervalsPrintConfig); }
 
 protected:
     using VarIdxToVarBoundMap = std::map<VarIdx, VarBound>;
-
-    static constexpr PrintConfig defaultSmtLib2PrintConfig{.delim = ' ', .includeAll = false};
-    static constexpr PrintConfig defaultIntervalsPrintConfig{.delim = ' ', .includeAll = true};
 
     std::optional<VarBound> & _tryGetVarBound(VarIdx idx) {
         auto & optVarBnd = tryGetVarBound(idx);
         return const_cast<std::remove_cvref_t<decltype(optVarBnd)> &>(optVarBnd);
     }
 
-    std::size_t computeFixedCount() const;
+    std::size_t computeFixedCount() const override;
 
-    Framework const & framework;
+    PrintFormat const & getPrintFormat() const;
 
     AllVarBounds allVarBounds;
     VarIdxToVarBoundMap varIdxToVarBoundMap{};
@@ -95,11 +120,11 @@ private:
 
     template<PrintFormat>
     void printTp(std::ostream &, PrintConfig const &) const;
-    static void printElem(std::ostream &, PrintConfig const &, VarBound const &);
     static void printElemSmtLib2(std::ostream &, PrintConfig const &, VarBound const &);
+    static void printElemBounds(std::ostream &, PrintConfig const &, VarBound const &);
     void printElemInterval(std::ostream &, PrintConfig const &, VarBound const &) const;
-    void printElem(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
     void printElemSmtLib2(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
+    void printElemBounds(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
     void printElemInterval(std::ostream &, PrintConfig const &, VarIdx, std::optional<VarBound> const &) const;
 };
 } // namespace xspace

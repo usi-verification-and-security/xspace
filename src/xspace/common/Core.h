@@ -3,8 +3,6 @@
 
 #include <utility>
 
-#define FORWARD(arg) std::forward<decltype(arg)>(arg)
-
 namespace xspace {
 using Float = float;
 } // namespace xspace

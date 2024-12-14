@@ -8,7 +8,7 @@
 
 namespace xspace {
 class VarBound;
-class IntervalExplanation;
+class Explanation;
 
 class Framework::Expand::Strategy {
 public:
@@ -17,14 +17,14 @@ public:
 
     virtual bool isAbductiveOnly() const { return true; }
 
-    virtual void execute(IntervalExplanation &);
+    virtual void execute(Explanation &);
 
 protected:
     virtual bool storeNamedTerms() const { return false; }
 
-    virtual void executeInit(IntervalExplanation &);
-    virtual void executeBody(IntervalExplanation &) = 0;
-    virtual void executeFinish(IntervalExplanation &) {}
+    virtual void executeInit(Explanation &);
+    virtual void executeBody(Explanation &) = 0;
+    virtual void executeFinish(Explanation &) {}
 
     void assertVarBound(VarBound const &, bool splitEq = false);
     void assertInterval(VarIdx, Interval const &);
@@ -52,7 +52,7 @@ public:
     using Strategy::Strategy;
 
 protected:
-    void executeBody(IntervalExplanation &) override;
+    void executeBody(Explanation &) override;
 };
 
 class Framework::Expand::TrialAndErrorStrategy : public Strategy {
@@ -69,7 +69,7 @@ public:
     bool isAbductiveOnly() const override { return false; }
 
 protected:
-    void executeBody(IntervalExplanation &) override;
+    void executeBody(Explanation &) override;
 
     Config config{};
 };
@@ -90,7 +90,7 @@ public:
 protected:
     bool storeNamedTerms() const override { return true; }
 
-    void executeBody(IntervalExplanation &) override;
+    void executeBody(Explanation &) override;
 
     Config config{};
 };

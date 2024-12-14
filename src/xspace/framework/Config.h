@@ -9,30 +9,40 @@ class Framework::Config {
 public:
     using Verbosity = short;
 
-    using ExplanationPrintFormat = IntervalExplanation::PrintFormat;
-
     void setVerbosity(Verbosity verb) { verbosity = verb; }
     void beVerbose() { setVerbosity(1); }
 
     void reverseVarOrdering() { reverseVarOrder = true; }
 
-    void setPrintExplanationsFormat(ExplanationPrintFormat tp) { explanationPrintFormat = tp; }
-    void printExplanationsInBoundFormat() { setPrintExplanationsFormat(ExplanationPrintFormat::bounds); }
-    void printExplanationsInSmtLib2Format() { setPrintExplanationsFormat(ExplanationPrintFormat::smtlib2); }
-    void printExplanationsInIntervalFormat() { setPrintExplanationsFormat(ExplanationPrintFormat::intervals); }
+    void setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat tp) {
+        intervalExplanationPrintFormat = tp;
+    }
+    void printIntervalExplanationsInSmtLib2Format() {
+        setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat::smtlib2);
+    }
+    void printIntervalExplanationsInBoundFormat() {
+        setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat::bounds);
+    }
+    void printIntervalExplanationsInIntervalFormat() {
+        setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat::intervals);
+    }
 
     Verbosity getVerbosity() const { return verbosity; }
     bool isVerbose() const { return getVerbosity() > 0; }
 
     bool isReverseVarOrdering() const { return reverseVarOrder; }
 
-    ExplanationPrintFormat const & getPrintingExplanationsFormat() const { return explanationPrintFormat; }
-    bool printingExplanationsInBoundFormat() const { return explanationPrintFormat == ExplanationPrintFormat::bounds; }
-    bool printingExplanationsInSmtLib2Format() const {
-        return explanationPrintFormat == ExplanationPrintFormat::smtlib2;
+    IntervalExplanation::PrintFormat const & getPrintingIntervalExplanationsFormat() const {
+        return intervalExplanationPrintFormat;
     }
-    bool printingExplanationsInIntervalFormat() const {
-        return explanationPrintFormat == ExplanationPrintFormat::intervals;
+    bool printingIntervalExplanationsInSmtLib2Format() const {
+        return intervalExplanationPrintFormat == IntervalExplanation::PrintFormat::smtlib2;
+    }
+    bool printingIntervalExplanationsInBoundFormat() const {
+        return intervalExplanationPrintFormat == IntervalExplanation::PrintFormat::bounds;
+    }
+    bool printingIntervalExplanationsInIntervalFormat() const {
+        return intervalExplanationPrintFormat == IntervalExplanation::PrintFormat::intervals;
     }
 
 protected:
@@ -40,7 +50,7 @@ protected:
 
     bool reverseVarOrder{};
 
-    ExplanationPrintFormat explanationPrintFormat{};
+    IntervalExplanation::PrintFormat intervalExplanationPrintFormat{IntervalExplanation::PrintFormat::bounds};
 };
 } // namespace xspace
 

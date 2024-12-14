@@ -96,10 +96,10 @@ int main(int argc, char * argv[]) try {
                 config.reverseVarOrdering();
                 break;
             case 's':
-                config.printExplanationsInSmtLib2Format();
+                config.printIntervalExplanationsInSmtLib2Format();
                 break;
             case 'i':
-                config.printExplanationsInIntervalFormat();
+                config.printIntervalExplanationsInIntervalFormat();
                 break;
             default:
                 assert(c == '?');

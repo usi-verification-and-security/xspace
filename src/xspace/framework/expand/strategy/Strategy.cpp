@@ -15,13 +15,13 @@ Framework::Expand::Strategy::Strategy(Expand & exp, VarOrdering order) : expand{
     assert((varOrdering.type == VarOrdering::Type::manual) xor varOrdering.manualOrder.empty());
 }
 
-void Framework::Expand::Strategy::execute(IntervalExplanation & explanation) {
+void Framework::Expand::Strategy::execute(Explanation & explanation) {
     executeInit(explanation);
     executeBody(explanation);
     executeFinish(explanation);
 }
 
-void Framework::Expand::Strategy::executeInit(IntervalExplanation &) {
+void Framework::Expand::Strategy::executeInit(Explanation &) {
     auto const & orderType = varOrdering.type;
     auto & varOrder = varOrdering.manualOrder;
     std::size_t const varSize = expand.framework.varSize();
@@ -168,15 +168,18 @@ bool Framework::Expand::Strategy::checkFormsExplanation() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & explanation) {
+void Framework::Expand::AbductiveStrategy::executeBody(Explanation & explanation) {
     auto & verifier = *expand.verifierPtr;
+
+    assert(dynamic_cast<IntervalExplanation *>(&explanation));
+    auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
     std::size_t const varSize = expand.framework.varSize();
     for (VarIdx idxToOmit : varOrdering.manualOrder) {
         verifier.push();
         for (VarIdx idx = 0; idx < varSize; ++idx) {
             if (idx == idxToOmit) { continue; }
-            auto & optVarBnd = explanation.tryGetVarBound(idx);
+            auto & optVarBnd = iexplanation.tryGetVarBound(idx);
             if (not optVarBnd.has_value()) { continue; }
 
             auto & varBnd = *optVarBnd;
@@ -186,14 +189,17 @@ void Framework::Expand::AbductiveStrategy::executeBody(IntervalExplanation & exp
         verifier.pop();
         // It is no longer explanation after the removal -> we cannot remove it
         if (not ok) { continue; }
-        explanation.eraseVarBound(idxToOmit);
+        iexplanation.eraseVarBound(idxToOmit);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Framework::Expand::TrialAndErrorStrategy::executeBody(IntervalExplanation & explanation) {
+void Framework::Expand::TrialAndErrorStrategy::executeBody(Explanation & explanation) {
     auto & verifier = *expand.verifierPtr;
+
+    assert(dynamic_cast<IntervalExplanation *>(&explanation));
+    auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
     auto & fw = expand.framework;
     auto const maxAttempts = config.maxAttempts;
@@ -201,13 +207,13 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(IntervalExplanation &
 
     std::size_t const varSize = fw.varSize();
     for (VarIdx idxToRelax : varOrdering.manualOrder) {
-        auto & optVarBndToRelax = explanation.tryGetVarBound(idxToRelax);
+        auto & optVarBndToRelax = iexplanation.tryGetVarBound(idxToRelax);
         if (not optVarBndToRelax.has_value()) { continue; }
 
         verifier.push();
         for (VarIdx idx = 0; idx < varSize; ++idx) {
             if (idx == idxToRelax) { continue; }
-            auto & optVarBnd = explanation.tryGetVarBound(idx);
+            auto & optVarBnd = iexplanation.tryGetVarBound(idx);
             if (not optVarBnd.has_value()) { continue; }
 
             auto & varBnd = *optVarBnd;
@@ -261,21 +267,24 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(IntervalExplanation &
         verifier.pop();
 
         auto optVarBnd = intervalToOptVarBound(fw, idxToRelax, std::move(origInterval));
-        explanation.setVarBound(idxToRelax, std::move(optVarBnd));
+        iexplanation.setVarBound(idxToRelax, std::move(optVarBnd));
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & explanation) {
+void Framework::Expand::UnsatCoreStrategy::executeBody(Explanation & explanation) {
     assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(expand.verifierPtr.get()));
     auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
+
+    assert(dynamic_cast<IntervalExplanation *>(&explanation));
+    auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
     auto & fw = expand.framework;
     bool const splitEq = config.splitEq;
 
     for (VarIdx idx : varOrdering.manualOrder) {
-        auto & optVarBnd = explanation.tryGetVarBound(idx);
+        auto & optVarBnd = iexplanation.tryGetVarBound(idx);
         if (not optVarBnd.has_value()) { continue; }
 
         auto & varBnd = *optVarBnd;
@@ -290,15 +299,15 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & exp
     IntervalExplanation newExplanation{fw};
 
     for (VarIdx idx : unsatCore.equalities) {
-        newExplanation.insertBound(idx, EqBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+        newExplanation.insertBound(idx, EqBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
     }
     for (VarIdx idx : unsatCore.lowerBounds) {
-        newExplanation.insertBound(idx, LowerBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+        newExplanation.insertBound(idx, LowerBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
     }
     for (VarIdx idx : unsatCore.upperBounds) {
-        newExplanation.insertBound(idx, UpperBound{explanation.tryGetVarBound(idx)->getBound().getValue()});
+        newExplanation.insertBound(idx, UpperBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
     }
 
-    explanation.swap(newExplanation);
+    iexplanation.swap(newExplanation);
 }
 } // namespace xspace

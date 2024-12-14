@@ -124,16 +124,13 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
     strategies.push_back(std::move(strategy));
 }
 
-void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanations, Dataset const & data) {
+void Framework::Expand::operator()(Explanations & explanations, Dataset const & data) {
     assert(not strategies.empty());
 
     Print & print = *framework.printPtr;
     bool const printingStats = not print.ignoringStats();
     bool const printingExplanations = not print.ignoringExplanations();
     auto & cexp = print.explanations();
-
-    auto const & config = framework.getConfig();
-    auto const & expPrintFormat = config.getPrintingExplanationsFormat();
 
     if (printingStats) { printStatsHead(data); }
 
@@ -153,7 +150,7 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
         auto const & output = outputs[i];
         assertClassification(output);
 
-        auto & explanation = explanations[i];
+        auto & explanation = *explanations[i];
         for (auto & strategy : strategies) {
             verifierPtr->push();
             strategy->execute(explanation);
@@ -162,7 +159,7 @@ void Framework::Expand::operator()(std::vector<IntervalExplanation> & explanatio
 
         if (printingStats) { printStats(explanation, data, i); }
         if (printingExplanations) {
-            explanation.print(cexp, expPrintFormat);
+            explanation.print(cexp);
             cexp << std::endl;
         }
 
@@ -229,14 +226,14 @@ void Framework::Expand::printStatsHead(Dataset const & data) const {
     cstats << std::string(60, '-') << '\n';
 }
 
-void Framework::Expand::printStats(IntervalExplanation const & explanation, Dataset const & data, std::size_t i) const {
+void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data, std::size_t i) const {
     Print const & print = *framework.printPtr;
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
     auto const defaultPrecision = cstats.precision();
 
     std::size_t const varSize = framework.varSize();
-    std::size_t const expSize = explanation.size();
+    std::size_t const expSize = explanation.varSize();
     assert(expSize <= varSize);
 
     auto const & samples = data.getSamples();

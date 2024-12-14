@@ -15,7 +15,7 @@ class Verifier;
 
 namespace xspace {
 class Dataset;
-class IntervalExplanation;
+class Explanation;
 
 class Framework::Expand {
 public:
@@ -50,13 +50,15 @@ public:
         return *verifierPtr;
     }
 
-    void operator()(std::vector<IntervalExplanation> &, Dataset const &);
+    void operator()(Explanations &, Dataset const &);
 
 protected:
     class Strategy;
     class AbductiveStrategy;
     class TrialAndErrorStrategy;
     class UnsatCoreStrategy;
+
+    using Strategies = std::vector<std::unique_ptr<Strategy>>;
 
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
     void setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf) {
@@ -75,13 +77,13 @@ protected:
     void resetClassification();
 
     void printStatsHead(Dataset const &) const;
-    void printStats(IntervalExplanation const &, Dataset const &, std::size_t i) const;
+    void printStats(Explanation const &, Dataset const &, std::size_t i) const;
 
     Framework & framework;
 
     std::unique_ptr<xai::verifiers::Verifier> verifierPtr{};
 
-    std::vector<std::unique_ptr<Strategy>> strategies{};
+    Strategies strategies{};
 
     Outputs outputs{};
 

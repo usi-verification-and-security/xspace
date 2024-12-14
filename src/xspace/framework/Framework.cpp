@@ -6,6 +6,7 @@
 #include "expand/strategy/Strategy.h"
 #include "explanation/Explanation.h"
 
+#include <xspace/common/Macro.h>
 #include <xspace/nn/Dataset.h>
 
 #include <verifiers/Verifier.h>
@@ -45,15 +46,15 @@ void Framework::setExpandStrategies(std::istream & is) {
     expandPtr->setStrategies(is);
 }
 
-std::vector<IntervalExplanation> Framework::explain(Dataset const & data) {
+Explanations Framework::explain(Dataset const & data) {
     auto & expand = *expandPtr;
 
-    std::vector<IntervalExplanation> explanations = encodeSamples(data);
+    auto explanations = encodeSamples(data);
     expand(explanations, data);
     return explanations;
 }
 
-std::vector<IntervalExplanation> Framework::encodeSamples(Dataset const & data) {
+Explanations Framework::encodeSamples(Dataset const & data) {
     auto & samples = data.getSamples();
     assert(not samples.empty());
     assert(not varNames.empty());
@@ -62,7 +63,7 @@ std::vector<IntervalExplanation> Framework::encodeSamples(Dataset const & data) 
 
     std::size_t const size = samples.size();
     assert(size == data.size());
-    std::vector<IntervalExplanation> explanations;
+    Explanations explanations;
     Expand::Outputs outputs;
     explanations.reserve(size);
     outputs.reserve(size);
@@ -70,13 +71,13 @@ std::vector<IntervalExplanation> Framework::encodeSamples(Dataset const & data) 
     for (auto const & sample : samples) {
         assert(sample.size() == vSize);
 
-        IntervalExplanation explanation{*this};
+        IntervalExplanation iexplanation{*this};
         for (VarIdx idx = 0; idx < vSize; ++idx) {
             Float const val = sample[idx];
             EqBound bnd{val};
-            explanation.insertBound(idx, std::move(bnd));
+            iexplanation.insertBound(idx, std::move(bnd));
         }
-        explanations.push_back(std::move(explanation));
+        explanations.push_back(MAKE_UNIQUE(std::move(iexplanation)));
 
         static_assert(std::is_base_of_v<xai::nn::NNet::input_t, Dataset::Sample>);
         static_assert(std::is_base_of_v<xai::nn::NNet::output_t, Expand::Output::Values>);
