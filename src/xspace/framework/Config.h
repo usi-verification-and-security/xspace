@@ -5,6 +5,8 @@
 #include "explanation/Explanation.h"
 
 namespace xspace {
+//+ move parsing cmdline options here
+//+ after construction, make the conf const
 class Framework::Config {
 public:
     using Verbosity = short;

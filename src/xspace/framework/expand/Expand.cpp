@@ -50,6 +50,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
     VarOrdering defaultVarOrder{};
     if (config.isReverseVarOrdering()) { defaultVarOrder.type = VarOrdering::Type::reverse; }
 
+    //+ move this parsing to particular strategies
     std::string line;
     while (std::getline(is, line, ',')) {
         std::istringstream issLine{line};
@@ -144,7 +145,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
     assert(data.getOutputs().size() == size);
     assert(outputs.size() == size);
     for (std::size_t i = 0; i < size; ++i) {
-        //+ This should ideally be outside of the loop
+        //++ This should ideally be outside of the loop
         assertModel();
 
         auto const & output = outputs[i];
@@ -157,6 +158,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
             verifierPtr->pop();
         }
 
+        //+ get rid of the conditionals
         if (printingStats) { printStats(explanation, data, i); }
         if (printingExplanations) {
             explanation.print(cexp);
@@ -165,7 +167,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
 
         resetClassification();
 
-        //+ This should not ideally be necessary
+        //++ This should not ideally be necessary
         resetModel();
     }
 }
