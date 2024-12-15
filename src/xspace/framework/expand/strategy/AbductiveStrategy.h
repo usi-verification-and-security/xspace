@@ -9,7 +9,7 @@ public:
     using Strategy::Strategy;
 
 protected:
-    void executeBody(Explanation &) override;
+    void executeBody(std::unique_ptr<Explanation> &) override;
 };
 } // namespace xspace
 

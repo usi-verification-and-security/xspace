@@ -18,7 +18,7 @@ public:
     bool isAbductiveOnly() const override { return false; }
 
 protected:
-    void executeBody(Explanation &) override;
+    void executeBody(std::unique_ptr<Explanation> &) override;
 
     Config config{};
 };

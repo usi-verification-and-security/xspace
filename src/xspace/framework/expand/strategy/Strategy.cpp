@@ -13,13 +13,13 @@ Framework::Expand::Strategy::Strategy(Expand & exp, VarOrdering order) : expand{
     assert((varOrdering.type == VarOrdering::Type::manual) xor varOrdering.manualOrder.empty());
 }
 
-void Framework::Expand::Strategy::execute(Explanation & explanation) {
-    executeInit(explanation);
-    executeBody(explanation);
-    executeFinish(explanation);
+void Framework::Expand::Strategy::execute(std::unique_ptr<Explanation> & explanationPtr) {
+    executeInit(explanationPtr);
+    executeBody(explanationPtr);
+    executeFinish(explanationPtr);
 }
 
-void Framework::Expand::Strategy::executeInit(Explanation &) {
+void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
     auto const & orderType = varOrdering.type;
     auto & varOrder = varOrdering.manualOrder;
     std::size_t const varSize = expand.framework.varSize();

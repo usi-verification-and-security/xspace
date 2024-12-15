@@ -162,14 +162,15 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
         auto const & output = outputs[i];
         assertClassification(output);
 
-        auto & explanation = *explanations[i];
+        auto & explanationPtr = explanations[i];
         for (auto & strategy : strategies) {
             verifierPtr->push();
-            strategy->execute(explanation);
+            strategy->execute(explanationPtr);
             verifierPtr->pop();
         }
 
         //+ get rid of the conditionals
+        auto & explanation = *explanationPtr;
         if (printingStats) { printStats(explanation, data, i); }
         if (printingExplanations) {
             explanation.print(cexp);

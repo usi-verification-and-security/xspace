@@ -20,7 +20,7 @@ public:
 protected:
     bool storeNamedTerms() const override { return true; }
 
-    void executeBody(Explanation &) override;
+    void executeBody(std::unique_ptr<Explanation> &) override;
 
     Config config{};
 };

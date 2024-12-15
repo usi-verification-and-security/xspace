@@ -8,10 +8,11 @@
 #include <cassert>
 
 namespace xspace {
-void Framework::Expand::UnsatCoreStrategy::executeBody(Explanation & explanation) {
+void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
     assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(expand.verifierPtr.get()));
     auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
 
+    auto & explanation = *explanationPtr;
     assert(dynamic_cast<IntervalExplanation *>(&explanation));
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 

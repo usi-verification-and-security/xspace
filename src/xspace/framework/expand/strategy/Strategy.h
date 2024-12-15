@@ -17,14 +17,14 @@ public:
 
     virtual bool isAbductiveOnly() const { return true; }
 
-    virtual void execute(Explanation &);
+    virtual void execute(std::unique_ptr<Explanation> &);
 
 protected:
     virtual bool storeNamedTerms() const { return false; }
 
-    virtual void executeInit(Explanation &);
-    virtual void executeBody(Explanation &) = 0;
-    virtual void executeFinish(Explanation &) {}
+    virtual void executeInit(std::unique_ptr<Explanation> &);
+    virtual void executeBody(std::unique_ptr<Explanation> &) = 0;
+    virtual void executeFinish(std::unique_ptr<Explanation> &) {}
 
     void assertVarBound(VarBound const &, bool splitEq = false);
     void assertInterval(VarIdx, Interval const &);
