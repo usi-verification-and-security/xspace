@@ -6,6 +6,7 @@
 #include "AbductiveStrategy.h"
 #include "TrialAndErrorStrategy.h"
 #include "UnsatCoreStrategy.h"
+#include "OpenSMTInterpolationStrategy.h"
 
 namespace xspace {} // namespace xspace
 

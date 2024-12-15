@@ -57,6 +57,8 @@ protected:
     class AbductiveStrategy;
     class TrialAndErrorStrategy;
     class UnsatCoreStrategy;
+    //+ make templated with Formula
+    class OpenSMTInterpolationStrategy;
 
     using Strategies = std::vector<std::unique_ptr<Strategy>>;
 

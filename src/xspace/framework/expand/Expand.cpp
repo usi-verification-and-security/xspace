@@ -126,6 +126,12 @@ void Framework::Expand::setStrategies(std::istream & is) {
             continue;
         }
 
+        if (nameLower == "itp") {
+            checkAdditionalParameters(line, params);
+            addStrategy(std::make_unique<OpenSMTInterpolationStrategy>(*this, defaultVarOrder));
+            continue;
+        }
+
         throw std::invalid_argument{"Unrecognized strategy name: "s + name};
     }
 }

@@ -41,6 +41,7 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageStrategyRow(os, "abductive");
     printUsageStrategyRow(os, "ucore", {"sample", "interval"});
     printUsageStrategyRow(os, "trial", {"n <int>"});
+    printUsageStrategyRow(os, "itp");
 
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "Prints this help message and exits");
