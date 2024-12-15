@@ -26,7 +26,12 @@ public:
     // Not inline because of fwd-decl. types
     Framework();
     Framework(Config const &);
+    Framework(Config const &, std::unique_ptr<xai::nn::NNet>);
+    Framework(Config const &, std::unique_ptr<xai::nn::NNet>, std::string_view verifierName,
+              std::istream & expandStrategiesSpec);
     ~Framework();
+
+    void setConfig(Config const &);
 
     Config const & getConfig() const {
         assert(configPtr);
@@ -35,14 +40,12 @@ public:
 
     void setNetwork(std::unique_ptr<xai::nn::NNet>);
 
-    void setVerifier(std::string_view name);
-
-    void setExpandStrategies(std::istream &);
-
     xai::nn::NNet const & getNetwork() const {
         assert(networkPtr);
         return *networkPtr;
     }
+
+    void setExpand(std::string_view verifierName, std::istream & strategiesSpec);
 
     std::size_t varSize() const { return varNames.size(); }
     VarName const & getVarName(VarIdx idx) const { return varNames[idx]; }

@@ -37,9 +37,9 @@ public:
 
     using Outputs = std::vector<Output>;
 
-    Expand(Framework & fw) : framework{fw} {}
+    Expand(Framework &);
 
-    void setVerifier(std::string_view name) { setVerifier(makeVerifier(name)); }
+    void setVerifier(std::string_view name);
 
     void setStrategies(std::istream &);
 
@@ -61,10 +61,7 @@ protected:
     using Strategies = std::vector<std::unique_ptr<Strategy>>;
 
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
-    void setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf) {
-        assert(vf);
-        verifierPtr = std::move(vf);
-    }
+    void setVerifier(std::unique_ptr<xai::verifiers::Verifier>);
 
     void addStrategy(std::unique_ptr<Strategy>);
 

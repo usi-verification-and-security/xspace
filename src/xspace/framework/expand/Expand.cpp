@@ -24,6 +24,8 @@
 #include <string>
 
 namespace xspace {
+Framework::Expand::Expand(Framework & fw) : framework{fw} {}
+
 std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
     if (toLower(name) == "opensmt") {
         return std::make_unique<xai::verifiers::OpenSMTVerifier>();
@@ -34,6 +36,15 @@ std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::s
     }
 
     throw std::invalid_argument{"Unrecognized verifier name: "s + std::string{name}};
+}
+
+void Framework::Expand::setVerifier(std::string_view name) {
+    setVerifier(makeVerifier(name));
+}
+
+void Framework::Expand::setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf) {
+    assert(vf);
+    verifierPtr = std::move(vf);
 }
 
 void Framework::Expand::setStrategies(std::istream & is) {

@@ -112,11 +112,8 @@ int main(int argc, char * argv[]) try {
     auto const dataset = xspace::Dataset{datasetFn};
     std::size_t const size = dataset.size();
 
-    xspace::Framework framework{config};
-    framework.setNetwork(std::move(network));
-    framework.setVerifier(verifierName);
     std::istringstream strategiesSpecIss{std::string{strategiesSpec}};
-    framework.setExpandStrategies(strategiesSpecIss);
+    xspace::Framework framework{config, std::move(network), verifierName, strategiesSpecIss};
 
     auto explanations = framework.explain(dataset);
     assert(explanations.size() == size);
