@@ -2,10 +2,10 @@
 
 #include <experiments/Config.h>
 
-#include <logics/ArithLogic.h>
-#include <logics/LogicFactory.h>
 #include <api/MainSolver.h>
 #include <common/StringConv.h>
+#include <logics/ArithLogic.h>
+#include <logics/LogicFactory.h>
 
 #include <algorithm>
 #include <string>
@@ -31,12 +31,17 @@ public:
     PTRef makeLowerBound(LayerIndex layer, NodeIndex node, float value) {
         return makeLowerBound(layer, node, floatToRational(value));
     }
+    PTRef makeEquality(LayerIndex layer, NodeIndex node, float value) {
+        return makeEquality(layer, node, floatToRational(value));
+    }
     PTRef makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value);
     PTRef makeLowerBound(LayerIndex layer, NodeIndex node, FastRational value);
+    PTRef makeEquality(LayerIndex layer, NodeIndex node, FastRational value);
 
     PTRef addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
     PTRef addLowerBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
-    void addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
+    PTRef addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
+
     void addClassificationConstraint(NodeIndex node, float threshold);
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs);
@@ -257,6 +262,12 @@ PTRef OpenSMTVerifier::OpenSMTImpl::makeLowerBound(LayerIndex layer, NodeIndex n
     return logic->mkGeq(var, logic->mkRealConst(value));
 }
 
+PTRef OpenSMTVerifier::OpenSMTImpl::makeEquality(LayerIndex layer, NodeIndex node, FastRational value) {
+    PTRef lterm = makeLowerBound(layer, node, value);
+    PTRef uterm = makeUpperBound(layer, node, std::move(value));
+    return logic->mkAnd(lterm, uterm);
+}
+
 PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeUpperBound(layer, node, value);
     solver->insertFormula(term);
@@ -279,17 +290,15 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex no
     return term;
 }
 
-void OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
-    FastRational rat = floatToRational(value);
-    PTRef lterm = makeLowerBound(layer, node, rat);
-    PTRef uterm = makeUpperBound(layer, node, std::move(rat));
-    PTRef term = logic->mkAnd(lterm, uterm);
+PTRef OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
+    PTRef term = makeEquality(layer, node, value);
     solver->insertFormula(term);
-    if (not explanationTerm) { return; }
+    if (not explanationTerm) { return term; }
 
     solver->getTermNames().insert(makeTermName(layer, node, "e_"), term);
     auto const [_, inserted] = inputVarEqualityToIndex.emplace(term, node);
     assert(inserted);
+    return term;
 }
 
 void OpenSMTVerifier::OpenSMTImpl::addClassificationConstraint(NodeIndex node, float threshold=0.0){
