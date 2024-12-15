@@ -20,7 +20,7 @@ PRIVATE
 PUBLIC
 )
 
-target_include_directories(xspace
+target_include_directories(xspace SYSTEM
 PUBLIC
     ${opensmt_SOURCE_DIR}/src
 )
