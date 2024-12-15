@@ -1,7 +1,6 @@
 #include "IntervalExplanation.h"
 
 #include "../Config.h"
-#include "../Framework.h"
 
 #include <xspace/common/Print.h>
 

@@ -55,11 +55,18 @@ public:
     Explanations explain(Dataset const &);
 
 protected:
+    friend class Explanation;
+
     class Expand;
 
     class Print;
 
     using VarNames = std::vector<VarName>;
+
+    Expand const & getExpand() const {
+        assert(expandPtr);
+        return *expandPtr;
+    }
 
     Explanations encodeSamples(Dataset const &);
 

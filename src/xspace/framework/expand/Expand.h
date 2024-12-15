@@ -41,14 +41,14 @@ public:
 
     void setVerifier(std::string_view name);
 
-    void setStrategies(std::istream &);
-
-    void setOutputs(Outputs outs) { outputs = std::move(outs); }
-
     xai::verifiers::Verifier const & getVerifier() const {
         assert(verifierPtr);
         return *verifierPtr;
     }
+
+    void setStrategies(std::istream &);
+
+    void setOutputs(Outputs outs) { outputs = std::move(outs); }
 
     void operator()(Explanations &, Dataset const &);
 
