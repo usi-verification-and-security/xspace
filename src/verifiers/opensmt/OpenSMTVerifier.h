@@ -35,6 +35,7 @@ public:
 
     UnsatCore getUnsatCore() const override;
 
+    opensmt::MainSolver const & getSolver() const;
     opensmt::MainSolver & getSolver();
 
 protected:

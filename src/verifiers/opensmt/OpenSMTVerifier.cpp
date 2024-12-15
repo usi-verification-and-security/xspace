@@ -53,6 +53,7 @@ public:
 
     UnsatCore getUnsatCore() const;
 
+    opensmt::MainSolver const & getSolver() const { return *solver; }
     opensmt::MainSolver & getSolver() { return *solver; }
 
 private:
@@ -136,6 +137,10 @@ void OpenSMTVerifier::reset() {
 
 UnsatCore OpenSMTVerifier::getUnsatCore() const {
     return pimpl->getUnsatCore();
+}
+
+opensmt::MainSolver const & OpenSMTVerifier::getSolver() const {
+    return pimpl->getSolver();
 }
 
 opensmt::MainSolver & OpenSMTVerifier::getSolver() {
