@@ -20,20 +20,12 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Expla
     auto const maxAttempts = config.maxAttempts;
     assert(maxAttempts > 0);
 
-    std::size_t const varSize = fw.varSize();
     for (VarIdx idxToRelax : varOrdering.manualOrder) {
         auto & optVarBndToRelax = iexplanation.tryGetVarBound(idxToRelax);
         if (not optVarBndToRelax.has_value()) { continue; }
 
         verifier.push();
-        for (VarIdx idx = 0; idx < varSize; ++idx) {
-            if (idx == idxToRelax) { continue; }
-            auto & optVarBnd = iexplanation.tryGetVarBound(idx);
-            if (not optVarBnd.has_value()) { continue; }
-
-            auto & varBnd = *optVarBnd;
-            assertVarBound(varBnd);
-        }
+        assertIntervalExplanationExcept(iexplanation, idxToRelax);
 
         auto & varBndToRelax = *optVarBndToRelax;
         Interval origInterval = varBndToRelax.toInterval();

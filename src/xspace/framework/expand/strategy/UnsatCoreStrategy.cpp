@@ -17,16 +17,8 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanati
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
     auto & fw = expand.framework;
-    bool const splitEq = config.splitEq;
 
-    for (VarIdx idx : varOrdering.manualOrder) {
-        auto & optVarBnd = iexplanation.tryGetVarBound(idx);
-        if (not optVarBnd.has_value()) { continue; }
-
-        auto & varBnd = *optVarBnd;
-        assertVarBound(varBnd, splitEq);
-    }
-
+    assertIntervalExplanation(iexplanation, {.ignoreVarOrder = false, .splitEq = config.splitEq});
     [[maybe_unused]] bool const ok = checkFormsExplanation();
     assert(ok);
 

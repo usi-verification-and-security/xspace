@@ -1,6 +1,7 @@
 #include "Strategy.h"
 
 #include <xspace/framework/explanation/Explanation.h>
+#include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/VarBound.h>
 
 #include <verifiers/Verifier.h>
@@ -35,6 +36,100 @@ void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
     } else {
         assert(orderType == VarOrdering::Type::reverse);
         std::iota(varOrder.rbegin(), varOrder.rend(), 0);
+    }
+
+    //? sort the variables right away, and then sort back at the end
+}
+
+void Framework::Expand::Strategy::assertExplanation(Explanation const & explanation) {
+    assertExplanation(explanation, AssertExplanationConf{});
+}
+
+void Framework::Expand::Strategy::assertExplanation(Explanation const & explanation,
+                                                    AssertExplanationConf const & conf) {
+    [[maybe_unused]] bool success = assertExplanationImpl(explanation, conf);
+    assert(success);
+}
+
+bool Framework::Expand::Strategy::assertExplanationImpl(Explanation const & explanation,
+                                                        AssertExplanationConf const & conf) {
+    if (auto iexpPtr = dynamic_cast<IntervalExplanation const *>(&explanation)) {
+        assertIntervalExplanation(*iexpPtr, conf);
+        return true;
+    }
+
+    return false;
+}
+
+void Framework::Expand::Strategy::assertIntervalExplanation(IntervalExplanation const & iexplanation) {
+    assertIntervalExplanation(iexplanation, AssertExplanationConf{});
+}
+
+void Framework::Expand::Strategy::assertIntervalExplanation(IntervalExplanation const & iexplanation,
+                                                            AssertExplanationConf const & conf) {
+    assertIntervalExplanationTp(iexplanation, conf);
+}
+
+void Framework::Expand::Strategy::assertIntervalExplanationExcept(IntervalExplanation const & iexplanation,
+                                                                  VarIdx idxToOmit) {
+    assertIntervalExplanationExcept(iexplanation, idxToOmit, AssertExplanationConf{});
+}
+
+void Framework::Expand::Strategy::assertIntervalExplanationExcept(IntervalExplanation const & iexplanation,
+                                                                  VarIdx idxToOmit,
+                                                                  AssertExplanationConf const & conf) {
+    assertIntervalExplanationTp<true>(iexplanation, conf, idxToOmit);
+}
+
+template<bool omitIdx>
+void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanation const & iexplanation,
+                                                              AssertExplanationConf const & conf,
+                                                              [[maybe_unused]] VarIdx idxToOmit) {
+    bool const splitEq = conf.splitEq;
+
+    if (conf.ignoreVarOrder) {
+        std::size_t const varSize = expand.framework.varSize();
+        std::size_t const eVarSize = iexplanation.varSize();
+        if (eVarSize < varSize / 2) {
+            for (auto & [idx, varBnd] : iexplanation) {
+                if constexpr (omitIdx) {
+                    if (idx == idxToOmit) { continue; }
+                } else {
+                    assert(idx != idxToOmit);
+                }
+                assertVarBound(varBnd, splitEq);
+            }
+            return;
+        }
+
+        for (VarIdx idx = 0; idx < varSize; ++idx) {
+            if constexpr (omitIdx) {
+                if (idx == idxToOmit) { continue; }
+            } else {
+                assert(idx != idxToOmit);
+            }
+
+            auto & optVarBnd = iexplanation.tryGetVarBound(idx);
+            if (not optVarBnd.has_value()) { continue; }
+
+            auto & varBnd = *optVarBnd;
+            assertVarBound(varBnd, splitEq);
+        }
+        return;
+    }
+
+    for (VarIdx idx : varOrdering.manualOrder) {
+        if constexpr (omitIdx) {
+            if (idx == idxToOmit) { continue; }
+        } else {
+            assert(idx != idxToOmit);
+        }
+
+        auto & optVarBnd = iexplanation.tryGetVarBound(idx);
+        if (not optVarBnd.has_value()) { continue; }
+
+        auto & varBnd = *optVarBnd;
+        assertVarBound(varBnd, splitEq);
     }
 }
 

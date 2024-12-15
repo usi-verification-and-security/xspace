@@ -9,6 +9,7 @@
 namespace xspace {
 class VarBound;
 class Explanation;
+class IntervalExplanation;
 
 class Framework::Expand::Strategy {
 public:
@@ -20,11 +21,25 @@ public:
     virtual void execute(std::unique_ptr<Explanation> &);
 
 protected:
+    struct AssertExplanationConf {
+        bool ignoreVarOrder = true;
+        bool splitEq = false;
+    };
+
     virtual bool storeNamedTerms() const { return false; }
 
     virtual void executeInit(std::unique_ptr<Explanation> &);
     virtual void executeBody(std::unique_ptr<Explanation> &) = 0;
     virtual void executeFinish(std::unique_ptr<Explanation> &) {}
+
+    void assertExplanation(Explanation const &);
+    void assertExplanation(Explanation const &, AssertExplanationConf const &);
+    virtual bool assertExplanationImpl(Explanation const &, AssertExplanationConf const &);
+
+    void assertIntervalExplanation(IntervalExplanation const &);
+    void assertIntervalExplanation(IntervalExplanation const &, AssertExplanationConf const &);
+    void assertIntervalExplanationExcept(IntervalExplanation const &, VarIdx);
+    void assertIntervalExplanationExcept(IntervalExplanation const &, VarIdx, AssertExplanationConf const &);
 
     void assertVarBound(VarBound const &, bool splitEq = false);
     void assertInterval(VarIdx, Interval const &);
@@ -45,6 +60,11 @@ protected:
     Expand & expand;
 
     VarOrdering varOrdering;
+
+private:
+    template<bool omitIdx = false>
+    void assertIntervalExplanationTp(IntervalExplanation const &, AssertExplanationConf const &,
+                                     VarIdx idxToOmit = invalidVarIdx);
 };
 } // namespace xspace
 
