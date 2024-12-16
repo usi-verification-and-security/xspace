@@ -158,9 +158,11 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
     //? This incrementality does not seem to work
     // assertModel();
 
-    std::size_t const size = data.size();
-    assert(explanations.size() == size);
-    for (Dataset::Sample::Idx idx = 0; idx < size; ++idx) {
+    //++ allow also other views based on config
+    auto const & indices = data.getSampleIndices();
+    assert(indices.size() <= data.size());
+    assert(explanations.size() == data.size());
+    for (auto idx : indices) {
         //++ This should ideally be outside of the loop
         assertModel();
 
