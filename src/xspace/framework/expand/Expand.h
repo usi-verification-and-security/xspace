@@ -19,11 +19,11 @@ class Explanation;
 class Framework::Expand {
 public:
     struct VarOrdering {
-        enum class Type { regular = 0, reverse, manual };
+        enum class Type { regular, reverse, manual };
 
         using ManualOrder = std::vector<VarIdx>;
 
-        Type type{};
+        Type type{Type::regular};
         ManualOrder manualOrder{};
     };
 

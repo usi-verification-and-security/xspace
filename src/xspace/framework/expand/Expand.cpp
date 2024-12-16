@@ -128,8 +128,69 @@ void Framework::Expand::setStrategies(std::istream & is) {
         }
 
         if (nameLower == "itp") {
+            OpenSMTInterpolationStrategy::Config conf;
+            while (not params.empty()) {
+                auto param = std::move(params.front());
+                params.pop();
+                auto const paramLower = toLower(param);
+                if (paramLower == "weak") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::weak;
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::weak;
+                    break;
+                }
+
+                if (paramLower == "strong") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::strong;
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::strong;
+                    break;
+                }
+
+                if (paramLower == "weaker") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::weak;
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::weaker;
+                    break;
+                }
+
+                if (paramLower == "stronger") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::strong;
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::stronger;
+                    break;
+                }
+
+                if (paramLower == "bweak") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::weak;
+                    continue;
+                }
+
+                if (paramLower == "bstrong") {
+                    conf.boolInterpolationAlg = OpenSMTInterpolationStrategy::BoolInterpolationAlg::strong;
+                    continue;
+                }
+
+                if (paramLower == "aweak") {
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::weak;
+                    continue;
+                }
+
+                if (paramLower == "astrong") {
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::strong;
+                    continue;
+                }
+
+                if (paramLower == "aweaker") {
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::weaker;
+                    continue;
+                }
+
+                if (paramLower == "astronger") {
+                    conf.arithInterpolationAlg = OpenSMTInterpolationStrategy::ArithInterpolationAlg::stronger;
+                    continue;
+                }
+
+                throwInvalidParameter(name, param);
+            }
             checkAdditionalParameters(line, params);
-            addStrategy(std::make_unique<OpenSMTInterpolationStrategy>(*this, defaultVarOrder));
+            addStrategy(std::make_unique<OpenSMTInterpolationStrategy>(*this, conf, defaultVarOrder));
             continue;
         }
 

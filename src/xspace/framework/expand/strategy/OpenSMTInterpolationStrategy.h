@@ -14,7 +14,13 @@ class FormulaExplanation;
 namespace xspace {
 class Framework::Expand::OpenSMTInterpolationStrategy : public Strategy {
 public:
-    struct Config {};
+    enum class BoolInterpolationAlg { weak, strong };
+    enum class ArithInterpolationAlg { weak, weaker, strong, stronger };
+
+    struct Config {
+        BoolInterpolationAlg boolInterpolationAlg{BoolInterpolationAlg::strong};
+        ArithInterpolationAlg arithInterpolationAlg{ArithInterpolationAlg::weak};
+    };
 
     using Strategy::Strategy;
     OpenSMTInterpolationStrategy(Expand & exp, Config const & conf, VarOrdering order = {})
@@ -26,6 +32,7 @@ public:
 protected:
     xai::verifiers::OpenSMTVerifier & getVerifier();
 
+    void executeInit(std::unique_ptr<Explanation> &) override;
     void executeBody(std::unique_ptr<Explanation> &) override;
 
     bool assertExplanationImpl(Explanation const &, AssertExplanationConf const &) override;
