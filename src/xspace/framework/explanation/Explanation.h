@@ -10,6 +10,11 @@ namespace xspace {
 class Explanation {
 public:
     Explanation(Framework const & fw) : frameworkPtr{&fw} {}
+    virtual ~Explanation() = default;
+    Explanation(Explanation const &) = default;
+    Explanation(Explanation &&) = default;
+    Explanation & operator=(Explanation const &) = default;
+    Explanation & operator=(Explanation &&) = default;
 
     virtual std::size_t varSize() const = 0;
 

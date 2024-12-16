@@ -110,7 +110,7 @@ int main(int argc, char * argv[]) try {
         }
     }
 
-    auto const dataset = xspace::Dataset{datasetFn};
+    auto dataset = xspace::Dataset{datasetFn};
     std::size_t const size = dataset.size();
 
     std::istringstream strategiesSpecIss{std::string{strategiesSpec}};

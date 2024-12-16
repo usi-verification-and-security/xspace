@@ -1,12 +1,13 @@
 #include "Expand.h"
 
 #include "../Config.h"
+#include "../Preprocess.h"
 #include "../Print.h"
 #include "../explanation/Explanation.h"
 #include "strategy/Strategies.h"
 
+#include <xspace/common/Core.h>
 #include <xspace/common/String.h>
-#include <xspace/nn/Dataset.h>
 
 #include <verifiers/Verifier.h>
 #include <verifiers/opensmt/OpenSMTVerifier.h>
@@ -142,7 +143,7 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
     strategies.push_back(std::move(strategy));
 }
 
-void Framework::Expand::operator()(Explanations & explanations, Dataset const & data) {
+void Framework::Expand::operator()(Explanations & explanations, Dataset & data) {
     assert(not strategies.empty());
 
     Print & print = *framework.printPtr;
@@ -157,18 +158,16 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
     //? This incrementality does not seem to work
     // assertModel();
 
-    std::size_t const size = explanations.size();
-    assert(data.getSamples().size() == size);
-    assert(data.getOutputs().size() == size);
-    assert(outputs.size() == size);
-    for (std::size_t i = 0; i < size; ++i) {
+    std::size_t const size = data.size();
+    assert(explanations.size() == size);
+    for (Dataset::Sample::Idx idx = 0; idx < size; ++idx) {
         //++ This should ideally be outside of the loop
         assertModel();
 
-        auto const & output = outputs[i];
+        auto const & output = data.getComputedOutput(idx);
         assertClassification(output);
 
-        auto & explanationPtr = explanations[i];
+        auto & explanationPtr = explanations[idx];
         for (auto & strategy : strategies) {
             verifierPtr->push();
             strategy->execute(explanationPtr);
@@ -177,7 +176,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
 
         //+ get rid of the conditionals
         auto & explanation = *explanationPtr;
-        if (printingStats) { printStats(explanation, data, i); }
+        if (printingStats) { printStats(explanation, data, idx); }
         if (printingExplanations) {
             explanation.print(cexp);
             cexp << std::endl;
@@ -204,28 +203,35 @@ void Framework::Expand::resetModel() {
     verifierPtr->reset();
 }
 
-void Framework::Expand::assertClassification(Output const & output) {
+void Framework::Expand::assertClassification(Dataset::Output const & output) {
     verifierPtr->push();
 
     auto & network = framework.getNetwork();
     auto const outputLayerIndex = network.getNumLayers() - 1;
+
+    auto const label = output.classificationLabel;
     auto const & outputValues = output.values;
-    if (outputValues.size() == 1) {
-        // With single output value, the flip in classification means flipping the value across certain threshold
-        constexpr Float threshold = 0;
-        constexpr Float precision = 0.015625f;
-        Float const outputValue = outputValues.front();
-        if (outputValue >= threshold) {
-            verifierPtr->addUpperBound(outputLayerIndex, 0, threshold - precision);
-        } else {
-            verifierPtr->addLowerBound(outputLayerIndex, 0, threshold + precision);
-        }
+
+    if (not Preprocess::isBinaryClassification(outputValues)) {
+        assert(outputValues.size() == network.getLayerSize(outputLayerIndex));
+        verifierPtr->addClassificationConstraint(label, 0);
         return;
     }
 
-    [[maybe_unused]] auto const outputLayerSize = network.getLayerSize(outputLayerIndex);
-    assert(outputLayerSize == outputValues.size());
-    verifierPtr->addClassificationConstraint(output.classifiedIdx, 0);
+    // With single output value, the flip in classification means flipping the value across 0
+    constexpr Float threshold = 0.015625f;
+    [[maybe_unused]] Float const val = outputValues.front();
+    assert(Preprocess::computeBinaryClassificationLabel(outputValues) == label);
+    assert(label == 0 || label == 1);
+    if (label == 1) {
+        assert(val >= 0);
+        // <= -threshold
+        verifierPtr->addUpperBound(outputLayerIndex, 0, -threshold);
+    } else {
+        assert(val < 0);
+        // >= threshold
+        verifierPtr->addLowerBound(outputLayerIndex, 0, threshold);
+    }
 }
 
 void Framework::Expand::resetClassification() {
@@ -238,46 +244,41 @@ void Framework::Expand::printStatsHead(Dataset const & data) const {
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
 
-    std::size_t const size = data.getSamples().size();
-    assert(size == data.getOutputs().size());
-    assert(size == outputs.size());
+    std::size_t const size = data.size();
     cstats << "Dataset size: " << size << '\n';
     cstats << "Number of variables: " << framework.varSize() << '\n';
     cstats << std::string(60, '-') << '\n';
 }
 
-void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data, std::size_t i) const {
+void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data,
+                                   Dataset::Sample::Idx idx) const {
     Print const & print = *framework.printPtr;
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
     auto const defaultPrecision = cstats.precision();
 
     std::size_t const varSize = framework.varSize();
-    std::size_t const expSize = explanation.varSize();
-    assert(expSize <= varSize);
+    std::size_t const expVarSize = explanation.varSize();
+    assert(expVarSize <= varSize);
 
-    auto const & samples = data.getSamples();
-    auto const & expOutputs = data.getOutputs();
-    std::size_t const size = samples.size();
-    assert(size == expOutputs.size());
-    assert(size == outputs.size());
-    auto const & sample = samples[i];
-    auto const & expOutput = expOutputs[i];
-    auto const & output = outputs[i];
+    std::size_t const dataSize = data.size();
+    auto const & sample = data.getSample(idx);
+    auto const & expClass = data.getExpectedClassification(idx).label;
+    auto const & compClass = data.getComputedOutput(idx).classificationLabel;
 
     std::size_t const fixedCount = explanation.getFixedCount();
-    assert(fixedCount <= expSize);
+    assert(fixedCount <= expVarSize);
 
     cstats << '\n';
-    cstats << "sample [" << i + 1 << '/' << size << "]: " << sample << '\n';
-    cstats << "expected output: " << expOutput << '\n';
-    cstats << "computed output: " << output.classifiedIdx << '\n';
+    cstats << "sample [" << idx + 1 << '/' << dataSize << "]: " << sample << '\n';
+    cstats << "expected output: " << expClass << '\n';
+    cstats << "computed output: " << compClass << '\n';
     cstats << "#checks: " << verifierPtr->getChecksCount() << '\n';
-    cstats << "explanation size: " << expSize << '/' << varSize << std::endl;
+    cstats << "explanation size: " << expVarSize << '/' << varSize << std::endl;
 
     assert(explanation.getRelativeVolumeSkipFixed() > 0);
     assert(explanation.getRelativeVolumeSkipFixed() <= 1);
-    assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expSize));
+    assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expVarSize));
     if (isAbductiveOnly) { return; }
 
     Float const relVolume = explanation.getRelativeVolumeSkipFixed();

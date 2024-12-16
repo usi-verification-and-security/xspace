@@ -6,6 +6,7 @@ PRIVATE
     common/Interval.cpp
     common/Print.cpp
     framework/Framework.cpp
+    framework/Preprocess.cpp
     framework/Print.cpp
     framework/Utils.cpp
     framework/expand/Expand.cpp

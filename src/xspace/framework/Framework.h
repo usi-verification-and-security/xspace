@@ -52,10 +52,12 @@ public:
 
     Interval const & getDomainInterval(VarIdx idx) const { return domainIntervals[idx]; }
 
-    Explanations explain(Dataset const &);
+    Explanations explain(Dataset &);
 
 protected:
     friend class Explanation;
+
+    class Preprocess;
 
     class Expand;
 
@@ -67,8 +69,6 @@ protected:
         assert(expandPtr);
         return *expandPtr;
     }
-
-    Explanations encodeSamples(Dataset const &);
 
     std::unique_ptr<Config> configPtr;
 

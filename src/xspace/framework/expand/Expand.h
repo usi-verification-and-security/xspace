@@ -3,8 +3,8 @@
 
 #include "../Framework.h"
 
-#include <xspace/common/Core.h>
 #include <xspace/common/Var.h>
+#include <xspace/nn/Dataset.h>
 
 #include <memory>
 #include <vector>
@@ -14,7 +14,6 @@ class Verifier;
 }
 
 namespace xspace {
-class Dataset;
 class Explanation;
 
 class Framework::Expand {
@@ -28,15 +27,6 @@ public:
         ManualOrder manualOrder{};
     };
 
-    struct Output {
-        using Values = std::vector<Float>;
-
-        Values values;
-        VarIdx classifiedIdx;
-    };
-
-    using Outputs = std::vector<Output>;
-
     Expand(Framework &);
 
     void setVerifier(std::string_view name);
@@ -48,9 +38,7 @@ public:
 
     void setStrategies(std::istream &);
 
-    void setOutputs(Outputs outs) { outputs = std::move(outs); }
-
-    void operator()(Explanations &, Dataset const &);
+    void operator()(Explanations &, Dataset &);
 
 protected:
     class Strategy;
@@ -72,19 +60,17 @@ protected:
     void assertModel();
     void resetModel();
 
-    void assertClassification(Output const &);
+    void assertClassification(Dataset::Output const &);
     void resetClassification();
 
     void printStatsHead(Dataset const &) const;
-    void printStats(Explanation const &, Dataset const &, std::size_t i) const;
+    void printStats(Explanation const &, Dataset const &, Dataset::Sample::Idx) const;
 
     Framework & framework;
 
     std::unique_ptr<xai::verifiers::Verifier> verifierPtr{};
 
     Strategies strategies{};
-
-    Outputs outputs{};
 
     bool isAbductiveOnly{true};
 };

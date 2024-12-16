@@ -1,12 +1,14 @@
 #include "Dataset.h"
 
-#include <cassert>
-#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <ranges>
 #include <sstream>
 #include <string>
+
+#ifndef NDEBUG
+#include <cmath>
+#endif
 
 namespace xspace {
 Dataset::Dataset(std::string_view fileName) {
@@ -26,13 +28,31 @@ Dataset::Dataset(std::string_view fileName) {
             sample.push_back(std::stof(field));
         }
         assert(not sample.empty());
-        Float output = sample.back();
-        assert(output == std::floor(output));
-        sample.resize(sample.size() - 1);
+        Float expectedClassFloat = sample.back();
+        assert(expectedClassFloat == std::floor(expectedClassFloat));
+        sample.pop_back();
+
+        Classification::Label label = expectedClassFloat;
+        expectedClassifications.push_back({.label = label});
+
         samples.push_back(std::move(sample));
-        outputs.push_back(output);
     }
+
     assert(not samples.empty());
+    assert(size() == samples.size());
+    assert(size() == expectedClassifications.size());
+}
+
+void Dataset::setComputedOutputs(Outputs outs) {
+    assert(outs.size() == size());
+    computedOutputs = std::move(outs);
+}
+
+bool Dataset::isCorrect(Sample::Idx idx) {
+    auto const expectedLabel = getExpectedClassification(idx).label;
+    auto const computedLabel = getComputedOutput(idx).classificationLabel;
+
+    return expectedLabel == computedLabel;
 }
 
 void Dataset::Sample::print(std::ostream & os) const {
