@@ -3,6 +3,7 @@
 #include <xspace/framework/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -23,8 +24,15 @@ void printUsageStrategyRow(std::ostream & os, std::string_view name, std::vector
     os << '\n';
 }
 
-void printUsageOptRow(std::ostream & os, char opt, std::string_view desc) {
-    os << "    -" << opt << "      " << desc << '\n';
+void printUsageOptRow(std::ostream & os, char opt, std::string_view arg, std::string_view desc) {
+    os << "    -" << opt << ' ';
+    os << std::left << std::setw(7);
+    if (arg.empty()) {
+        os << ' ';
+    } else {
+        os << arg;
+    }
+    os << desc << '\n';
 }
 
 void printUsage(std::ostream & os = std::cout) {
@@ -44,11 +52,12 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageStrategyRow(os, "itp");
 
     os << "OPTIONS:\n";
-    printUsageOptRow(os, 'h', "Prints this help message and exits");
-    printUsageOptRow(os, 'v', "Run in verbose mode");
-    printUsageOptRow(os, 'r', "Reverse the order of variables");
-    printUsageOptRow(os, 's', "Print the resulting explanations in the SMT-LIB2 format");
-    printUsageOptRow(os, 'i', "Print the resulting explanations in the form of intervals");
+    printUsageOptRow(os, 'h', "", "Prints this help message and exits");
+    printUsageOptRow(os, 'v', "", "Run in verbose mode");
+    printUsageOptRow(os, 'r', "", "Reverse the order of variables");
+    printUsageOptRow(os, 's', "", "Print the resulting explanations in the SMT-LIB2 format");
+    printUsageOptRow(os, 'i', "", "Print the resulting explanations in the form of intervals");
+    printUsageOptRow(os, 'n', "<int>", "Maximum no. samples to be processed");
     os.flush();
 }
 } // namespace
@@ -83,7 +92,7 @@ int main(int argc, char * argv[]) try {
     xspace::Framework::Config config;
 
     while (true) {
-        int const c = getopt(argc, argv, ":hvrsi");
+        int const c = getopt(argc, argv, ":hvrsin:");
         if (c == -1) { break; }
 
         switch (c) {
@@ -102,6 +111,11 @@ int main(int argc, char * argv[]) try {
             case 'i':
                 config.printIntervalExplanationsInIntervalFormat();
                 break;
+            case 'n': {
+                auto const n = std::stoull(optarg);
+                config.setMaxSamples(n);
+                break;
+            }
             default:
                 assert(c == '?');
                 std::cerr << "Unrecognized option: '-" << char(optopt) << "'\n\n";

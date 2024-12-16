@@ -29,6 +29,8 @@ public:
         setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat::intervals);
     }
 
+    void setMaxSamples(std::size_t n) { maxSamples = n; }
+
     Verbosity getVerbosity() const { return verbosity; }
     bool isVerbose() const { return getVerbosity() > 0; }
 
@@ -47,12 +49,17 @@ public:
         return intervalExplanationPrintFormat == IntervalExplanation::PrintFormat::intervals;
     }
 
+    std::size_t getMaxSamples() const { return maxSamples; }
+    bool limitingMaxSamples() const { return getMaxSamples() > 0; }
+
 protected:
     Verbosity verbosity{};
 
     bool reverseVarOrder{};
 
     IntervalExplanation::PrintFormat intervalExplanationPrintFormat{IntervalExplanation::PrintFormat::bounds};
+
+    std::size_t maxSamples{};
 };
 } // namespace xspace
 

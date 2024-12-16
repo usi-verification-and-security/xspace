@@ -146,6 +146,8 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
 void Framework::Expand::operator()(Explanations & explanations, Dataset & data) {
     assert(not strategies.empty());
 
+    auto const & config = framework.getConfig();
+
     Print & print = *framework.printPtr;
     bool const printingStats = not print.ignoringStats();
     bool const printingExplanations = not print.ignoringExplanations();
@@ -159,9 +161,15 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
     // assertModel();
 
     //++ allow also other views based on config
-    auto const & indices = data.getSampleIndices();
+    auto indices = data.getSampleIndices();
     assert(indices.size() <= data.size());
     assert(explanations.size() == data.size());
+    if (config.limitingMaxSamples()) {
+        auto const maxSamples = config.getMaxSamples();
+        assert(maxSamples > 0);
+        if (maxSamples < indices.size()) { indices.resize(maxSamples); }
+    }
+
     for (auto idx : indices) {
         //++ This should ideally be outside of the loop
         assertModel();
