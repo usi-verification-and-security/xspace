@@ -42,4 +42,4 @@ DIR=output/$DATASET
 
 PREFIX=$DIR/${BUILD_PREFIX}${VARIANT}
 
-{ time $BIN >${PREFIX}.out.txt 2>${PREFIX}.err.txt; } 2>${PREFIX}.time.txt &
+{ time $BIN >${PREFIX}.stats.txt 2>${PREFIX}.phi.txt; } 2>${PREFIX}.time.txt &

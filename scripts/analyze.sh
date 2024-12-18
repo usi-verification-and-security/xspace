@@ -50,30 +50,30 @@ esac
 FILE="$1"
 shift
 
-if [[ $FILE =~ \.err\.txt$ ]]; then
-    ERR_FILE="$FILE"
-    OUT_FILE="${FILE/.err./.out.}"
-elif [[ $FILE =~ \.out\.txt$ ]]; then
-    OUT_FILE="$FILE"
-    ERR_FILE="${FILE/.out./.err.}"
+if [[ $FILE =~ \.phi\.txt$ ]]; then
+    PHI_FILE="$FILE"
+    STATS_FILE="${FILE/.phi./.stats.}"
+elif [[ $FILE =~ \.stats\.txt$ ]]; then
+    STATS_FILE="$FILE"
+    PHI_FILE="${FILE/.stats./.phi.}"
 else
-    OUT_FILE="${FILE%.}.out.txt"
-    ERR_FILE="${FILE%.}.err.txt"
+    STATS_FILE="${FILE%.}.stats.txt"
+    PHI_FILE="${FILE%.}.phi.txt"
 fi
 
-[[ -r $OUT_FILE ]] || {
-    printf "Not readable output data file: %s\n" "$OUT_FILE" >&2
+[[ -r $STATS_FILE ]] || {
+    printf "Not readable stats data file: %s\n" "$STATS_FILE" >&2
     usage 1
 }
 
-[[ -r $ERR_FILE ]] || {
-    printf "Not readable error data file: %s\n" "$ERR_FILE" >&2
+[[ -r $PHI_FILE ]] || {
+    printf "Not readable formula data file: %s\n" "$PHI_FILE" >&2
     usage 1
 }
 
 MAX_LINES=$1
 
-N_LINES=$(wc -l <"$ERR_FILE")
+N_LINES=$(wc -l <"$PHI_FILE")
 
 [[ -n $MAX_LINES ]] && {
     (( $MAX_LINES > $N_LINES )) && {
@@ -144,7 +144,7 @@ while read line; do
         done
         out_class=${oline##*: }
         [[ $out_class =~ ^[0-9]+$ ]] || {
-            printf "Unexpected output class from row '%s' in %s: %s\n" "$oline" "$OUT_FILE" "$out_class" >&2
+            printf "Unexpected output class from row '%s' in %s: %s\n" "$oline" "$STATS_FILE" "$out_class" >&2
             cleanup 3
         }
         psi_file="${PSI_FILE/_c[0-9]/_c$out_class}"
@@ -203,7 +203,7 @@ while read line; do
     [[ -z $MAX_LINES ]] && continue
     (( ++cnt ))
     (( $cnt >= $MAX_LINES )) && break
-done <"$ERR_FILE" 3<"$OUT_FILE"
+done <"$PHI_FILE" 3<"$STATS_FILE"
 
 wait || {
     printf "Error when waiting on the rest of processes.\n" >&2
