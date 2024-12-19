@@ -27,7 +27,13 @@ public:
         ManualOrder manualOrder{};
     };
 
+    class Strategy;
+
+    using Strategies = std::vector<std::unique_ptr<Strategy>>;
+
     Expand(Framework &);
+
+    Framework const & getFramework() const { return framework; }
 
     void setVerifier(std::string_view name);
 
@@ -41,14 +47,9 @@ public:
     void operator()(Explanations &, Dataset &);
 
 protected:
-    class Strategy;
     class AbductiveStrategy;
     class TrialAndErrorStrategy;
     class UnsatCoreStrategy;
-    //+ make templated with Formula
-    class OpenSMTInterpolationStrategy;
-
-    using Strategies = std::vector<std::unique_ptr<Strategy>>;
 
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
     void setVerifier(std::unique_ptr<xai::verifiers::Verifier>);

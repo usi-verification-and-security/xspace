@@ -23,7 +23,7 @@ void Framework::Expand::Strategy::execute(std::unique_ptr<Explanation> & explana
 void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
     auto const & orderType = varOrdering.type;
     auto & varOrder = varOrdering.manualOrder;
-    std::size_t const varSize = expand.framework.varSize();
+    std::size_t const varSize = expand.getFramework().varSize();
     assert(varSize > 0);
     if (orderType == VarOrdering::Type::manual) {
         assert(varOrder.size() == varSize);
@@ -88,7 +88,7 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
     bool const splitEq = conf.splitEq;
 
     if (conf.ignoreVarOrder) {
-        std::size_t const varSize = expand.framework.varSize();
+        std::size_t const varSize = expand.getFramework().varSize();
         std::size_t const eVarSize = iexplanation.varSize();
         if (eVarSize < varSize / 2) {
             for (auto & [idx, varBnd] : iexplanation) {
@@ -157,7 +157,7 @@ void Framework::Expand::Strategy::assertInterval(VarIdx idx, Interval const & iv
     }
 
     auto const [lo, hi] = ival.getBounds();
-    auto & network = expand.framework.getNetwork();
+    auto & network = expand.getFramework().getNetwork();
     assert(lo >= network.getInputLowerBound(idx));
     assert(hi <= network.getInputUpperBound(idx));
     bool const isLower = (lo == network.getInputLowerBound(idx));
@@ -208,7 +208,7 @@ void Framework::Expand::Strategy::assertPointNoSplit(VarIdx idx, EqBound const &
 
 void Framework::Expand::Strategy::assertPointSplit(VarIdx idx, EqBound const & eq) {
     Float const val = eq.getValue();
-    auto & network = expand.framework.getNetwork();
+    auto & network = expand.getFramework().getNetwork();
     bool const isLower = (val == network.getInputLowerBound(idx));
     bool const isUpper = (val == network.getInputUpperBound(idx));
     assert(not isLower or not isUpper);
@@ -234,27 +234,27 @@ void Framework::Expand::Strategy::assertBound(VarIdx idx, Bound const & bnd) {
 
 void Framework::Expand::Strategy::assertEquality(VarIdx idx, EqBound const & eq) {
     Float const val = eq.getValue();
-    assert(val >= expand.framework.getNetwork().getInputLowerBound(idx));
-    assert(val <= expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addEquality(0, idx, val, storeNamedTerms());
+    assert(val >= expand.getFramework().getNetwork().getInputLowerBound(idx));
+    assert(val <= expand.getFramework().getNetwork().getInputUpperBound(idx));
+    getVerifier().addEquality(0, idx, val, storeNamedTerms());
 }
 
 void Framework::Expand::Strategy::assertLowerBound(VarIdx idx, LowerBound const & lo) {
     Float const val = lo.getValue();
-    assert(val > expand.framework.getNetwork().getInputLowerBound(idx));
-    assert(val < expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addLowerBound(0, idx, val, storeNamedTerms());
+    assert(val > expand.getFramework().getNetwork().getInputLowerBound(idx));
+    assert(val < expand.getFramework().getNetwork().getInputUpperBound(idx));
+    getVerifier().addLowerBound(0, idx, val, storeNamedTerms());
 }
 
 void Framework::Expand::Strategy::assertUpperBound(VarIdx idx, UpperBound const & hi) {
     Float const val = hi.getValue();
-    assert(val > expand.framework.getNetwork().getInputLowerBound(idx));
-    assert(val < expand.framework.getNetwork().getInputUpperBound(idx));
-    expand.verifierPtr->addUpperBound(0, idx, val, storeNamedTerms());
+    assert(val > expand.getFramework().getNetwork().getInputLowerBound(idx));
+    assert(val < expand.getFramework().getNetwork().getInputUpperBound(idx));
+    getVerifier().addUpperBound(0, idx, val, storeNamedTerms());
 }
 
 bool Framework::Expand::Strategy::checkFormsExplanation() {
-    auto answer = expand.verifierPtr->check();
+    auto answer = getVerifier().check();
     assert(answer == xai::verifiers::Verifier::Answer::SAT or answer == xai::verifiers::Verifier::Answer::UNSAT);
     return (answer == xai::verifiers::Verifier::Answer::UNSAT);
 }

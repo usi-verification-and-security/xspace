@@ -23,6 +23,8 @@ class Framework {
 public:
     class Config;
 
+    class Expand;
+
     // Not inline because of fwd-decl. types
     Framework();
     Framework(Config const &);
@@ -58,8 +60,6 @@ protected:
     friend class Explanation;
 
     class Preprocess;
-
-    class Expand;
 
     class Print;
 

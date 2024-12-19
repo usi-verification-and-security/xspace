@@ -8,15 +8,20 @@
 #include <cassert>
 
 namespace xspace {
+xai::verifiers::UnsatCoreVerifier & Framework::Expand::UnsatCoreStrategy::getVerifier() {
+    auto & verifier = Strategy::getVerifier();
+    assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(&verifier));
+    return static_cast<xai::verifiers::UnsatCoreVerifier &>(verifier);
+}
+
 void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(expand.verifierPtr.get()));
-    auto & verifier = static_cast<xai::verifiers::UnsatCoreVerifier &>(*expand.verifierPtr);
+    auto & verifier = getVerifier();
 
     auto & explanation = *explanationPtr;
     assert(dynamic_cast<IntervalExplanation *>(&explanation));
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
-    auto & fw = expand.framework;
+    auto & fw = expand.getFramework();
 
     assertIntervalExplanation(iexplanation, {.ignoreVarOrder = false, .splitEq = config.splitEq});
     [[maybe_unused]] bool const ok = checkFormsExplanation();

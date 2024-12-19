@@ -3,6 +3,10 @@
 
 #include "Strategy.h"
 
+namespace xai::verifiers {
+class UnsatCoreVerifier;
+}
+
 namespace xspace {
 class Framework::Expand::UnsatCoreStrategy : public Strategy {
 public:
@@ -18,6 +22,8 @@ public:
     bool isAbductiveOnly() const override { return not config.splitEq; }
 
 protected:
+    xai::verifiers::UnsatCoreVerifier & getVerifier();
+
     bool storeNamedTerms() const override { return true; }
 
     void executeBody(std::unique_ptr<Explanation> &) override;

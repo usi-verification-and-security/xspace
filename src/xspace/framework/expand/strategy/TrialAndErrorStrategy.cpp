@@ -10,13 +10,13 @@
 
 namespace xspace {
 void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    auto & verifier = *expand.verifierPtr;
+    auto & verifier = getVerifier();
 
     auto & explanation = *explanationPtr;
     assert(dynamic_cast<IntervalExplanation *>(&explanation));
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
-    auto & fw = expand.framework;
+    auto & fw = expand.getFramework();
     auto const maxAttempts = config.maxAttempts;
     assert(maxAttempts > 0);
 

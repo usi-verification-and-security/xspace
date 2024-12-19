@@ -26,6 +26,8 @@ protected:
         bool splitEq = false;
     };
 
+    xai::verifiers::Verifier & getVerifier() { return *expand.verifierPtr; }
+
     virtual bool storeNamedTerms() const { return false; }
 
     virtual void executeInit(std::unique_ptr<Explanation> &);
