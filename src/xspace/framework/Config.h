@@ -4,6 +4,10 @@
 #include "Framework.h"
 #include "explanation/IntervalExplanation.h"
 
+#include <xspace/nn/Dataset.h>
+
+#include <optional>
+
 namespace xspace {
 //+ move parsing cmdline options here
 //+ after construction, make the conf const
@@ -29,7 +33,13 @@ public:
         setPrintIntervalExplanationsFormat(IntervalExplanation::PrintFormat::intervals);
     }
 
+    void shuffleSamples() { _shuffleSamples = true; }
+
     void setMaxSamples(std::size_t n) { maxSamples = n; }
+
+    void filterCorrectSamples() { optFilterCorrectSamples = true; }
+    void filterIncorrectSamples() { optFilterCorrectSamples = false; }
+    void filterSamplesOfExpectedClass(Dataset::Classification c) { optFilterSamplesOfExpectedClass = c; }
 
     Verbosity getVerbosity() const { return verbosity; }
     bool isVerbose() const { return getVerbosity() > 0; }
@@ -49,8 +59,20 @@ public:
         return intervalExplanationPrintFormat == IntervalExplanation::PrintFormat::intervals;
     }
 
+    bool shufflingSamples() const { return _shuffleSamples; }
+
     std::size_t getMaxSamples() const { return maxSamples; }
     bool limitingMaxSamples() const { return getMaxSamples() > 0; }
+
+    bool filteringCorrectSamples() const { return optFilterCorrectSamples.has_value() and *optFilterCorrectSamples; }
+    bool filteringIncorrectSamples() const {
+        return optFilterCorrectSamples.has_value() and not *optFilterCorrectSamples;
+    }
+    bool filteringSamplesOfExpectedClass() const { return optFilterSamplesOfExpectedClass.has_value(); }
+    Dataset::Classification const & getSamplesExpectedClassFilter() const {
+        assert(filteringSamplesOfExpectedClass());
+        return *optFilterSamplesOfExpectedClass;
+    }
 
 protected:
     Verbosity verbosity{};
@@ -59,7 +81,12 @@ protected:
 
     IntervalExplanation::PrintFormat intervalExplanationPrintFormat{IntervalExplanation::PrintFormat::bounds};
 
+    bool _shuffleSamples{};
+
     std::size_t maxSamples{};
+
+    std::optional<bool> optFilterCorrectSamples{};
+    std::optional<Dataset::Classification> optFilterSamplesOfExpectedClass{};
 };
 } // namespace xspace
 

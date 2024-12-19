@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <numeric>
 #include <queue>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -206,10 +207,41 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
     strategies.push_back(std::move(strategy));
 }
 
-void Framework::Expand::operator()(Explanations & explanations, Dataset & data) {
-    assert(not strategies.empty());
+Dataset::SampleIndices Framework::Expand::makeSampleIndices(Dataset const & data) const {
+    auto indices = getSampleIndices(data);
+    assert(indices.size() <= data.size());
 
     auto const & config = framework.getConfig();
+
+    if (config.shufflingSamples()) { std::ranges::shuffle(indices, std::default_random_engine{}); }
+
+    if (config.limitingMaxSamples()) {
+        auto const maxSamples = config.getMaxSamples();
+        assert(maxSamples > 0);
+        if (maxSamples < indices.size()) { indices.resize(maxSamples); }
+    }
+
+    return indices;
+}
+
+Dataset::SampleIndices Framework::Expand::getSampleIndices(Dataset const & data) const {
+    auto const & config = framework.getConfig();
+
+    if (not config.filteringSamplesOfExpectedClass()) {
+        if (config.filteringCorrectSamples()) { return data.getCorrectSampleIndices(); }
+        if (config.filteringIncorrectSamples()) { return data.getIncorrectSampleIndices(); }
+        return data.getSampleIndices();
+    }
+
+    auto const & label = config.getSamplesExpectedClassFilter().label;
+    if (config.filteringCorrectSamples()) { return data.getCorrectSampleIndicesOfExpectedClass(label); }
+    if (config.filteringIncorrectSamples()) { return data.getIncorrectSampleIndicesOfExpectedClass(label); }
+    return data.getSampleIndicesOfExpectedClass(label);
+}
+
+void Framework::Expand::operator()(Explanations & explanations, Dataset & data) {
+    assert(explanations.size() == data.size());
+    assert(not strategies.empty());
 
     Print & print = *framework.printPtr;
     bool const printingStats = not print.ignoringStats();
@@ -223,16 +255,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
     //? This incrementality does not seem to work
     // assertModel();
 
-    //++ allow also other views based on config
-    auto indices = data.getSampleIndices();
-    assert(indices.size() <= data.size());
-    assert(explanations.size() == data.size());
-    if (config.limitingMaxSamples()) {
-        auto const maxSamples = config.getMaxSamples();
-        assert(maxSamples > 0);
-        if (maxSamples < indices.size()) { indices.resize(maxSamples); }
-    }
-
+    Dataset::SampleIndices const indices = makeSampleIndices(data);
     for (auto idx : indices) {
         //++ This should ideally be outside of the loop
         assertModel();

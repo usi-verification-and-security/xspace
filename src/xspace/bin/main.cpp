@@ -5,6 +5,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -60,6 +61,7 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 's', "", "Print the resulting explanations in the SMT-LIB2 format");
     printUsageOptRow(os, 'i', "", "Print the resulting explanations in the form of intervals");
     printUsageOptRow(os, 'n', "<int>", "Maximum no. samples to be processed");
+    printUsageOptRow(os, 'S', "", "Shuffle samples");
     os.flush();
 }
 } // namespace
@@ -93,11 +95,72 @@ int main(int argc, char * argv[]) try {
 
     xspace::Framework::Config config;
 
+    int selectedLongOpt = 0;
+    // constexpr int versionLongOpt = 1;
+    constexpr int formatLongOpt = 2;
+    constexpr int filterLongOpt = 3;
+
+    struct ::option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                     {"verbose", no_argument, nullptr, 'v'},
+                                     // {"version", no_argument, &selectedLongOpt, versionLongOpt},
+                                     {"reverse-var", no_argument, nullptr, 'r'},
+                                     {"format", required_argument, &selectedLongOpt, formatLongOpt},
+                                     {"shuffle-samples", no_argument, nullptr, 'S'},
+                                     {"max-samples", required_argument, nullptr, 'n'},
+                                     {"filter-samples", required_argument, &selectedLongOpt, filterLongOpt},
+                                     {0, 0, 0, 0}};
+
     while (true) {
-        int const c = getopt(argc, argv, ":hvrsin:");
+        int optIndex = 0;
+        int c = getopt_long(argc, argv, ":hvrsiSn:", longOptions, &optIndex);
         if (c == -1) { break; }
 
         switch (c) {
+            case 0: {
+                std::string_view optargStr{optarg};
+                switch (selectedLongOpt) {
+                    case formatLongOpt:
+                        if (optargStr == "smtlib2") {
+                            config.printIntervalExplanationsInSmtLib2Format();
+                        } else if (optargStr == "intervals") {
+                            config.printIntervalExplanationsInIntervalFormat();
+                        } else {
+                            assert(optargStr == "bounds");
+                            config.printingIntervalExplanationsInBoundFormat();
+                        }
+                        break;
+                    case filterLongOpt:
+                        std::optional<bool> optCorrectnessFilter{};
+                        if (optargStr.starts_with("in")) {
+                            optargStr.remove_prefix(2);
+                            optCorrectnessFilter = false;
+                        }
+                        if (optargStr == "correct") {
+                            if (not optCorrectnessFilter.has_value()) { optCorrectnessFilter = true; }
+                        } else {
+                            assert(not optCorrectnessFilter.has_value());
+                        }
+                        if (optCorrectnessFilter.has_value()) {
+                            if (*optCorrectnessFilter) {
+                                config.filterCorrectSamples();
+                            } else {
+                                config.filterIncorrectSamples();
+                            }
+                            break;
+                        }
+
+                        if (optargStr.starts_with("class")) {
+                            optargStr.remove_prefix(5);
+                            xspace::Dataset::Classification c;
+                            c.label = std::stoi(std::string{optargStr});
+                            config.filterSamplesOfExpectedClass(std::move(c));
+                            break;
+                        }
+
+                        assert(false);
+                }
+                break;
+            }
             case 'h':
                 printUsage();
                 return 0;
@@ -112,6 +175,9 @@ int main(int argc, char * argv[]) try {
                 break;
             case 'i':
                 config.printIntervalExplanationsInIntervalFormat();
+                break;
+            case 'S':
+                config.shuffleSamples();
                 break;
             case 'n': {
                 auto const n = std::stoull(optarg);

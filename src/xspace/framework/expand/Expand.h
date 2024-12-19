@@ -56,6 +56,8 @@ protected:
 
     void addStrategy(std::unique_ptr<Strategy>);
 
+    Dataset::SampleIndices makeSampleIndices(Dataset const &) const;
+
     void initVerifier();
 
     void assertModel();
@@ -74,6 +76,9 @@ protected:
     Strategies strategies{};
 
     bool isAbductiveOnly{true};
+
+private:
+    Dataset::SampleIndices getSampleIndices(Dataset const &) const;
 };
 } // namespace xspace
 
