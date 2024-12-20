@@ -13,8 +13,12 @@ class IntervalExplanation;
 
 class Framework::Expand::Strategy {
 public:
+    class Factory;
+
     Strategy(Expand &, VarOrdering = {});
     virtual ~Strategy() = default;
+
+    static char const * name() = delete;
 
     virtual bool isAbductiveOnly() const { return true; }
 

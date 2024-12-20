@@ -8,6 +8,8 @@ class Framework::Expand::AbductiveStrategy : public Strategy {
 public:
     using Strategy::Strategy;
 
+    static char const * name() { return "abductive"; }
+
 protected:
     void executeBody(std::unique_ptr<Explanation> &) override;
 };

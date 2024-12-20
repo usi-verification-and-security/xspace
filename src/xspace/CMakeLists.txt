@@ -10,6 +10,7 @@ PRIVATE
     framework/Print.cpp
     framework/Utils.cpp
     framework/expand/Expand.cpp
+    framework/expand/strategy/Factory.cpp
     framework/expand/strategy/Strategy.cpp
     framework/expand/strategy/AbductiveStrategy.cpp
     framework/expand/strategy/TrialAndErrorStrategy.cpp

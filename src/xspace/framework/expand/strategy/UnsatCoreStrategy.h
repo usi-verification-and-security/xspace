@@ -19,6 +19,8 @@ public:
         : Strategy{exp, std::move(order)},
           config{conf} {}
 
+    static char const * name() { return "ucore"; }
+
     bool isAbductiveOnly() const override { return not config.splitEq; }
 
 protected:

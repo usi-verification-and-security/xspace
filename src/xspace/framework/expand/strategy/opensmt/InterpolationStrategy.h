@@ -30,6 +30,8 @@ public:
         : Strategy{exp, std::move(order)},
           config{conf} {}
 
+    static char const * name() { return "itp"; }
+
     bool isAbductiveOnly() const override { return false; }
 
 protected:

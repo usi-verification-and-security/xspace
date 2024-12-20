@@ -4,7 +4,8 @@
 #include "../Preprocess.h"
 #include "../Print.h"
 #include "../explanation/Explanation.h"
-#include "strategy/Strategies.h"
+#include "strategy/Factory.h"
+#include "strategy/Strategy.h"
 
 #include <xspace/common/Core.h>
 #include <xspace/common/String.h>
@@ -18,10 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
-#include <numeric>
-#include <queue>
 #include <random>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -50,154 +48,17 @@ void Framework::Expand::setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf
 }
 
 void Framework::Expand::setStrategies(std::istream & is) {
-    using expand::opensmt::InterpolationStrategy;
-
-    static auto const checkAdditionalParameters = [](std::string const & line, auto const & params) {
-        if (params.empty()) return;
-        throw std::invalid_argument{"Additional parameters of strategy: "s + line};
-    };
-    static auto const throwInvalidParameter = [](std::string const & name, auto const & param) {
-        throw std::invalid_argument{"Invalid parameter of strategy "s + name + ": " + param};
-    };
-
     auto const & config = framework.getConfig();
 
     VarOrdering defaultVarOrder{};
     if (config.isReverseVarOrdering()) { defaultVarOrder.type = VarOrdering::Type::reverse; }
 
-    //+ move this parsing to particular strategies
+    Strategy::Factory factory{*this, defaultVarOrder};
+
     std::string line;
     while (std::getline(is, line, ',')) {
-        std::istringstream issLine{line};
-        std::string name;
-        issLine >> name;
-        std::queue<std::string> params;
-        for (std::string param; issLine >> param;) {
-            params.push(std::move(param));
-        }
-
-        auto const nameLower = toLower(name);
-
-        if (nameLower == "abductive") {
-            checkAdditionalParameters(line, params);
-            addStrategy(std::make_unique<AbductiveStrategy>(*this, defaultVarOrder));
-            continue;
-        }
-
-        if (nameLower == "ucore") {
-            UnsatCoreStrategy::Config conf;
-            while (not params.empty()) {
-                auto param = std::move(params.front());
-                params.pop();
-                auto const paramLower = toLower(param);
-                if (paramLower == "sample") {
-                    conf.splitEq = false;
-                    break;
-                }
-
-                if (paramLower == "interval") {
-                    conf.splitEq = true;
-                    break;
-                }
-
-                throwInvalidParameter(name, param);
-            }
-            checkAdditionalParameters(line, params);
-            addStrategy(std::make_unique<UnsatCoreStrategy>(*this, conf, defaultVarOrder));
-            continue;
-        }
-
-        if (nameLower == "trial") {
-            TrialAndErrorStrategy::Config conf;
-            bool maxAttemptsFollows = false;
-            while (not params.empty()) {
-                auto param = std::move(params.front());
-                params.pop();
-                if (maxAttemptsFollows) {
-                    conf.maxAttempts = std::stoi(param);
-                    break;
-                }
-                auto const paramLower = toLower(param);
-                if (paramLower == "n") {
-                    maxAttemptsFollows = true;
-                    continue;
-                }
-
-                throwInvalidParameter(name, param);
-            }
-            checkAdditionalParameters(line, params);
-            addStrategy(std::make_unique<TrialAndErrorStrategy>(*this, conf, defaultVarOrder));
-            continue;
-        }
-
-        if (nameLower == "itp") {
-            InterpolationStrategy::Config conf;
-            while (not params.empty()) {
-                auto param = std::move(params.front());
-                params.pop();
-                auto const paramLower = toLower(param);
-                if (paramLower == "weak") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::weak;
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weak;
-                    break;
-                }
-
-                if (paramLower == "strong") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::strong;
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::strong;
-                    break;
-                }
-
-                if (paramLower == "weaker") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::weak;
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weaker;
-                    break;
-                }
-
-                if (paramLower == "stronger") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::strong;
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::stronger;
-                    break;
-                }
-
-                if (paramLower == "bweak") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::weak;
-                    continue;
-                }
-
-                if (paramLower == "bstrong") {
-                    conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::strong;
-                    continue;
-                }
-
-                if (paramLower == "aweak") {
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weak;
-                    continue;
-                }
-
-                if (paramLower == "astrong") {
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::strong;
-                    continue;
-                }
-
-                if (paramLower == "aweaker") {
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weaker;
-                    continue;
-                }
-
-                if (paramLower == "astronger") {
-                    conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::stronger;
-                    continue;
-                }
-
-                throwInvalidParameter(name, param);
-            }
-            checkAdditionalParameters(line, params);
-            addStrategy(std::make_unique<InterpolationStrategy>(*this, conf, defaultVarOrder));
-            continue;
-        }
-
-        throw std::invalid_argument{"Unrecognized strategy name: "s + name};
+        auto strategyPtr = factory.parse(line);
+        addStrategy(std::move(strategyPtr));
     }
 }
 
