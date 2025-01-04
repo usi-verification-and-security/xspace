@@ -34,7 +34,7 @@ VarBound::VarBound(Framework const & fw, VarIdx idx, Bound bnd1, Bound bnd2)
 }
 
 VarBound::VarBound(Framework const & fw, VarIdx idx, Bound && bnd, ConsOneBoundTag)
-    : frameworkPtr{&fw},
+    : PartialExplanation{fw},
       varIdx{idx},
       firstBound{std::move(bnd)} {
     assert(not isInterval());
@@ -49,7 +49,7 @@ VarBound::VarBound(Framework const & fw, VarIdx idx, LowerBound && lo, [[maybe_u
 }
 
 VarBound::VarBound(Framework const & fw, VarIdx idx, LowerBound && lo, UpperBound && hi, ConsIntervalTag)
-    : frameworkPtr{&fw},
+    : PartialExplanation{fw},
       varIdx{idx},
       firstBound{std::move(lo)},
       optSecondBound{std::move(hi)} {
@@ -94,6 +94,13 @@ bool VarBound::isValid() const {
         return val > dLo and val < dHi;
     }
 #endif
+}
+
+void VarBound::swap(VarBound & rhs) {
+    PartialExplanation::swap(rhs);
+
+    std::swap(firstBound, rhs.firstBound);
+    std::swap(optSecondBound, rhs.optSecondBound);
 }
 
 Interval VarBound::getInterval() const {

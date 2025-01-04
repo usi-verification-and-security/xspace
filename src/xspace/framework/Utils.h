@@ -7,10 +7,10 @@
 #include <xspace/common/Interval.h>
 #include <xspace/common/Var.h>
 
-#include <optional>
+#include <memory>
 
 namespace xspace {
-std::optional<VarBound> intervalToOptVarBound(Framework const &, VarIdx, Interval const &);
+std::unique_ptr<VarBound> intervalToOptVarBound(Framework const &, VarIdx, Interval const &);
 } // namespace xspace
 
 #endif // XSPACE_FRAMEWORK_UTILS_H

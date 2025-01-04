@@ -8,7 +8,9 @@
 
 namespace xspace {
 class VarBound;
+class PartialExplanation;
 class Explanation;
+class ConjunctExplanation;
 class IntervalExplanation;
 
 class Framework::Expand::Strategy {
@@ -38,9 +40,12 @@ protected:
     virtual void executeBody(std::unique_ptr<Explanation> &) = 0;
     virtual void executeFinish(std::unique_ptr<Explanation> &) {}
 
-    void assertExplanation(Explanation const &);
-    void assertExplanation(Explanation const &, AssertExplanationConf const &);
-    virtual bool assertExplanationImpl(Explanation const &, AssertExplanationConf const &);
+    void assertExplanation(PartialExplanation const &);
+    void assertExplanation(PartialExplanation const &, AssertExplanationConf const &);
+    virtual bool assertExplanationImpl(PartialExplanation const &, AssertExplanationConf const &);
+
+    void assertConjunctExplanation(ConjunctExplanation const &);
+    void assertConjunctExplanation(ConjunctExplanation const &, AssertExplanationConf const &);
 
     void assertIntervalExplanation(IntervalExplanation const &);
     void assertIntervalExplanation(IntervalExplanation const &, AssertExplanationConf const &);

@@ -57,7 +57,7 @@ public:
     Explanations explain(Dataset &);
 
 protected:
-    friend class Explanation;
+    friend class PartialExplanation;
 
     class Preprocess;
 

@@ -16,8 +16,10 @@ PRIVATE
     framework/expand/strategy/TrialAndErrorStrategy.cpp
     framework/expand/strategy/UnsatCoreStrategy.cpp
     framework/expand/strategy/opensmt/InterpolationStrategy.cpp
+    framework/explanation/ConjunctExplanation.cpp
     framework/explanation/Explanation.cpp
     framework/explanation/IntervalExplanation.cpp
+    framework/explanation/PartialExplanation.cpp
     framework/explanation/VarBound.cpp
     framework/explanation/opensmt/FormulaExplanation.cpp
     nn/Dataset.cpp

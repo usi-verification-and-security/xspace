@@ -1,5 +1,6 @@
 #include "Strategy.h"
 
+#include <xspace/framework/explanation/ConjunctExplanation.h>
 #include <xspace/framework/explanation/Explanation.h>
 #include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/VarBound.h>
@@ -41,25 +42,42 @@ void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
     //? sort the variables right away, and then sort back at the end
 }
 
-void Framework::Expand::Strategy::assertExplanation(Explanation const & explanation) {
-    assertExplanation(explanation, AssertExplanationConf{});
+void Framework::Expand::Strategy::assertExplanation(PartialExplanation const & pexplanation) {
+    assertExplanation(pexplanation, AssertExplanationConf{});
 }
 
-void Framework::Expand::Strategy::assertExplanation(Explanation const & explanation,
+void Framework::Expand::Strategy::assertExplanation(PartialExplanation const & pexplanation,
                                                     AssertExplanationConf const & conf) {
-    [[maybe_unused]] bool success = assertExplanationImpl(explanation, conf);
+    [[maybe_unused]] bool success = assertExplanationImpl(pexplanation, conf);
     assert(success);
 }
 
-bool Framework::Expand::Strategy::assertExplanationImpl(Explanation const & explanation,
+bool Framework::Expand::Strategy::assertExplanationImpl(PartialExplanation const & pexplanation,
                                                         AssertExplanationConf const & conf) {
-    if (auto iexpPtr = dynamic_cast<IntervalExplanation const *>(&explanation)) {
-        assertIntervalExplanation(*iexpPtr, conf);
+    if (auto cexpPtr = dynamic_cast<ConjunctExplanation const *>(&pexplanation)) {
+        assertConjunctExplanation(*cexpPtr, conf);
         return true;
     }
 
     return false;
 }
+
+void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation const & cexplanation) {
+    assertConjunctExplanation(cexplanation, AssertExplanationConf{});
+}
+
+void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation const & cexplanation,
+                                                            AssertExplanationConf const & conf) {
+    if (auto iexpPtr = dynamic_cast<IntervalExplanation const *>(&cexplanation)) {
+        assertIntervalExplanation(*iexpPtr, conf);
+        return;
+    }
+
+    for (auto & pexplanationPtr : cexplanation) {
+        assertExplanation(*pexplanationPtr, conf);
+    }
+}
+
 
 void Framework::Expand::Strategy::assertIntervalExplanation(IntervalExplanation const & iexplanation) {
     assertIntervalExplanation(iexplanation, AssertExplanationConf{});
@@ -88,29 +106,16 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
     bool const splitEq = conf.splitEq;
 
     if (conf.ignoreVarOrder) {
-        std::size_t const varSize = expand.getFramework().varSize();
-        std::size_t const eVarSize = iexplanation.varSize();
-        if (eVarSize < varSize / 2) {
-            for (auto & [idx, varBnd] : iexplanation) {
-                if constexpr (omitIdx) {
-                    if (idx == idxToOmit) { continue; }
-                } else {
-                    assert(idx != idxToOmit);
-                }
-                assertVarBound(varBnd, splitEq);
-            }
-            return;
-        }
-
-        for (VarIdx idx = 0; idx < varSize; ++idx) {
+        std::size_t const esize = iexplanation.size();
+        for (VarIdx idx = 0; idx < esize; ++idx) {
             if constexpr (omitIdx) {
                 if (idx == idxToOmit) { continue; }
             } else {
                 assert(idx != idxToOmit);
             }
 
-            auto & optVarBnd = iexplanation.tryGetVarBound(idx);
-            if (not optVarBnd.has_value()) { continue; }
+            auto * optVarBnd = iexplanation.tryGetVarBound(idx);
+            if (not optVarBnd) { continue; }
 
             auto & varBnd = *optVarBnd;
             assertVarBound(varBnd, splitEq);
@@ -125,8 +130,8 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
             assert(idx != idxToOmit);
         }
 
-        auto & optVarBnd = iexplanation.tryGetVarBound(idx);
-        if (not optVarBnd.has_value()) { continue; }
+        auto * optVarBnd = iexplanation.tryGetVarBound(idx);
+        if (not optVarBnd) { continue; }
 
         auto & varBnd = *optVarBnd;
         assertVarBound(varBnd, splitEq);

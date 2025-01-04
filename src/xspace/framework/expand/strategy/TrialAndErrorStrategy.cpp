@@ -21,8 +21,8 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Expla
     assert(maxAttempts > 0);
 
     for (VarIdx idxToRelax : varOrdering.manualOrder) {
-        auto & optVarBndToRelax = iexplanation.tryGetVarBound(idxToRelax);
-        if (not optVarBndToRelax.has_value()) { continue; }
+        auto * optVarBndToRelax = iexplanation.tryGetVarBound(idxToRelax);
+        if (not optVarBndToRelax) { continue; }
 
         verifier.push();
         assertIntervalExplanationExcept(iexplanation, idxToRelax);

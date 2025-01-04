@@ -19,11 +19,9 @@ using Formula = ::opensmt::PTRef;
 class FormulaExplanation : public Explanation {
 public:
     using Explanation::Explanation;
-    FormulaExplanation(Framework const &, Formula const &);
+    explicit FormulaExplanation(Framework const &, Formula const &);
 
     Formula const & getFormula() const { return *formulaPtr; }
-
-    std::size_t varSize() const override;
 
     bool contains(VarIdx) const override;
 

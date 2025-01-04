@@ -21,15 +21,6 @@ xai::verifiers::OpenSMTVerifier const & FormulaExplanation::getVerifier() const 
     return static_cast<xai::verifiers::OpenSMTVerifier const &>(getExpand().getVerifier());
 }
 
-std::size_t FormulaExplanation::varSize() const {
-    std::size_t const varSize_ = frameworkPtr->varSize();
-    std::size_t cnt{};
-    for (VarIdx idx = 0; idx < varSize_; ++idx) {
-        if (contains(idx)) { ++cnt; }
-    }
-    return cnt;
-}
-
 bool FormulaExplanation::contains(VarIdx) const {
     //+ Not implemented
     return true;

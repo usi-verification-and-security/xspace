@@ -40,7 +40,7 @@ protected:
     void executeInit(std::unique_ptr<Explanation> &) override;
     void executeBody(std::unique_ptr<Explanation> &) override;
 
-    bool assertExplanationImpl(Explanation const &, AssertExplanationConf const &) override;
+    bool assertExplanationImpl(PartialExplanation const &, AssertExplanationConf const &) override;
 
     void assertFormulaExplanation(FormulaExplanation const &);
     void assertFormulaExplanation(FormulaExplanation const &, AssertExplanationConf const &);

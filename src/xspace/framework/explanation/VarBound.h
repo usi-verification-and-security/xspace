@@ -1,6 +1,8 @@
 #ifndef XSPACE_VARBOUND_H
 #define XSPACE_VARBOUND_H
 
+#include "PartialExplanation.h"
+
 #include <xspace/common/Bound.h>
 #include <xspace/common/Interval.h>
 #include <xspace/common/Var.h>
@@ -14,7 +16,7 @@
 namespace xspace {
 class Framework;
 
-class VarBound {
+class VarBound : public PartialExplanation {
 public:
     explicit VarBound(Framework const & fw, VarIdx idx, Float val) : VarBound(fw, idx, EqBound{val}) {}
     explicit VarBound(Framework const & fw, VarIdx idx, Interval const & ival)
@@ -40,6 +42,10 @@ public:
 
     VarIdx getVarIdx() const { return varIdx; }
 
+    std::size_t varSize() const override { return 1; }
+
+    bool contains(VarIdx idx) const override { return idx == getVarIdx(); }
+
     // If it holds just a single LowerBound or UpperBound, it must be accessed from here
     Bound const & getBound() const { return firstBound; }
 
@@ -63,6 +69,8 @@ public:
         return static_cast<EqBound const &>(getBound());
     }
 
+    void swap(VarBound &);
+
     Float size() const { return toInterval().size(); }
 
     Interval getInterval() const;
@@ -77,8 +85,8 @@ public:
     void eraseLowerBound();
     void eraseUpperBound();
 
-    void print(std::ostream & os) const { printRegular(os); }
-    void printSmtLib2(std::ostream &) const;
+    void print(std::ostream & os) const override { printRegular(os); }
+    void printSmtLib2(std::ostream &) const override;
 
 protected:
     bool isValid() const;
@@ -87,8 +95,6 @@ protected:
     void printRegularBound(std::ostream &, Bound const &) const;
 
     void printSmtLib2Bound(std::ostream &, Bound const &) const;
-
-    Framework const * frameworkPtr;
 
     VarIdx varIdx;
 

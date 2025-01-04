@@ -78,11 +78,11 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     assignNew<FormulaExplanation>(explanationPtr, fw, itp);
 }
 
-bool InterpolationStrategy::assertExplanationImpl(Explanation const & explanation, AssertExplanationConf const & conf) {
-    if (Strategy::assertExplanationImpl(explanation, conf)) { return true; }
+bool InterpolationStrategy::assertExplanationImpl(PartialExplanation const & pexplanation, AssertExplanationConf const & conf) {
+    if (Strategy::assertExplanationImpl(pexplanation, conf)) { return true; }
 
-    assert(dynamic_cast<FormulaExplanation const *>(&explanation));
-    auto & phiexplanation = static_cast<FormulaExplanation const &>(explanation);
+    assert(dynamic_cast<FormulaExplanation const *>(&pexplanation));
+    auto & phiexplanation = static_cast<FormulaExplanation const &>(pexplanation);
     assertFormulaExplanation(phiexplanation, conf);
 
     return true;
