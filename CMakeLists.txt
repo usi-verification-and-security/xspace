@@ -61,20 +61,4 @@ set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
 
 include_directories(${SOURCE_DIR})
 
-add_executable(XAI-SMT
-    ${SOURCE_DIR}/main.cpp
-    ${SOURCE_DIR}/nn/NNet.cpp
-    ${SOURCE_DIR}/algorithms/BasicVerix.cpp
-    ${SOURCE_DIR}/experiments/VerixExperiments.cpp
-)
-
-target_link_libraries(XAI-SMT PUBLIC OpenSMT::OpenSMT)
-
-if (ENABLE_MARABOU)
-    target_link_libraries(XAI-SMT PUBLIC Marabou::Marabou)
-    target_include_directories(XAI-SMT PRIVATE ${MARABOU_INCLUDE_DIRS})
-    #get_target_property(MY_INCLUDE_DIRS XAI-SMT INCLUDE_DIRECTORIES)
-    #message(STATUS "Include directories for me: ${MY_INCLUDE_DIRS}")
-endif()
-
 add_subdirectory(${SOURCE_DIR})
