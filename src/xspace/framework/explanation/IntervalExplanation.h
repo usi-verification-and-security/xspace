@@ -24,6 +24,8 @@ public:
 
     explicit IntervalExplanation(Framework const &);
 
+    bool supportsVolume() const override { return true; }
+
     std::size_t size() const {
         assert(ConjunctExplanation::size() == frameworkPtr->varSize());
         return ConjunctExplanation::size();

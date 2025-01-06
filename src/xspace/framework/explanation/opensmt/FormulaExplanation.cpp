@@ -22,7 +22,7 @@ xai::verifiers::OpenSMTVerifier const & FormulaExplanation::getVerifier() const 
 }
 
 bool FormulaExplanation::contains(VarIdx) const {
-    //+ Not implemented
+    //++ Not implemented
     return true;
 }
 
@@ -36,20 +36,6 @@ void FormulaExplanation::swap(FormulaExplanation & rhs) {
     Explanation::swap(rhs);
 
     std::swap(formulaPtr, rhs.formulaPtr);
-}
-
-std::size_t FormulaExplanation::computeFixedCount() const {
-    //+ Not implemented
-    return 0;
-}
-
-Float FormulaExplanation::getRelativeVolume() const {
-    //+ Not implemented
-    return -1;
-}
-Float FormulaExplanation::getRelativeVolumeSkipFixed() const {
-    //+ Not implemented
-    return -1;
 }
 
 void FormulaExplanation::printSmtLib2(std::ostream & os) const {

@@ -29,17 +29,12 @@ public:
 
     void swap(FormulaExplanation &);
 
-    Float getRelativeVolume() const override;
-    Float getRelativeVolumeSkipFixed() const override;
-
     void printSmtLib2(std::ostream &) const override;
 
 protected:
     xai::verifiers::OpenSMTVerifier const & getVerifier() const;
 
     void resetFormula() { formulaPtr.reset(); }
-
-    std::size_t computeFixedCount() const override;
 
     std::unique_ptr<Formula> formulaPtr{};
 };

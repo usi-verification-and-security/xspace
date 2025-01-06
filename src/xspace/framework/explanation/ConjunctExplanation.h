@@ -13,7 +13,7 @@ public:
         char delim = ' ';
     };
 
-    explicit ConjunctExplanation(Framework const & fw) : Explanation{fw} {}
+    using Explanation::Explanation;
     explicit ConjunctExplanation(Framework const & fw, std::size_t size_) : Explanation{fw}, conjunction(size_) {}
 
     // May contain null pointers representing true values

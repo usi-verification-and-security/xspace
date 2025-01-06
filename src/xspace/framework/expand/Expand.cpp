@@ -233,14 +233,18 @@ void Framework::Expand::printStats(Explanation const & explanation, Dataset cons
     cstats << "#checks: " << verifierPtr->getChecksCount() << '\n';
     cstats << "explanation size: " << expVarSize << '/' << varSize << std::endl;
 
-    assert(explanation.getRelativeVolumeSkipFixed() > 0);
+    assert(not explanation.supportsVolume() or explanation.getRelativeVolumeSkipFixed() > 0);
     assert(explanation.getRelativeVolumeSkipFixed() <= 1);
     assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expVarSize));
+
     if (isAbductiveOnly) { return; }
+
+    cstats << "fixed features: " << fixedCount << '/' << varSize << std::endl;
+
+    if (not explanation.supportsVolume()) { return; }
 
     Float const relVolume = explanation.getRelativeVolumeSkipFixed();
 
-    cstats << "fixed features: " << fixedCount << '/' << varSize << '\n';
     cstats << "relVolume*: " << std::setprecision(1) << (relVolume * 100) << "%" << std::setprecision(defaultPrecision)
            << std::endl;
 }
