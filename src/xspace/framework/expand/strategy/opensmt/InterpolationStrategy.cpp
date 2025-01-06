@@ -1,7 +1,6 @@
 #include "InterpolationStrategy.h"
 
 #include <xspace/framework/explanation/Explanation.h>
-#include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/opensmt/FormulaExplanation.h>
 
 #include <xspace/common/Utils.h>
@@ -13,12 +12,6 @@
 #include <cassert>
 
 namespace xspace::expand::opensmt {
-xai::verifiers::OpenSMTVerifier & InterpolationStrategy::getVerifier() {
-    auto & verifier = Strategy::getVerifier();
-    assert(dynamic_cast<xai::verifiers::OpenSMTVerifier *>(&verifier));
-    return static_cast<xai::verifiers::OpenSMTVerifier &>(verifier);
-}
-
 void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> &) {
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
@@ -76,28 +69,5 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     Formula itp = itps[0];
 
     assignNew<FormulaExplanation>(explanationPtr, fw, itp);
-}
-
-bool InterpolationStrategy::assertExplanationImpl(PartialExplanation const & pexplanation, AssertExplanationConf const & conf) {
-    if (Strategy::assertExplanationImpl(pexplanation, conf)) { return true; }
-
-    assert(dynamic_cast<FormulaExplanation const *>(&pexplanation));
-    auto & phiexplanation = static_cast<FormulaExplanation const &>(pexplanation);
-    assertFormulaExplanation(phiexplanation, conf);
-
-    return true;
-}
-
-void InterpolationStrategy::assertFormulaExplanation(FormulaExplanation const & phiexplanation) {
-    assertFormulaExplanation(phiexplanation, AssertExplanationConf{});
-}
-
-void InterpolationStrategy::assertFormulaExplanation(FormulaExplanation const & phiexplanation,
-                                                     AssertExplanationConf const &) {
-    Formula const & phi = phiexplanation.getFormula();
-
-    auto & verifier = getVerifier();
-    auto & solver = verifier.getSolver();
-    solver.insertFormula(phi);
 }
 } // namespace xspace::expand::opensmt
