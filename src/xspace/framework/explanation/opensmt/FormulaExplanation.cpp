@@ -21,9 +21,13 @@ xai::verifiers::OpenSMTVerifier const & FormulaExplanation::getVerifier() const 
     return static_cast<xai::verifiers::OpenSMTVerifier const &>(getExpand().getVerifier());
 }
 
-bool FormulaExplanation::contains(VarIdx) const {
-    //++ Not implemented
-    return true;
+bool FormulaExplanation::contains(VarIdx idx) const {
+    auto & solver = getVerifier().getSolver();
+    auto & logic = solver.getLogic();
+
+    auto & varName = frameworkPtr->getVarName(idx);
+    Formula const varPhi = logic.resolveTerm(varName.c_str(), {});
+    return logic.contains(*formulaPtr, varPhi);
 }
 
 void FormulaExplanation::clear() {
