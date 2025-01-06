@@ -25,6 +25,7 @@ public:
 
     // May return null pointer ~ true value
     PartialExplanation const * tryGetExplanation(std::size_t idx) const { return getExplanationPtr(idx).get(); }
+    PartialExplanation * tryGetExplanation(std::size_t idx) { return getExplanationPtr(idx).get(); }
 
     bool contains(VarIdx) const override;
 

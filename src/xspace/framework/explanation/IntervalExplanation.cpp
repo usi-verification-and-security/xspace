@@ -48,7 +48,7 @@ void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
     assert(not valIsUpper or bnd.isEq());
 #endif
 
-    auto * optVarBnd = _tryGetVarBound(idx);
+    auto * optVarBnd = tryGetVarBound(idx);
     if (not optVarBnd) {
         insertVarBound(VarBound{*frameworkPtr, idx, std::move(bnd)});
         return;
@@ -66,7 +66,7 @@ void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
 void IntervalExplanation::setVarBound(VarBound varBnd) {
     VarIdx const idx = varBnd.getVarIdx();
     assert(contains(idx));
-    auto * optVarBnd = _tryGetVarBound(idx);
+    auto * optVarBnd = tryGetVarBound(idx);
     assert(optVarBnd);
     *optVarBnd = std::move(varBnd);
 }

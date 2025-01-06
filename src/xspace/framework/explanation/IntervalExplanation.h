@@ -29,10 +29,8 @@ public:
         return ConjunctExplanation::size();
     }
 
-    VarBound const * tryGetVarBound(VarIdx idx) const {
-        auto * expPtr = tryGetExplanation(idx);
-        return castToVarBound(expPtr);
-    }
+    VarBound const * tryGetVarBound(VarIdx idx) const { return castToVarBound(tryGetExplanation(idx)); }
+    VarBound * tryGetVarBound(VarIdx idx) { return castToVarBound(tryGetExplanation(idx)); }
 
     std::size_t varSize() const override;
 
@@ -59,7 +57,6 @@ public:
 protected:
     void insertExplanation(std::unique_ptr<PartialExplanation>) override;
     void setExplanation(std::size_t idx, std::unique_ptr<PartialExplanation>) override;
-    using ConjunctExplanation::eraseExplanation;
 
     std::size_t computeFixedCount() const override;
 
@@ -74,11 +71,6 @@ private:
     static VarBound * castToVarBound(PartialExplanation * expPtr) {
         assert(not expPtr or dynamic_cast<VarBound *>(expPtr));
         return static_cast<VarBound *>(expPtr);
-    }
-
-    VarBound * _tryGetVarBound(VarIdx idx) {
-        auto * expPtr = getExplanationPtr(idx).get();
-        return castToVarBound(expPtr);
     }
 
     template<bool skipFixed>
