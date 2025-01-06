@@ -54,7 +54,16 @@ void Framework::Expand::Strategy::assertExplanation(PartialExplanation const & p
 
 bool Framework::Expand::Strategy::assertExplanationImpl(PartialExplanation const & pexplanation,
                                                         AssertExplanationConf const & conf) {
-    if (auto cexpPtr = dynamic_cast<ConjunctExplanation const *>(&pexplanation)) {
+    // Not necessary yet
+    assert(not dynamic_cast<VarBound const *>(&pexplanation));
+    /*
+    if (auto * varBndPtr = dynamic_cast<VarBound const *>(&pexplanation)) {
+        assertVarBound(*varBndPtr, conf);
+        return true;
+    }
+    */
+
+    if (auto * cexpPtr = dynamic_cast<ConjunctExplanation const *>(&pexplanation)) {
         assertConjunctExplanation(*cexpPtr, conf);
         return true;
     }
@@ -68,16 +77,16 @@ void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation 
 
 void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation const & cexplanation,
                                                             AssertExplanationConf const & conf) {
-    if (auto iexpPtr = dynamic_cast<IntervalExplanation const *>(&cexplanation)) {
+    if (auto * iexpPtr = dynamic_cast<IntervalExplanation const *>(&cexplanation)) {
         assertIntervalExplanation(*iexpPtr, conf);
         return;
     }
 
+    // Does not consider var ordering, unlike interval explanations
     for (auto & pexplanationPtr : cexplanation) {
         assertExplanation(*pexplanationPtr, conf);
     }
 }
-
 
 void Framework::Expand::Strategy::assertIntervalExplanation(IntervalExplanation const & iexplanation) {
     assertIntervalExplanation(iexplanation, AssertExplanationConf{});
@@ -103,8 +112,6 @@ template<bool omitIdx>
 void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanation const & iexplanation,
                                                               AssertExplanationConf const & conf,
                                                               [[maybe_unused]] VarIdx idxToOmit) {
-    bool const splitEq = conf.splitEq;
-
     if (conf.ignoreVarOrder) {
         std::size_t const esize = iexplanation.size();
         for (VarIdx idx = 0; idx < esize; ++idx) {
@@ -118,7 +125,7 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
             if (not optVarBnd) { continue; }
 
             auto & varBnd = *optVarBnd;
-            assertVarBound(varBnd, splitEq);
+            assertVarBound(varBnd, conf);
         }
         return;
     }
@@ -134,11 +141,15 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
         if (not optVarBnd) { continue; }
 
         auto & varBnd = *optVarBnd;
-        assertVarBound(varBnd, splitEq);
+        assertVarBound(varBnd, conf);
     }
 }
 
-void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd, bool splitEq) {
+void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd) {
+    assertVarBound(varBnd, AssertExplanationConf{});
+}
+
+void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd, AssertExplanationConf const & conf) {
     VarIdx const idx = varBnd.getVarIdx();
     if (varBnd.isInterval()) {
         assertInnerInterval(idx, varBnd.getIntervalLower(), varBnd.getIntervalUpper());
@@ -146,7 +157,7 @@ void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd, bool s
     }
 
     if (varBnd.isPoint()) {
-        assertPoint(idx, varBnd.getPoint(), splitEq);
+        assertPoint(idx, varBnd.getPoint(), conf.splitEq);
         return;
     }
 

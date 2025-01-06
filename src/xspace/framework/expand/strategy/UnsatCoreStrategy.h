@@ -8,7 +8,7 @@ class UnsatCoreVerifier;
 }
 
 namespace xspace {
-class Framework::Expand::UnsatCoreStrategy : public Strategy {
+class Framework::Expand::UnsatCoreStrategy : virtual public Strategy {
 public:
     struct Config {
         bool splitEq = false;

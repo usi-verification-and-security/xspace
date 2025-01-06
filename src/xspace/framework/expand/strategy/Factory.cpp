@@ -76,6 +76,8 @@ Framework::Expand::Strategy::Factory::parseAbductive(std::string const & str, au
 
 std::unique_ptr<Framework::Expand::Strategy>
 Framework::Expand::Strategy::Factory::parseUnsatCore(std::string const & str, auto & params) {
+    using expand::opensmt::UnsatCoreStrategy;
+
     UnsatCoreStrategy::Config conf;
     while (not params.empty()) {
         auto param = std::move(params.front());

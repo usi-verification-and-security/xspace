@@ -15,10 +15,7 @@ namespace xspace::expand::opensmt {
 using namespace xspace::opensmt;
 
 //+ make templated with Formula
-class Strategy : public Framework::Expand::Strategy {
-public:
-    using Framework::Expand::Strategy::Strategy;
-
+class Strategy : virtual public Framework::Expand::Strategy {
 protected:
     xai::verifiers::OpenSMTVerifier & getVerifier();
 

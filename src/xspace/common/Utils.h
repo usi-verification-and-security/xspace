@@ -10,11 +10,14 @@ namespace xspace {
 template<typename Derived, typename Base>
     requires std::derived_from<Derived, Base>
 void assignNew(std::unique_ptr<Base> & ptr, auto &&... args) {
-    if (auto derivedPtr = dynamic_cast<Derived *>(ptr.get())) {
+    /*! not safe if Base is actually an even more derived type than Derived
+    if (auto * derivedPtr = dynamic_cast<Derived *>(ptr.get())) {
         *derivedPtr = Derived{FORWARD(args)...};
-    } else {
-        ptr = std::make_unique<Derived>(FORWARD(args)...);
+        return;
     }
+    */
+
+    ptr = std::make_unique<Derived>(FORWARD(args)...);
 }
 } // namespace xspace
 

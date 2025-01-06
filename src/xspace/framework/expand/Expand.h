@@ -28,6 +28,9 @@ public:
     };
 
     class Strategy;
+    class AbductiveStrategy;
+    class TrialAndErrorStrategy;
+    class UnsatCoreStrategy;
 
     using Strategies = std::vector<std::unique_ptr<Strategy>>;
 
@@ -47,10 +50,6 @@ public:
     void operator()(Explanations &, Dataset &);
 
 protected:
-    class AbductiveStrategy;
-    class TrialAndErrorStrategy;
-    class UnsatCoreStrategy;
-
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
     void setVerifier(std::unique_ptr<xai::verifiers::Verifier>);
 

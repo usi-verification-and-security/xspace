@@ -43,12 +43,11 @@ void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> &) {
 }
 
 void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    auto & verifier = getVerifier();
-    auto & solver = verifier.getSolver();
+    auto & explanation = *explanationPtr;
 
     auto & fw = expand.getFramework();
-
-    auto & explanation = *explanationPtr;
+    auto & verifier = getVerifier();
+    auto & solver = verifier.getSolver();
 
     auto const firstIdx = solver.getInsertedFormulasCount();
     assertExplanation(explanation);
@@ -68,6 +67,7 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     assert(itps.size() == 1);
     Formula itp = itps[0];
 
+    //++ sometimes may produce conjunct explanations
     assignNew<FormulaExplanation>(explanationPtr, fw, itp);
 }
 } // namespace xspace::expand::opensmt

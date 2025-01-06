@@ -9,11 +9,11 @@
 
 namespace xspace {
 void Framework::Expand::AbductiveStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    auto & verifier = getVerifier();
-
     auto & explanation = *explanationPtr;
     assert(dynamic_cast<IntervalExplanation *>(&explanation));
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
+
+    auto & verifier = getVerifier();
 
     for (VarIdx idxToOmit : varOrdering.manualOrder) {
         verifier.push();

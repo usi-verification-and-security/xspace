@@ -7,6 +7,7 @@
 #include "TrialAndErrorStrategy.h"
 #include "UnsatCoreStrategy.h"
 #include "opensmt/InterpolationStrategy.h"
+#include "opensmt/UnsatCoreStrategy.h"
 
 namespace xspace {} // namespace xspace
 

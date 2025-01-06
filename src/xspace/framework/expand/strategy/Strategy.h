@@ -28,6 +28,7 @@ public:
 
 protected:
     struct AssertExplanationConf {
+        //? change to false
         bool ignoreVarOrder = true;
         bool splitEq = false;
     };
@@ -52,7 +53,8 @@ protected:
     void assertIntervalExplanationExcept(IntervalExplanation const &, VarIdx);
     void assertIntervalExplanationExcept(IntervalExplanation const &, VarIdx, AssertExplanationConf const &);
 
-    void assertVarBound(VarBound const &, bool splitEq = false);
+    void assertVarBound(VarBound const &);
+    void assertVarBound(VarBound const &, AssertExplanationConf const &);
     void assertInterval(VarIdx, Interval const &);
     void assertInnerInterval(VarIdx, Interval const &);
     void assertInnerInterval(VarIdx, LowerBound const &, UpperBound const &);
