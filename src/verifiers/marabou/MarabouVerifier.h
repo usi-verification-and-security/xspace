@@ -3,13 +3,18 @@
 
 #include <verifiers/Verifier.h>
 
+#include <memory>
 
 namespace xai::verifiers {
 
 class MarabouVerifier : public Verifier {
 public:
     MarabouVerifier();
-    ~MarabouVerifier();
+    virtual ~MarabouVerifier();
+    MarabouVerifier(MarabouVerifier const &) = delete;
+    MarabouVerifier & operator=(MarabouVerifier const &) = delete;
+    MarabouVerifier(MarabouVerifier &&) = default;
+    MarabouVerifier & operator=(MarabouVerifier &&) = default;
 
     void loadModel(nn::NNet const & network) override;
 
@@ -29,7 +34,7 @@ protected:
 
 private:
     class MarabouImpl;
-    MarabouImpl * pimpl;
+    std::unique_ptr<MarabouImpl> pimpl;
 };
 }
 

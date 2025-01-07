@@ -82,9 +82,9 @@ private:
     std::unordered_map<PTRef, NodeIndex, PTRefHash> inputVarEqualityToIndex;
 };
 
-OpenSMTVerifier::OpenSMTVerifier() { pimpl = new OpenSMTImpl(); }
+OpenSMTVerifier::OpenSMTVerifier() : pimpl{std::make_unique<OpenSMTImpl>()} {}
 
-OpenSMTVerifier::~OpenSMTVerifier() { delete pimpl; }
+OpenSMTVerifier::~OpenSMTVerifier() {}
 
 void OpenSMTVerifier::loadModel(nn::NNet const & network) {
     pimpl->loadModel(network);

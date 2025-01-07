@@ -3,6 +3,8 @@
 
 #include <verifiers/UnsatCoreVerifier.h>
 
+#include <memory>
+
 namespace opensmt {
 class MainSolver;
 struct PTRef;
@@ -13,7 +15,11 @@ namespace xai::verifiers {
 class OpenSMTVerifier : public UnsatCoreVerifier {
 public:
     OpenSMTVerifier();
-    ~OpenSMTVerifier();
+    virtual ~OpenSMTVerifier();
+    OpenSMTVerifier(OpenSMTVerifier const &) = delete;
+    OpenSMTVerifier & operator=(OpenSMTVerifier const &) = delete;
+    OpenSMTVerifier(OpenSMTVerifier &&) = default;
+    OpenSMTVerifier & operator=(OpenSMTVerifier &&) = default;
 
     void loadModel(nn::NNet const & network) override;
 
@@ -45,7 +51,7 @@ protected:
 
 private:
     class OpenSMTImpl;
-    OpenSMTImpl * pimpl;
+    std::unique_ptr<OpenSMTImpl> pimpl;
 };
 
 } // namespace xai::verifiers

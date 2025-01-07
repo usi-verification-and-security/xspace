@@ -75,9 +75,9 @@ private:
     std::unique_ptr<QueryIncrementalWrapper> queryWrapper;
 };
 
-MarabouVerifier::MarabouVerifier() { pimpl = new MarabouImpl(); }
+MarabouVerifier::MarabouVerifier() : pimpl{std::make_unique<MarabouImpl>()} {}
 
-MarabouVerifier::~MarabouVerifier() { delete pimpl; }
+MarabouVerifier::~MarabouVerifier() {}
 
 void MarabouVerifier::loadModel(nn::NNet const & network) {
     pimpl->loadModel(network);

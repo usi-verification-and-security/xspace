@@ -15,6 +15,13 @@ class Verifier {
 public:
     enum class Answer { SAT, UNSAT, UNKNOWN, ERROR };
 
+    Verifier() = default;
+    virtual ~Verifier() = default;
+    Verifier(Verifier const &) = delete;
+    Verifier & operator=(Verifier const &) = delete;
+    Verifier(Verifier &&) = default;
+    Verifier & operator=(Verifier &&) = default;
+
     virtual void loadModel(nn::NNet const &) = 0;
 
     virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) = 0;
@@ -44,8 +51,6 @@ public:
 
     virtual void resetSample() { checksCount = 0; }
     virtual void reset() { resetSample(); }
-
-    virtual ~Verifier() = default;
 
 protected:
     virtual void initImpl() {}
