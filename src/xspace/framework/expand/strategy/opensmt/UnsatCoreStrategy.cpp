@@ -20,7 +20,7 @@ void UnsatCoreStrategy::executeBody(std::unique_ptr<Explanation> & explanationPt
         return;
     }
 
-    assert(dynamic_cast<ConjunctExplanation *>(&explanation));
+    if (not dynamic_cast<ConjunctExplanation *>(&explanation)) { return; }
     auto & cexplanation = static_cast<ConjunctExplanation &>(explanation);
 
     bool const splitEq = config.splitEq;

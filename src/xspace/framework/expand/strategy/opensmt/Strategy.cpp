@@ -30,10 +30,13 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
 }
 
 void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanation, AssertExplanationConf const &) {
+    static std::size_t counter{};
+
     Formula const & phi = phiexplanation.getFormula();
 
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
     solver.insertFormula(phi);
+    solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi);
 }
 } // namespace xspace::expand::opensmt
