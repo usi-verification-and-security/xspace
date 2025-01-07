@@ -42,9 +42,10 @@ public:
 
     VarIdx getVarIdx() const { return varIdx; }
 
-    std::size_t varSize() const override { return 1; }
-
     bool contains(VarIdx idx) const override { return idx == getVarIdx(); }
+
+    std::size_t varSize() const override { return 1; }
+    std::size_t termSize() const override;
 
     // If it holds just a single LowerBound or UpperBound, it must be accessed from here
     Bound const & getBound() const { return firstBound; }

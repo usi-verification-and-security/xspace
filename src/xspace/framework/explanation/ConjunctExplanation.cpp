@@ -22,6 +22,17 @@ bool ConjunctExplanation::contains(VarIdx idx) const {
     });
 }
 
+std::size_t ConjunctExplanation::termSize() const {
+    std::size_t size_{};
+    for (auto & pexplanationPtr : conjunction) {
+        if (not pexplanationPtr) { continue; }
+        size_ += pexplanationPtr->termSize();
+    }
+
+    assert(size_ > 0);
+    return size_;
+}
+
 void ConjunctExplanation::clear() {
     Explanation::clear();
 

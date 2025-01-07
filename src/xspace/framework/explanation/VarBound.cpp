@@ -96,6 +96,11 @@ bool VarBound::isValid() const {
 #endif
 }
 
+std::size_t VarBound::termSize() const {
+    if (isInterval()) return 2;
+    return 1;
+}
+
 void VarBound::swap(VarBound & rhs) {
     PartialExplanation::swap(rhs);
 

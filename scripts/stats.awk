@@ -19,16 +19,21 @@ function assert(condition, string) {
    if (computed == expected) correct_cnt++
 }
 
-/size:/ && $1 != "Dataset" {
+/#features:/ {
    split($NF, nums, "/")
    sum_size += nums[1]
    div_sum_size += nums[2]
 }
 
-/fixed features:/ {
+/#fixed features:/ {
    split($NF, nums, "/")
    sum_fixed += nums[1]
    div_sum_fixed += nums[2]
+}
+
+/#terms:/ {
+   sum_termsize += $NF
+   cnt_termsize++
 }
 
 /#checks:/ {
@@ -53,9 +58,13 @@ END {
    printf("avg #any features: %.1f%%\n", (sum_size/div_sum_size)*100)
    if (div_sum_fixed > 0) printf("avg #fixed features: %.1f%%\n", (sum_fixed/div_sum_fixed)*100)
    else printf("avg #fixed features: %.1f%%\n", (sum_size/div_sum_size)*100)
+   if (cnt_termsize > 0) {
+      assert(total_cnt == 0 || total_cnt == cnt_termsize, "total_cnt == cnt_termsize: " total_cnt " == " cnt_termsize)
+      printf("avg #terms: %.1f\n", (sum_termsize/cnt_termsize))
+   }
    if (cnt_volume > 0) {
       assert(total_cnt == 0 || total_cnt == cnt_volume, "total_cnt == cnt_volume: " total_cnt " == " cnt_volume)
-      printf("avg volume: %.2f%%\n", sum_volume/cnt_volume)
+      printf("avg relVolume*: %.2f%%\n", sum_volume/cnt_volume)
    }
    if (cnt_checks > 0) {
       assert(total_cnt == 0 || total_cnt == cnt_checks, "total_cnt == cnt_checks: " total_cnt " == " cnt_checks)

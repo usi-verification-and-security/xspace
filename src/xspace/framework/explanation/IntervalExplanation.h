@@ -34,9 +34,9 @@ public:
     VarBound const * tryGetVarBound(VarIdx idx) const { return castToVarBound(tryGetExplanation(idx)); }
     VarBound * tryGetVarBound(VarIdx idx) { return castToVarBound(tryGetExplanation(idx)); }
 
-    std::size_t varSize() const override;
-
     bool contains(VarIdx idx) const override { return bool(tryGetVarBound(idx)); }
+
+    std::size_t varSize() const override;
 
     void insertVarBound(VarBound);
     void insertBound(VarIdx, Bound);

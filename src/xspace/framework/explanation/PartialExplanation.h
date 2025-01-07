@@ -15,9 +15,10 @@ public:
     PartialExplanation & operator=(PartialExplanation const &) = default;
     PartialExplanation & operator=(PartialExplanation &&) = default;
 
-    virtual std::size_t varSize() const;
-
     virtual bool contains(VarIdx) const = 0;
+
+    virtual std::size_t varSize() const;
+    virtual std::size_t termSize() const = 0;
 
     void swap(PartialExplanation &);
 

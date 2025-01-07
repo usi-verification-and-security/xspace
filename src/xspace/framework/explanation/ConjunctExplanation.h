@@ -29,6 +29,8 @@ public:
 
     bool contains(VarIdx) const override;
 
+    std::size_t termSize() const override;
+
     void clear() override;
 
     void swap(ConjunctExplanation &);

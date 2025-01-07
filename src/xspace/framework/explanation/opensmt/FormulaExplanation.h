@@ -25,6 +25,8 @@ public:
 
     bool contains(VarIdx) const override;
 
+    std::size_t termSize() const override;
+
     void clear() override;
 
     void swap(FormulaExplanation &);
@@ -33,6 +35,8 @@ public:
 
 protected:
     xai::verifiers::OpenSMTVerifier const & getVerifier() const;
+
+    std::size_t termSizeOf(Formula const &) const;
 
     void resetFormula() { formulaPtr.reset(); }
 

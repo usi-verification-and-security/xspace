@@ -224,20 +224,29 @@ void Framework::Expand::printStats(Explanation const & explanation, Dataset cons
     std::size_t const fixedCount = explanation.getFixedCount();
     assert(fixedCount <= expVarSize);
 
+    std::size_t const termSize = explanation.termSize();
+    assert(termSize > 0);
+
     cstats << '\n';
     cstats << "sample [" << idx + 1 << '/' << dataSize << "]: " << sample << '\n';
     cstats << "expected output: " << expClass << '\n';
     cstats << "computed output: " << compClass << '\n';
     cstats << "#checks: " << verifierPtr->getChecksCount() << '\n';
-    cstats << "explanation size: " << expVarSize << '/' << varSize << std::endl;
+    cstats << "#features: " << expVarSize << '/' << varSize << std::endl;
 
     assert(not explanation.supportsVolume() or explanation.getRelativeVolumeSkipFixed() > 0);
     assert(explanation.getRelativeVolumeSkipFixed() <= 1);
     assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expVarSize));
 
-    if (isAbductiveOnly) { return; }
+    if (isAbductiveOnly) {
+        assert(fixedCount == expVarSize);
+        assert(termSize == expVarSize);
+        assert(explanation.getRelativeVolumeSkipFixed() == 1);
+        return;
+    }
 
-    cstats << "fixed features: " << fixedCount << '/' << varSize << std::endl;
+    cstats << "#fixed features: " << fixedCount << '/' << varSize << '\n';
+    cstats << "#terms: " << termSize << std::endl;
 
     if (not explanation.supportsVolume()) { return; }
 
