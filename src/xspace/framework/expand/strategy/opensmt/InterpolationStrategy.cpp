@@ -1,5 +1,6 @@
 #include "InterpolationStrategy.h"
 
+#include <xspace/framework/explanation/ConjunctExplanation.h>
 #include <xspace/framework/explanation/Explanation.h>
 #include <xspace/framework/explanation/opensmt/FormulaExplanation.h>
 
@@ -67,7 +68,22 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     assert(itps.size() == 1);
     Formula itp = itps[0];
 
-    //++ sometimes may produce conjunct explanations
-    assignNew<FormulaExplanation>(explanationPtr, fw, itp);
+    auto const & logic = solver.getLogic();
+
+    if (not logic.isAnd(itp)) {
+        assert(config.boolInterpolationAlg != BoolInterpolationAlg::strong);
+        assignNew<FormulaExplanation>(explanationPtr, fw, itp);
+        return;
+    }
+
+    ConjunctExplanation cexplanation{fw};
+
+    for (Formula const & phi : logic.getPterm(itp)) {
+        assert(not logic.isAnd(phi));
+        auto phiexplanationPtr = std::make_unique<FormulaExplanation>(fw, phi);
+        cexplanation.insertExplanation(std::move(phiexplanationPtr));
+    }
+
+    assignNew<ConjunctExplanation>(explanationPtr, std::move(cexplanation));
 }
 } // namespace xspace::expand::opensmt
