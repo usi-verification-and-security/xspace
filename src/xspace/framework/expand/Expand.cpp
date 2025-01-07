@@ -126,9 +126,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
 
         auto & explanationPtr = explanations[idx];
         for (auto & strategy : strategies) {
-            verifierPtr->push();
             strategy->execute(explanationPtr);
-            verifierPtr->pop();
         }
 
         //+ get rid of the conditionals

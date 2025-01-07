@@ -22,6 +22,18 @@ void Framework::Expand::Strategy::execute(std::unique_ptr<Explanation> & explana
 }
 
 void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
+    initVarOrdering();
+
+    auto & verifier = getVerifier();
+    verifier.push();
+}
+
+void Framework::Expand::Strategy::executeFinish(std::unique_ptr<Explanation> &) {
+    auto & verifier = getVerifier();
+    verifier.pop();
+}
+
+void Framework::Expand::Strategy::initVarOrdering() {
     auto const & orderType = varOrdering.type;
     auto & varOrder = varOrdering.manualOrder;
     std::size_t const varSize = expand.getFramework().varSize();

@@ -13,7 +13,9 @@
 #include <cassert>
 
 namespace xspace::expand::opensmt {
-void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> &) {
+void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanationPtr) {
+    Strategy::executeInit(explanationPtr);
+
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
     auto & solverConf = solver.getConfig();

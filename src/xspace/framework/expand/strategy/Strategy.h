@@ -39,7 +39,9 @@ protected:
 
     virtual void executeInit(std::unique_ptr<Explanation> &);
     virtual void executeBody(std::unique_ptr<Explanation> &) = 0;
-    virtual void executeFinish(std::unique_ptr<Explanation> &) {}
+    virtual void executeFinish(std::unique_ptr<Explanation> &);
+
+    void initVarOrdering();
 
     void assertExplanation(PartialExplanation const &);
     void assertExplanation(PartialExplanation const &, AssertExplanationConf const &);
