@@ -37,6 +37,6 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
     solver.insertFormula(phi);
-    solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi);
+    if (storeNamedTerms()) { solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi); }
 }
 } // namespace xspace::expand::opensmt
