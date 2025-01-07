@@ -49,6 +49,7 @@ public:
 
     Answer check();
 
+    void resetSampleQuery();
     void resetSample();
     void reset();
 
@@ -124,6 +125,11 @@ void OpenSMTVerifier::pop() {
 
 Verifier::Answer OpenSMTVerifier::checkImpl() {
     return pimpl->check();
+}
+
+void OpenSMTVerifier::resetSampleQuery() {
+    pimpl->resetSampleQuery();
+    UnsatCoreVerifier::resetSampleQuery();
 }
 
 void OpenSMTVerifier::resetSample() {
@@ -354,10 +360,14 @@ void OpenSMTVerifier::OpenSMTImpl::init() {
     // reset() is called by Verifier
 }
 
-void OpenSMTVerifier::OpenSMTImpl::resetSample() {
+void OpenSMTVerifier::OpenSMTImpl::resetSampleQuery() {
     inputVarLowerBoundToIndex.clear();
     inputVarUpperBoundToIndex.clear();
     inputVarEqualityToIndex.clear();
+}
+
+void OpenSMTVerifier::OpenSMTImpl::resetSample() {
+    // resetSampleQuery() is called by Verifier
 }
 
 void OpenSMTVerifier::OpenSMTImpl::reset() {

@@ -49,7 +49,11 @@ public:
 
     std::size_t getChecksCount() const { return checksCount; }
 
-    virtual void resetSample() { checksCount = 0; }
+    virtual void resetSampleQuery() {}
+    virtual void resetSample() {
+        resetSampleQuery();
+        checksCount = 0;
+    }
     virtual void reset() { resetSample(); }
 
 protected:

@@ -31,6 +31,7 @@ void Framework::Expand::Strategy::executeInit(std::unique_ptr<Explanation> &) {
 void Framework::Expand::Strategy::executeFinish(std::unique_ptr<Explanation> &) {
     auto & verifier = getVerifier();
     verifier.pop();
+    verifier.resetSampleQuery();
 }
 
 void Framework::Expand::Strategy::initVarOrdering() {

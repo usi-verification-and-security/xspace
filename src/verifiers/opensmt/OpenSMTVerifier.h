@@ -36,6 +36,7 @@ public:
     void push() override;
     void pop() override;
 
+    void resetSampleQuery() override;
     void resetSample() override;
     void reset() override;
 
