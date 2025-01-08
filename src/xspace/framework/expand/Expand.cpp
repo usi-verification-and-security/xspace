@@ -113,12 +113,12 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
 
     initVerifier();
 
-    //? This incrementality does not seem to work
+    // Such incrementality does not seem to be beneficial
     // assertModel();
 
     Dataset::SampleIndices const indices = makeSampleIndices(data);
     for (auto idx : indices) {
-        //++ This should ideally be outside of the loop
+        // Seems quite more efficient than if outside the loop, at least with 'abductive'
         assertModel();
 
         auto const & output = data.getComputedOutput(idx);
@@ -139,7 +139,6 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset & data) 
 
         resetClassification();
 
-        //++ This should not ideally be necessary
         resetModel();
     }
 }

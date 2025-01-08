@@ -28,7 +28,6 @@ public:
 
 protected:
     struct AssertExplanationConf {
-        //? change to false
         bool ignoreVarOrder = true;
         bool splitEq = false;
     };
