@@ -9,31 +9,28 @@ OUTPUT_DIRS=(output/heart_attack output/obesity)
 ## Default for now ..
 MAX_MODELS=1
 
-for idx in ${!MODELS[@]}; do
-    [[ -n $MAX_MODELS ]] && (( idx >= MAX_MODELS )) && break
+source "$(dirname "$0")/experiments"
 
-    model="${MODELS[$idx]}"
-    dataset="${DATASETS[$idx]}"
-    output_dir="${OUTPUT_DIRS[$idx]}"
+for model_idx in ${!MODELS[@]}; do
+    [[ -n $MAX_MODELS ]] && (( model_idx >= MAX_MODELS )) && break
 
-    # { time ${CMD} "$model" "$dataset" opensmt 'abductive' -sv >"${output_dir}/abductive_min.phi.txt" 2>"${output_dir}/abductive_min.stats.txt" ; } 2>"${output_dir}/abductive_min.time.txt" &
-    # { time ${CMD} "$model" "$dataset" opensmt 'abductive' -rsv >"${output_dir}/abductive_min_reverse.phi.txt" 2>"${output_dir}/abductive_min_reverse.stats.txt" ; } 2>"${output_dir}/abductive_min_reverse.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample' -sv >"${output_dir}/ucore_sample_min.phi.txt" 2>"${output_dir}/ucore_sample_min.stats.txt" ; } 2>"${output_dir}/ucore_sample_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample' -rsv >"${output_dir}/ucore_sample_min_reverse.phi.txt" 2>"${output_dir}/ucore_sample_min_reverse.stats.txt" ; } 2>"${output_dir}/ucore_sample_min_reverse.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval' -sv >"${output_dir}/ucore_interval_min.phi.txt" 2>"${output_dir}/ucore_interval_min.stats.txt" ; } 2>"${output_dir}/ucore_interval_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval' -rsv >"${output_dir}/ucore_interval_min_reverse.phi.txt" 2>"${output_dir}/ucore_interval_min_reverse.stats.txt" ; } 2>"${output_dir}/ucore_interval_min_reverse.time.txt" &
+    model="${MODELS[$model_idx]}"
+    dataset="${DATASETS[$model_idx]}"
+    output_dir="${OUTPUT_DIRS[$model_idx]}"
 
-    { time ${CMD} "$model" "$dataset" opensmt 'abductive,trial' -sv >"${output_dir}/trial_sample_min_3.phi.txt" 2>"${output_dir}/trial_sample_min_3.stats.txt" ; } 2>"${output_dir}/trial_sample_min_3.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'abductive,trial' -rsv >"${output_dir}/trial_sample_min_reverse_3.phi.txt" 2>"${output_dir}/trial_sample_min_reverse_3.stats.txt" ; } 2>"${output_dir}/trial_sample_min_reverse_3.time.txt" &
-    # { time ${CMD} "$model" "$dataset" opensmt 'ucore,trial' -sv >"${output_dir}/trial_ucore_sample_min_3.phi.txt" 2>"${output_dir}/trial_ucore_sample_min_3.stats.txt" ; } 2>"${output_dir}/trial_ucore_sample_min_3.time.txt" &
-    # { time ${CMD} "$model" "$dataset" opensmt 'ucore,trial' -rsv >"${output_dir}/trial_ucore_sample_min_reverse_3.phi.txt" 2>"${output_dir}/trial_ucore_sample_min_reverse_3.stats.txt" ; } 2>"${output_dir}/trial_ucore_sample_min_reverse_3.time.txt" &
+    for exp_idx in ${!EXPERIMENTS[@]}; do
+        _experiment=${EXPERIMENTS[$exp_idx]}
+        experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
 
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample,itp' -sv >"${output_dir}/itp_ucore_sample_min.phi.txt" 2>"${output_dir}/itp_ucore_sample_min.stats.txt" ; } 2>"${output_dir}/itp_ucore_sample_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample,itp' -rsv >"${output_dir}/itp_ucore_sample_min_reverse.phi.txt" 2>"${output_dir}/itp_ucore_sample_min_reverse.stats.txt" ; } 2>"${output_dir}/itp_ucore_sample_min_reverse.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval,itp' -sv >"${output_dir}/itp_ucore_interval_min.phi.txt" 2>"${output_dir}/itp_ucore_interval_min.stats.txt" ; } 2>"${output_dir}/itp_ucore_interval_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval,itp' -rsv >"${output_dir}/itp_ucore_interval_min_reverse.phi.txt" 2>"${output_dir}/itp_ucore_interval_min_reverse.stats.txt" ; } 2>"${output_dir}/itp_ucore_interval_min_reverse.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample,itp,ucore' -sv >"${output_dir}/ucore_itp_ucore_sample_min.phi.txt" 2>"${output_dir}/ucore_itp_ucore_sample_min.stats.txt" ; } 2>"${output_dir}/ucore_itp_ucore_sample_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore sample,itp,ucore' -rsv >"${output_dir}/ucore_itp_ucore_sample_min_reverse.phi.txt" 2>"${output_dir}/ucore_itp_ucore_sample_min_reverse.stats.txt" ; } 2>"${output_dir}/ucore_itp_ucore_sample_min_reverse.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval,itp,ucore' -sv >"${output_dir}/ucore_itp_ucore_interval_min.phi.txt" 2>"${output_dir}/ucore_itp_ucore_interval_min.stats.txt" ; } 2>"${output_dir}/ucore_itp_ucore_interval_min.time.txt" &
-    { time ${CMD} "$model" "$dataset" opensmt 'ucore interval,itp,ucore' -rsv >"${output_dir}/ucore_itp_ucore_interval_min_reverse.phi.txt" 2>"${output_dir}/ucore_itp_ucore_interval_min_reverse.stats.txt" ; } 2>"${output_dir}/ucore_itp_ucore_interval_min_reverse.time.txt" &
+        for do_reverse in 0 1; do
+            experiment=$_experiment
+            opts=-sv
+            (( $do_reverse )) && {
+                experiment+=_reverse
+                opts+=r
+            }
+
+            { time ${CMD} "$model" "$dataset" opensmt "$experiment_strategies" $opts >"${output_dir}/${experiment}.phi.txt" 2>"${output_dir}/${experiment}.stats.txt" ; } 2>"${output_dir}/${experiment}.time.txt" &
+        done
+    done
 done

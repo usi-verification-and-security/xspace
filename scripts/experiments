@@ -1,0 +1,32 @@
+EXPERIMENTS=(
+    # abductive_min
+    ucore_sample_min
+    ucore_interval_min
+
+    trial_sample_min_3
+    # trial_ucore_sample_min_3
+
+    itp_ucore_sample_min
+    itp_ucore_interval_min
+    ucore_itp_ucore_sample_min
+    ucore_itp_ucore_interval_min
+)
+
+EXPERIMENT_STRATEGIES=(
+    # 'abductive'
+    'ucore sample'
+    'ucore interval'
+
+    'abductive,trial'
+    # 'ucore,trial'
+
+    'ucore sample,itp'
+    'ucore interval,itp'
+    'ucore sample,itp,ucore'
+    'ucore interval,itp,ucore'
+)
+
+(( ${#EXPERIMENTS[@]} == ${#EXPERIMENT_STRATEGIES[@]} )) || {
+    printf "Mismatch of the size of arrays %s and %s: %d != %d\n" EXPERIMENTS EXPERIMENT_STRATEGIES ${#EXPERIMENTS[@]} ${#EXPERIMENT_STRATEGIES[@]} >&2
+    exit 9
+}
