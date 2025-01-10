@@ -31,7 +31,7 @@ FNR == 1 {
     incremented = 0
 }
 
-/fixed features:/ {
+/#fixed features:/ {
     split($NF, nums, "/")
     assert(fix_sizes[fidx, idx] == "", "fix_sizes["fidx", "idx"]  ==  '': " fix_sizes[fidx, idx])
     fix_sizes[fidx, idx] = nums[1]
@@ -61,7 +61,7 @@ FNR == 1 {
     }
 }
 
-/size:/ && $1 != "Dataset" {
+/#features:/ {
     if (first_is_fixed[fidx]) {
     ## this discards the very first encounter
     } else if (first_is_size[fidx]) {
