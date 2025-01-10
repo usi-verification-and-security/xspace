@@ -1,9 +1,9 @@
 #!/bin/bash
 
-ACTION_REGEX='check|count-fixed'
+ACTION_REGEX='check|count-fixed|compare-subset'
 
 function usage {
-    printf "USAGE: %s <action> <psi> <f> [<max_rows>]\n" "$0"
+    printf "USAGE: %s <action> <psi> <f> [<f2>] [<max_rows>]\n" "$0"
     printf "ACTIONS: %s\n" "$ACTION_REGEX"
 
     [[ -n $1 ]] && exit $1
@@ -34,7 +34,7 @@ check)
         usage 1
     }
     ;;
-count-fixed)
+count-fixed|compare-subset)
     [[ $PSI_FILE =~ _d ]] || {
         printf "Expected domain psi file, got: %s\n" "$PSI_FILE" >&2
         usage 1
@@ -71,16 +71,66 @@ fi
     usage 1
 }
 
+case $ACTION in
+compare-subset)
+    PHI_FILE2="$1"
+    shift
+
+    [[ -r $PHI_FILE2 ]] || {
+        printf "Not readable second formula data file: %s\n" "$PHI_FILE2" >&2
+        usage 1
+    }
+    ;;
+esac
+
 MAX_LINES=$1
+shift
 
 N_LINES=$(wc -l <"$PHI_FILE")
 
-[[ -n $MAX_LINES ]] && {
-    (( $MAX_LINES > $N_LINES )) && {
-        printf "The entered max. no. lines is greater than the actual no. lines: %d > %d\n" $MAX_LINES $N_LINES >&2
-        exit 2
+case $ACTION in
+compare-subset)
+    N_LINES1=$N_LINES
+    N_LINES2=$(sed '/^ *$/d' <"$PHI_FILE2" | wc -l)
+    unset N_LINES
+
+    if [[ -z $MAX_LINES ]]; then
+        (( $N_LINES1 != $N_LINES2 )) && {
+            printf "The number of lines of the data files do not match: %d != %d\n" $N_LINES1 $N_LINES2 >&2
+            exit 2
+        }
+        N_LINES=$N_LINES1
+    else
+        if (( $N_LINES1 <= $N_LINES2 )); then
+            N_LINES=$N_LINES1
+        else
+            N_LINES=$N_LINES2
+        fi
+
+        if [[ $MAX_LINES == max ]]; then
+            MAX_LINES=$N_LINES
+        else
+            [[ $MAX_LINES =~ ^[1-9][0-9]*$ ]] || {
+                printf "Expected max. no. lines, got: %s\n" "$MAX_LINES" >&2
+                usage 2
+            }
+
+            (( $MAX_LINES > $N_LINES )) && {
+                printf "The entered max. no. lines is greater than the min. no. lines of the files: %d > %d\n" $MAX_LINES $N_LINES >&2
+                exit 2
+            }
+        fi
+    fi
+    ;;
+*)
+    [[ -n $MAX_LINES ]] && {
+        (( $MAX_LINES > $N_LINES )) && {
+            printf "The entered max. no. lines is greater than the actual no. lines: %d > %d\n" $MAX_LINES $N_LINES >&2
+            exit 2
+        }
     }
-}
+    ;;
+esac
 
 SOLVER=cvc5
 # SOLVER=z3
@@ -93,6 +143,12 @@ command -v $SOLVER &>/dev/null || {
 
 IFILES=()
 OFILES=()
+
+IFILES_SUBSET=()
+IFILES_SUPSET=()
+
+OFILES_SUBSET=()
+OFILES_SUPSET=()
 
 # set -e
 
@@ -111,6 +167,17 @@ function cleanup {
         rm -f $ofile
     done
 
+    for idx in ${!IFILES_SUBSET[@]}; do
+        local ifile_subset=${IFILES_SUBSET[$idx]}
+        local ofile_subset=${OFILES_SUBSET[$idx]}
+        local ifile_supset=${IFILES_SUPSET[$idx]}
+        local ofile_supset=${OFILES_SUPSET[$idx]}
+        rm -f $ifile_subset
+        rm -f $ofile_subset
+        rm -f $ifile_supset
+        rm -f $ofile_supset
+    done
+
     [[ -n $code ]] && exit $code
 }
 
@@ -125,17 +192,27 @@ PIDS=()
 }
 
 case $ACTION in
-check)
-    ARGS=(dummy)
-    ;;
 count-fixed)
     ARGS=(${VARIABLES[@]})
+    ;;
+*)
+    ARGS=(dummy)
+    ;;
+esac
+
+case $ACTION in
+compare-subset)
+    FILE2="$PHI_FILE2"
+    ;;
+*)
+    FILE2="$STATS_FILE"
     ;;
 esac
 
 cnt=0
-while read line; do
-    [[ -z ${line// } ]] && continue
+while true; do
+    while read line && [[ -z ${line// } ]]; do :; done
+    [[ -z $line ]] && break
 
     case $ACTION in
     check)
@@ -152,15 +229,40 @@ while read line; do
     count-fixed)
         psi_file="$PSI_FILE"
         ;;
+    compare-subset)
+        while read line2 <&3 && [[ -z ${line2// } ]]; do :; done
+        [[ -z $line2 ]] && {
+            printf "Unexpected missing data from the second file at cnt=%d\n" $cnt >&2
+            cleanup 9
+        }
+        ;;
     esac
 
     for arg in ${ARGS[@]}; do
-        ifile=$(mktemp --suffix=.smt2)
-        ofile=${ifile}.out
-        IFILES+=($ifile)
-        OFILES+=($ofile)
+        case $ACTION in
+        compare-subset)
+            ifile_subset=$(mktemp --suffix=.smt2)
+            ofile_subset=${ifile_subset}.out
+            IFILES_SUBSET+=($ifile_subset)
+            OFILES_SUBSET+=($ofile_subset)
+            ifile_supset=$(mktemp --suffix=.smt2)
+            ofile_supset=${ifile_supset}.out
+            IFILES_SUPSET+=($ifile_supset)
+            OFILES_SUPSET+=($ofile_supset)
 
-        cp "$psi_file" $ifile
+            cp "$PSI_FILE" $ifile_subset
+            cp "$PSI_FILE" $ifile_supset
+            ;;
+        *)
+            ifile=$(mktemp --suffix=.smt2)
+            ofile=${ifile}.out
+            IFILES+=($ifile)
+            OFILES+=($ofile)
+
+            cp "$psi_file" $ifile
+            ;;
+        esac
+
 
         case $ACTION in
         check)
@@ -183,7 +285,15 @@ while read line; do
             ;;
         esac
 
-        printf "(check-sat)\n" >>$ifile
+        case $ACTION in
+        compare-subset)
+            printf "(assert (and %s (not %s)))\n(check-sat)\n" "$line" "$line2" >>$ifile_subset
+            printf "(assert (and (not %s) %s))\n(check-sat)\n" "$line" "$line2" >>$ifile_supset
+            ;;
+        *)
+            printf "(check-sat)\n" >>$ifile
+            ;;
+        esac
 
         while (( $N_PROC >= $MAX_PROC )); do
             # wait -n -p pid || {
@@ -195,51 +305,121 @@ while read line; do
             (( --N_PROC ))
         done
 
-        $SOLVER $ifile &>$ofile &
-        PIDS+=($!)
-        (( ++N_PROC ))
+        case $ACTION in
+        compare-subset)
+            $SOLVER $ifile_subset &>$ofile_subset &
+            PIDS+=($!)
+            (( ++N_PROC ))
+            $SOLVER $ifile_supset &>$ofile_supset &
+            PIDS+=($!)
+            (( ++N_PROC ))
+            ;;
+        *)
+            $SOLVER $ifile &>$ofile &
+            PIDS+=($!)
+            (( ++N_PROC ))
+            ;;
+        esac
     done
 
     [[ -z $MAX_LINES ]] && continue
     (( ++cnt ))
     (( $cnt >= $MAX_LINES )) && break
-done <"$PHI_FILE" 3<"$STATS_FILE"
+done <"$PHI_FILE" 3<"$FILE2"
+
+case $ACTION in
+compare-subset)
+    [[ -z $MAX_LINES ]] && cnt=${#IFILES_SUBSET[@]}
+
+    [[ -z $MAX_LINES && $cnt != $N_LINES ]] && {
+        printf "Unexpected mismatch of the # processed lines: %d != %d\n" $cnt $N_LINES >&2
+        cleanup 9
+    }
+    [[ -n $MAX_LINES && $cnt != $MAX_LINES ]] && {
+        printf "Unexpected mismatch of the bounded # processed lines: %d != %d\n" $cnt $MAX_LINES >&2
+        cleanup 9
+    }
+    ;;
+esac
 
 wait || {
     printf "Error when waiting on the rest of processes.\n" >&2
     cleanup 4
 }
 
-cnt=0
-for idx in ${!IFILES[@]}; do
-    ifile=${IFILES[$idx]}
-    ofile=${OFILES[$idx]}
-    result=$(cat $ofile)
-    if [[ $result == unsat ]]; then
-        (( ++cnt ))
-        case $ACTION in
-        check)
-            ;;
-        count-fixed)
-            ;;
-        esac
-    elif [[ $result == sat ]]; then
-        case $ACTION in
-        check)
-            printf "NOT space explanation [%d]:\n" $idx >&2
-            sed -n '$p' $ifile >&2
-            cp -v $ifile $(basename $ifile) >&2
+case $ACTION in
+compare-subset)
+    SUBSET_CNT=0
+    SUPSET_CNT=0
+    EQUAL_CNT=0
+    UNCOMPARABLE_CNT=0
+    for idx in ${!IFILES_SUBSET[@]}; do
+        ofile_subset=${OFILES_SUBSET[$idx]}
+        ofile_supset=${OFILES_SUPSET[$idx]}
+
+        subset_result=$(cat $ofile_subset)
+        supset_result=$(cat $ofile_supset)
+
+        if [[ $subset_result == unsat ]]; then
+            if [[ $supset_result == unsat ]]; then
+                (( ++EQUAL_CNT ))
+            elif [[ $supset_result == sat ]]; then
+                (( ++SUBSET_CNT ))
+            else
+                printf "Unexpected output of supset query: %s\n" $supset_result >&2
+                less $ofile_supset
+                cleanup 3
+            fi
+        elif [[ $subset_result == sat ]]; then
+            if [[ $supset_result == unsat ]]; then
+                (( ++SUPSET_CNT ))
+            elif [[ $supset_result == sat ]]; then
+                (( ++UNCOMPARABLE_CNT ))
+            else
+                printf "Unexpected output of supset query: %s\n" $supset_result >&2
+                less $ofile_supset
+                cleanup 3
+            fi
+        else
+            printf "Unexpected output of subset query: %s\n" $subset_result >&2
+            less $ofile_subset
             cleanup 3
-            ;;
-        count-fixed)
-            ;;
-        esac
-    else
-        printf "Unexpected output of query:\n%s\n" "$result" >&2
-        less $ofile
-        cleanup 3
-    fi
-done
+        fi
+    done
+    ;;
+*)
+    cnt=0
+    for idx in ${!IFILES[@]}; do
+        ifile=${IFILES[$idx]}
+        ofile=${OFILES[$idx]}
+        result=$(cat $ofile)
+        if [[ $result == unsat ]]; then
+            case $ACTION in
+            check)
+                ;;
+            count-fixed)
+                (( ++cnt ))
+                ;;
+            esac
+        elif [[ $result == sat ]]; then
+            case $ACTION in
+            check)
+                printf "NOT space explanation [%d]:\n" $idx >&2
+                sed -n '$p' $ifile >&2
+                cp -v $ifile $(basename $ifile) >&2
+                cleanup 3
+                ;;
+            count-fixed)
+                ;;
+            esac
+        else
+            printf "Unexpected output of query:\n%s\n" "$result" >&2
+            less $ofile
+            cleanup 3
+        fi
+    done
+    ;;
+esac
 
 case $ACTION in
 check)
@@ -247,6 +427,10 @@ check)
     ;;
 count-fixed)
     printf "avg #fixed features: %.1f%%\n" $(bc -l <<<"($cnt / ${#IFILES[@]})*100")
+    ;;
+compare-subset)
+    printf "Total: %d\n" $cnt
+    printf "<: %d =: %d >: %d | ?: %d\n" $SUBSET_CNT $EQUAL_CNT $SUPSET_CNT $UNCOMPARABLE_CNT
     ;;
 esac
 
