@@ -31,11 +31,7 @@ CHECKS_MAX_WIDTH=${#CHECKS_CAPTION}
 printf "%${EXPERIMENT_MAX_WIDTH}s | %s | %s | %s\n\n" experiment "$DIMENSION_CAPTION" "$TERMS_CAPTION" "$CHECKS_CAPTION"
 
 for do_reverse in 0 1; do
-    for exp_idx in ${!EXPERIMENTS[@]}; do
-        _experiment=${EXPERIMENTS[$exp_idx]}
-        experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
-
-        experiment=$_experiment
+    for experiment in ${EXPERIMENTS[@]}; do
         (( $do_reverse )) && {
             experiment+=_reverse
         }
