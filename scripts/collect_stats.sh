@@ -1,5 +1,11 @@
 #!/bin/bash
 
+SCRIPTS_DIR=$(dirname "$0")
+
+STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
+
+source "$SCRIPTS_DIR/experiments"
+
 [[ -z $1 ]] && {
     printf "Provide stats data directory.\n" >&2
     exit 1
@@ -10,12 +16,6 @@ STATS_DIR="$1"
     printf "'%s' is not a readable directory.\n" "$STATS_DIR" >&2
     exit 1
 }
-
-SCRIPTS_DIR=$(dirname "$0")
-
-STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
-
-source "$SCRIPTS_DIR/experiments"
 
 EXPERIMENT_MAX_WIDTH=40
 
