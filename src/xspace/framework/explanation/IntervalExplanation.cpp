@@ -22,16 +22,12 @@ void IntervalExplanation::insertExplanation(std::unique_ptr<PartialExplanation> 
     ConjunctExplanation::insertExplanation(std::move(pexplanationPtr));
 }
 
-void IntervalExplanation::setExplanation(std::size_t idx, std::unique_ptr<PartialExplanation> pexplanationPtr) {
-    assert(not pexplanationPtr or dynamic_cast<VarBound *>(pexplanationPtr.get()));
-    ConjunctExplanation::setExplanation(idx, std::move(pexplanationPtr));
-}
-
 void IntervalExplanation::insertVarBound(VarBound varBnd) {
     VarIdx idx = varBnd.getVarIdx();
     assert(not contains(idx));
+    auto & pexplanationPtr = operator[](idx);
     auto varBndPtr = MAKE_UNIQUE(std::move(varBnd));
-    setExplanation(idx, std::move(varBndPtr));
+    pexplanationPtr = std::move(varBndPtr);
 }
 
 void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
@@ -61,14 +57,6 @@ void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
     assert(bnd.isLower() xor varBnd.getBound().isLower());
     assert(bnd.isUpper() xor varBnd.getBound().isUpper());
     varBnd.insertBound(std::move(bnd));
-}
-
-void IntervalExplanation::setVarBound(VarBound varBnd) {
-    VarIdx const idx = varBnd.getVarIdx();
-    assert(contains(idx));
-    auto * optVarBnd = tryGetVarBound(idx);
-    assert(optVarBnd);
-    *optVarBnd = std::move(varBnd);
 }
 
 std::size_t IntervalExplanation::computeFixedCount() const {

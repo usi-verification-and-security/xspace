@@ -6,13 +6,13 @@
 #include <cassert>
 
 namespace xspace {
-std::unique_ptr<PartialExplanation> const & ConjunctExplanation::getExplanationPtr(std::size_t idx) const {
+ConjunctExplanation::Conjunction::value_type const & ConjunctExplanation::operator[](std::size_t idx) const {
     assert(idx < size());
     return conjunction[idx];
 }
 
-std::unique_ptr<PartialExplanation> & ConjunctExplanation::getExplanationPtr(std::size_t idx) {
-    return const_cast<std::unique_ptr<PartialExplanation> &>(std::as_const(*this).getExplanationPtr(idx));
+ConjunctExplanation::Conjunction::value_type & ConjunctExplanation::operator[](std::size_t idx) {
+    return const_cast<ConjunctExplanation::Conjunction::value_type &>(std::as_const(*this)[idx]);
 }
 
 bool ConjunctExplanation::contains(VarIdx idx) const {
@@ -52,16 +52,27 @@ void ConjunctExplanation::insertExplanation(std::unique_ptr<PartialExplanation> 
     conjunction.push_back(std::move(pexplanationPtr));
 }
 
-void ConjunctExplanation::setExplanation(std::size_t idx, std::unique_ptr<PartialExplanation> newExplanationPtr) {
-    auto & pexplanationPtr = getExplanationPtr(idx);
-    pexplanationPtr = std::move(newExplanationPtr);
+bool ConjunctExplanation::eraseExplanation(std::size_t idx) {
+    auto & pexplanationPtr = operator[](idx);
+    return eraseExplanation(pexplanationPtr);
 }
 
-bool ConjunctExplanation::eraseExplanation(std::size_t idx) {
-    auto & pexplanationPtr = getExplanationPtr(idx);
+bool ConjunctExplanation::eraseExplanation(Conjunction::iterator it) {
+    std::unique_ptr<PartialExplanation> & pexplanationPtr = *it;
+    return eraseExplanation(pexplanationPtr);
+}
+
+bool ConjunctExplanation::eraseExplanation(std::unique_ptr<PartialExplanation> & pexplanationPtr) {
     if (not pexplanationPtr) { return false; }
     pexplanationPtr.reset();
     return true;
+}
+
+void ConjunctExplanation::merge(ConjunctExplanation && cexplanation) {
+    for (auto & pexplanationPtr : cexplanation.conjunction) {
+        if (not pexplanationPtr) { continue; }
+        insertExplanation(std::move(pexplanationPtr));
+    }
 }
 
 void ConjunctExplanation::printSmtLib2(std::ostream & os) const {

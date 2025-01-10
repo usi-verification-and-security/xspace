@@ -72,8 +72,8 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Expla
 
         verifier.pop();
 
-        auto optVarBnd = intervalToOptVarBound(fw, idxToRelax, std::move(origInterval));
-        iexplanation.setVarBound(idxToRelax, std::move(optVarBnd));
+        auto varBndPtr = intervalToOptVarBound(fw, idxToRelax, std::move(origInterval));
+        iexplanation[idxToRelax] = std::move(varBndPtr);
     }
 }
 } // namespace xspace

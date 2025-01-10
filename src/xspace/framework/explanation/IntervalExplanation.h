@@ -41,9 +41,6 @@ public:
     void insertVarBound(VarBound);
     void insertBound(VarIdx, Bound);
 
-    void setVarBound(VarBound);
-    void setVarBound(VarIdx idx, std::unique_ptr<VarBound> varBndPtr) { setExplanation(idx, std::move(varBndPtr)); }
-
     bool eraseVarBound(VarIdx idx) { return eraseExplanation(idx); }
 
     Float getRelativeVolume() const override;
@@ -58,7 +55,6 @@ public:
 
 protected:
     void insertExplanation(std::unique_ptr<PartialExplanation>) override;
-    void setExplanation(std::size_t idx, std::unique_ptr<PartialExplanation>) override;
 
     std::size_t computeFixedCount() const override;
 

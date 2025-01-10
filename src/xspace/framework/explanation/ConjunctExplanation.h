@@ -9,6 +9,8 @@
 namespace xspace {
 class ConjunctExplanation : public Explanation {
 public:
+    using Conjunction = std::vector<std::unique_ptr<PartialExplanation>>;
+
     struct PrintConfig {
         char delim = ' ';
     };
@@ -17,15 +19,20 @@ public:
     explicit ConjunctExplanation(Framework const & fw, std::size_t size_) : Explanation{fw}, conjunction(size_) {}
 
     // May contain null pointers representing true values
-    auto begin() const { return conjunction.cbegin(); }
-    auto end() const { return conjunction.cend(); }
+    Conjunction::const_iterator begin() const { return conjunction.cbegin(); }
+    Conjunction::const_iterator end() const { return conjunction.cend(); }
+    Conjunction::iterator begin() { return conjunction.begin(); }
+    Conjunction::iterator end() { return conjunction.end(); }
 
     // Including null pointers
     std::size_t size() const { return conjunction.size(); }
 
+    Conjunction::value_type const & operator[](std::size_t idx) const;
+    Conjunction::value_type & operator[](std::size_t idx);
+
     // May return null pointer ~ true value
-    PartialExplanation const * tryGetExplanation(std::size_t idx) const { return getExplanationPtr(idx).get(); }
-    PartialExplanation * tryGetExplanation(std::size_t idx) { return getExplanationPtr(idx).get(); }
+    PartialExplanation const * tryGetExplanation(std::size_t idx) const { return operator[](idx).get(); }
+    PartialExplanation * tryGetExplanation(std::size_t idx) { return operator[](idx).get(); }
 
     bool contains(VarIdx) const override;
 
@@ -36,20 +43,21 @@ public:
     void swap(ConjunctExplanation &);
 
     virtual void insertExplanation(std::unique_ptr<PartialExplanation>);
-    virtual void setExplanation(std::size_t idx, std::unique_ptr<PartialExplanation>);
     // Effectively sets the partial explanation to true value
-    virtual bool eraseExplanation(std::size_t idx);
+    bool eraseExplanation(std::size_t idx);
+    bool eraseExplanation(Conjunction::iterator);
+
+    virtual void merge(ConjunctExplanation &&);
 
     void printSmtLib2(std::ostream &) const override;
     void printSmtLib2(std::ostream &, PrintConfig const &) const;
 
 protected:
-    std::unique_ptr<PartialExplanation> const & getExplanationPtr(std::size_t idx) const;
-    std::unique_ptr<PartialExplanation> & getExplanationPtr(std::size_t idx);
+    virtual bool eraseExplanation(std::unique_ptr<PartialExplanation> &);
 
     //+ also store indices to a set and iterate using it if the vector is already too sparse
     //+ see `assert-interval-maybe-using-map` git tag
-    std::vector<std::unique_ptr<PartialExplanation>> conjunction{};
+    Conjunction conjunction{};
 };
 } // namespace xspace
 
