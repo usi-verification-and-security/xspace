@@ -6,6 +6,7 @@
 #include <logics/LogicFactory.h>
 
 #include <algorithm>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -30,13 +31,21 @@ public:
     PTRef makeEquality(LayerIndex layer, NodeIndex node, float value) {
         return makeEquality(layer, node, floatToRational(value));
     }
+    PTRef makeInterval(LayerIndex layer, NodeIndex node, float lo, float hi) {
+        return makeInterval(layer, node, floatToRational(lo), floatToRational(hi));
+    }
     PTRef makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value);
     PTRef makeLowerBound(LayerIndex layer, NodeIndex node, FastRational value);
-    PTRef makeEquality(LayerIndex layer, NodeIndex node, FastRational value);
+    PTRef makeEquality(LayerIndex layer, NodeIndex node, FastRational value) {
+        FastRational valueCp = value;
+        return makeInterval(layer, node, std::move(value), std::move(valueCp));
+    }
+    PTRef makeInterval(LayerIndex layer, NodeIndex node, FastRational lo, FastRational hi);
 
     PTRef addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
     PTRef addLowerBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
     PTRef addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm = false);
+    PTRef addInterval(LayerIndex layer, NodeIndex node, float lo, float hi, bool explanationTerm = false);
 
     void addClassificationConstraint(NodeIndex node, float threshold);
 
@@ -67,9 +76,11 @@ private:
     bool containsInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.contains(term); }
     bool containsInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.contains(term); }
     bool containsInputEquality(PTRef term) const { return inputVarEqualityToIndex.contains(term); }
+    bool containsInputInterval(PTRef term) const { return inputVarIntervalToIndex.contains(term); }
     NodeIndex nodeIndexOfInputLowerBound(PTRef term) const { return inputVarLowerBoundToIndex.at(term); }
     NodeIndex nodeIndexOfInputUpperBound(PTRef term) const { return inputVarUpperBoundToIndex.at(term); }
     NodeIndex nodeIndexOfInputEquality(PTRef term) const { return inputVarEqualityToIndex.at(term); }
+    NodeIndex nodeIndexOfInputInterval(PTRef term) const { return inputVarIntervalToIndex.at(term); }
 
     std::unique_ptr<ArithLogic> logic;
     std::unique_ptr<MainSolver> solver;
@@ -81,6 +92,7 @@ private:
     std::unordered_map<PTRef, NodeIndex, PTRefHash> inputVarLowerBoundToIndex;
     std::unordered_map<PTRef, NodeIndex, PTRefHash> inputVarUpperBoundToIndex;
     std::unordered_map<PTRef, NodeIndex, PTRefHash> inputVarEqualityToIndex;
+    std::unordered_map<PTRef, NodeIndex, PTRefHash> inputVarIntervalToIndex;
 };
 
 OpenSMTVerifier::OpenSMTVerifier() : pimpl{std::make_unique<OpenSMTImpl>()} {}
@@ -101,6 +113,10 @@ void OpenSMTVerifier::addLowerBound(LayerIndex layer, NodeIndex var, float value
 
 void OpenSMTVerifier::addEquality(LayerIndex layer, NodeIndex var, float value, bool explanationTerm) {
     pimpl->addEquality(layer, var, value, explanationTerm);
+}
+
+void OpenSMTVerifier::addInterval(LayerIndex layer, NodeIndex var, float lo, float hi, bool explanationTerm) {
+    pimpl->addInterval(layer, var, lo, hi, explanationTerm);
 }
 
 void OpenSMTVerifier::addClassificationConstraint(NodeIndex node, float threshold=0) {
@@ -264,9 +280,9 @@ PTRef OpenSMTVerifier::OpenSMTImpl::makeLowerBound(LayerIndex layer, NodeIndex n
     return logic->mkGeq(var, logic->mkRealConst(value));
 }
 
-PTRef OpenSMTVerifier::OpenSMTImpl::makeEquality(LayerIndex layer, NodeIndex node, FastRational value) {
-    PTRef lterm = makeLowerBound(layer, node, value);
-    PTRef uterm = makeUpperBound(layer, node, std::move(value));
+PTRef OpenSMTVerifier::OpenSMTImpl::makeInterval(LayerIndex layer, NodeIndex node, FastRational lo, FastRational hi) {
+    PTRef lterm = makeLowerBound(layer, node, std::move(lo));
+    PTRef uterm = makeUpperBound(layer, node, std::move(hi));
     return logic->mkAnd(lterm, uterm);
 }
 
@@ -299,6 +315,17 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node
 
     solver->getTermNames().insert(makeTermName(layer, node, "e_"), term);
     auto const [_, inserted] = inputVarEqualityToIndex.emplace(term, node);
+    assert(inserted);
+    return term;
+}
+
+PTRef OpenSMTVerifier::OpenSMTImpl::addInterval(LayerIndex layer, NodeIndex node, float lo, float hi, bool explanationTerm) {
+    PTRef term = makeInterval(layer, node, lo, hi);
+    solver->insertFormula(term);
+    if (not explanationTerm) { return term; }
+
+    solver->getTermNames().insert(makeTermName(layer, node, "i_"), term);
+    auto const [_, inserted] = inputVarIntervalToIndex.emplace(term, node);
     assert(inserted);
     return term;
 }
@@ -364,6 +391,7 @@ void OpenSMTVerifier::OpenSMTImpl::resetSampleQuery() {
     inputVarLowerBoundToIndex.clear();
     inputVarUpperBoundToIndex.clear();
     inputVarEqualityToIndex.clear();
+    inputVarIntervalToIndex.clear();
 }
 
 void OpenSMTVerifier::OpenSMTImpl::resetSample() {
@@ -381,29 +409,78 @@ void OpenSMTVerifier::OpenSMTImpl::reset() {
 
 UnsatCore OpenSMTVerifier::OpenSMTImpl::getUnsatCore() const {
     auto const unsatCore = solver->getUnsatCore();
+    assert(unsatCore->getTerms().size() > 0);
+
+    // This assumes that all explanation terms are the only included terms at the last assertion level
+    // Hence interleaving the insertions with non-explanation terms would break this
+    auto const & assertions = solver->getAssertionsAtCurrentLevel();
+    std::size_t const assertionsSize = assertions.size();
+    assert(assertionsSize >= unsatCore->getTerms().size());
+
+    std::unordered_map<PTRef, std::size_t, PTRefHash> termToAssertionIdxMap;
+    termToAssertionIdxMap.reserve(assertionsSize);
+    for (std::size_t assertionIdx = 0; assertionIdx < assertionsSize; ++assertionIdx) {
+        PTRef term = assertions[assertionIdx];
+        [[maybe_unused]] auto const [_, inserted] = termToAssertionIdxMap.emplace(term, assertionIdx);
+        assert(inserted);
+    }
+    assert(termToAssertionIdxMap.size() == assertionsSize);
 
     UnsatCore unsatCoreRes;
+    auto & [includedIndices, excludedIndices, lowerBounds, upperBounds, equalities, intervals] = unsatCoreRes;
+    includedIndices.reserve(assertionsSize);
 
     for (PTRef term : unsatCore->getTerms()) {
-        bool const containsEquality = containsInputEquality(term);
-        if (containsEquality) {
-            unsatCoreRes.equalities.push_back(nodeIndexOfInputEquality(term));
-            continue;
-        }
+        std::size_t const assertionIdx = termToAssertionIdxMap[term];
+        includedIndices.push_back(assertionIdx);
 
         bool const containsLower = containsInputLowerBound(term);
         if (containsLower) {
-            unsatCoreRes.lowerBounds.push_back(nodeIndexOfInputLowerBound(term));
+            lowerBounds.push_back(nodeIndexOfInputLowerBound(term));
             continue;
         }
 
-        assert(containsInputUpperBound(term));
-        unsatCoreRes.upperBounds.push_back(nodeIndexOfInputUpperBound(term));
+        bool const containsUpper = containsInputUpperBound(term);
+        if (containsUpper) {
+            upperBounds.push_back(nodeIndexOfInputUpperBound(term));
+            continue;
+        }
+
+        bool const containsEquality = containsInputEquality(term);
+        if (containsEquality) {
+            equalities.push_back(nodeIndexOfInputEquality(term));
+            continue;
+        }
+
+        bool const containsInterval = containsInputInterval(term);
+        if (containsInterval) {
+            intervals.push_back(nodeIndexOfInputInterval(term));
+            continue;
+        }
+
+        // formulas not related to particular variables must be handled via (in|ex)cluded indices
     }
 
-    std::ranges::sort(unsatCoreRes.equalities);
-    std::ranges::sort(unsatCoreRes.lowerBounds);
-    std::ranges::sort(unsatCoreRes.upperBounds);
+    assert(not includedIndices.empty());
+    std::ranges::sort(includedIndices);
+
+    assert(assertionsSize >= includedIndices.size());
+    excludedIndices.reserve(assertionsSize - includedIndices.size());
+    std::ranges::set_difference(std::views::iota(0UL, assertionsSize), includedIndices, std::back_inserter(excludedIndices));
+
+    assert(excludedIndices.size() == assertionsSize - includedIndices.size());
+    assert(std::ranges::is_sorted(excludedIndices));
+
+#ifndef NDEBUG
+    decltype(includedIndices) xorIndices;
+    std::ranges::set_symmetric_difference(includedIndices, excludedIndices, std::back_inserter(xorIndices));
+    assert(std::ranges::equal(xorIndices, std::views::iota(0UL, assertionsSize)));
+#endif
+
+    std::ranges::sort(lowerBounds);
+    std::ranges::sort(upperBounds);
+    std::ranges::sort(equalities);
+    std::ranges::sort(intervals);
 
     return unsatCoreRes;
 }

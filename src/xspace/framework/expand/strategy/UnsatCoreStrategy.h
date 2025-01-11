@@ -8,10 +8,13 @@ class UnsatCoreVerifier;
 }
 
 namespace xspace {
+class ConjunctExplanation;
+class IntervalExplanation;
+
 class Framework::Expand::UnsatCoreStrategy : virtual public Strategy {
 public:
     struct Config {
-        bool splitEq = false;
+        bool splitIntervals = false;
     };
 
     using Strategy::Strategy;
@@ -21,7 +24,9 @@ public:
 
     static char const * name() { return "ucore"; }
 
-    bool isAbductiveOnly() const override { return not config.splitEq; }
+    //! not true if the previous strategy yielded non-abductive explanation
+    // but currently harmless because Expand checks if ALL strategies are only abductive
+    bool isAbductiveOnly() const override { return not config.splitIntervals; }
 
 protected:
     xai::verifiers::UnsatCoreVerifier & getVerifier();
@@ -29,6 +34,8 @@ protected:
     bool storeNamedTerms() const override { return true; }
 
     void executeBody(std::unique_ptr<Explanation> &) override;
+    virtual void executeBody(ConjunctExplanation &);
+    virtual void executeBody(IntervalExplanation &);
 
     Config config{};
 };

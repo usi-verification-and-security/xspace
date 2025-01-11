@@ -8,13 +8,12 @@
 #include <algorithm>
 
 namespace xspace {
-IntervalExplanation::IntervalExplanation(Framework const & fw) : ConjunctExplanation{fw, fw.varSize()} {}
+IntervalExplanation::IntervalExplanation(Framework const & fw) : ConjunctExplanation{fw, fw.varSize()} {
+    assert(size() == frameworkPtr->varSize());
+}
 
 std::size_t IntervalExplanation::varSize() const {
-    //+ inefficient
-    std::size_t size_ = std::ranges::count_if(*this, [](auto const & expPtr) { return bool(expPtr); });
-    assert(size_ <= frameworkPtr->varSize());
-    return size_;
+    return validSize();
 }
 
 void IntervalExplanation::insertExplanation(std::unique_ptr<PartialExplanation> pexplanationPtr) {

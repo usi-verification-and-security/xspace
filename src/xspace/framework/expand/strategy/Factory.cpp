@@ -84,12 +84,12 @@ Framework::Expand::Strategy::Factory::parseUnsatCore(std::string const & str, au
         params.pop();
         auto const paramLower = toLower(param);
         if (paramLower == "sample") {
-            conf.splitEq = false;
+            conf.splitIntervals = false;
             break;
         }
 
         if (paramLower == "interval") {
-            conf.splitEq = true;
+            conf.splitIntervals = true;
             break;
         }
 

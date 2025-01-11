@@ -7,7 +7,6 @@
 
 namespace opensmt {
 class MainSolver;
-struct PTRef;
 }
 
 namespace xai::verifiers {
@@ -24,10 +23,10 @@ public:
     void loadModel(nn::NNet const & network) override;
 
     void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) override;
-
     void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) override;
-
+    // Ensure that equalities and intervals correspond to just one assertion
     void addEquality(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) override;
+    void addInterval(LayerIndex layer, NodeIndex var, float lo, float hi, bool explanationTerm = false) override;
 
     void addClassificationConstraint(NodeIndex node, float threshold) override;
 

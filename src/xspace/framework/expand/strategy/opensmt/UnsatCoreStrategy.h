@@ -5,11 +5,11 @@
 #include "../UnsatCoreStrategy.h"
 
 namespace xspace::expand::opensmt {
-class UnsatCoreStrategy : public Strategy, virtual public Framework::Expand::UnsatCoreStrategy {
+class UnsatCoreStrategy : public Framework::Expand::UnsatCoreStrategy, public Strategy {
 public:
     using Framework::Expand::UnsatCoreStrategy::Config;
 
-    using Strategy::Strategy;
+    using Framework::Expand::UnsatCoreStrategy::UnsatCoreStrategy;
     UnsatCoreStrategy(Framework::Expand & exp, Config const & conf, Framework::Expand::VarOrdering order = {})
         : Framework::Expand::Strategy{exp, std::move(order)},
           Framework::Expand::UnsatCoreStrategy{exp, conf} {}
@@ -17,7 +17,7 @@ public:
 protected:
     using Strategy::getVerifier;
 
-    void executeBody(std::unique_ptr<Explanation> &) override;
+    // using Strategy::assertFormulaExplanation allows to handle those explanations as well
 };
 } // namespace xspace::expand::opensmt
 

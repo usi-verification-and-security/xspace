@@ -27,9 +27,13 @@ public:
     virtual void addUpperBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) = 0;
     virtual void addLowerBound(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) = 0;
     virtual void addEquality(LayerIndex layer, NodeIndex var, float value, bool explanationTerm = false) {
-        addUpperBound(layer, var, value, explanationTerm);
-        addLowerBound(layer, var, value, explanationTerm);
+        addInterval(layer, var, value, value, explanationTerm);
     }
+    virtual void addInterval(LayerIndex layer, NodeIndex var, float lo, float hi, bool explanationTerm = false) {
+        addUpperBound(layer, var, lo, explanationTerm);
+        addLowerBound(layer, var, hi, explanationTerm);
+    }
+
     virtual void addClassificationConstraint(NodeIndex node, float threshold) = 0;
 
     virtual void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) = 0;

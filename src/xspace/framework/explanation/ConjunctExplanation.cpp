@@ -22,6 +22,14 @@ bool ConjunctExplanation::contains(VarIdx idx) const {
     });
 }
 
+std::size_t ConjunctExplanation::validSize() const {
+    //+ inefficient
+    std::size_t size_ =
+        std::ranges::count_if(conjunction, [](auto const & pexplanationPtr) { return bool(pexplanationPtr); });
+    assert(size_ <= size());
+    return size_;
+}
+
 std::size_t ConjunctExplanation::termSize() const {
     std::size_t size_{};
     for (auto & pexplanationPtr : conjunction) {
@@ -36,8 +44,8 @@ std::size_t ConjunctExplanation::termSize() const {
 void ConjunctExplanation::clear() {
     Explanation::clear();
 
-    for (auto & expPtr : conjunction) {
-        expPtr.reset();
+    for (auto & pexplanationPtr : conjunction) {
+        pexplanationPtr.reset();
     }
 }
 

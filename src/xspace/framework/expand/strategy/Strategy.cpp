@@ -96,7 +96,9 @@ void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation 
     }
 
     // Does not consider var ordering, unlike interval explanations
+    assert(conf.ignoreVarOrder);
     for (auto & pexplanationPtr : cexplanation) {
+        if (not pexplanationPtr) { continue; }
         assertExplanation(*pexplanationPtr, conf);
     }
 }
@@ -165,12 +167,12 @@ void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd) {
 void Framework::Expand::Strategy::assertVarBound(VarBound const & varBnd, AssertExplanationConf const & conf) {
     VarIdx const idx = varBnd.getVarIdx();
     if (varBnd.isInterval()) {
-        assertInnerInterval(idx, varBnd.getIntervalLower(), varBnd.getIntervalUpper());
+        assertInnerInterval(idx, varBnd.getIntervalLower(), varBnd.getIntervalUpper(), conf.splitIntervals);
         return;
     }
 
     if (varBnd.isPoint()) {
-        assertPoint(idx, varBnd.getPoint(), conf.splitEq);
+        assertPoint(idx, varBnd.getPoint(), conf.splitIntervals);
         return;
     }
 
@@ -206,13 +208,29 @@ void Framework::Expand::Strategy::assertInterval(VarIdx idx, Interval const & iv
     }
 }
 
-void Framework::Expand::Strategy::assertInnerInterval(VarIdx idx, Interval const & ival) {
-    LowerBound lo{ival.getLower()};
-    UpperBound hi{ival.getUpper()};
-    assertInnerInterval(idx, lo, hi);
+void Framework::Expand::Strategy::assertInnerInterval(VarIdx idx, Interval const & ival, bool splitIntervals) {
+    assertInnerInterval(idx, LowerBound{ival.getLower()}, UpperBound{ival.getUpper()}, splitIntervals);
 }
 
-void Framework::Expand::Strategy::assertInnerInterval(VarIdx idx, LowerBound const & lo, UpperBound const & hi) {
+void Framework::Expand::Strategy::assertInnerInterval(VarIdx idx, LowerBound const & lo, UpperBound const & hi,
+                                                      bool splitIntervals) {
+    if (not splitIntervals) {
+        assertInnerIntervalNoSplit(idx, lo, hi);
+    } else {
+        assertInnerIntervalSplit(idx, lo, hi);
+    }
+}
+
+void Framework::Expand::Strategy::assertInnerIntervalNoSplit(VarIdx idx, LowerBound const & lo, UpperBound const & hi) {
+    Float const loVal = lo.getValue();
+    Float const hiVal = hi.getValue();
+    assert(loVal < hiVal);
+    assert(loVal > expand.getFramework().getNetwork().getInputLowerBound(idx));
+    assert(hiVal < expand.getFramework().getNetwork().getInputUpperBound(idx));
+    getVerifier().addInterval(0, idx, loVal, hiVal, storeNamedTerms());
+}
+
+void Framework::Expand::Strategy::assertInnerIntervalSplit(VarIdx idx, LowerBound const & lo, UpperBound const & hi) {
     assert(lo.getValue() < hi.getValue());
 
     assertLowerBound(idx, lo);
@@ -223,8 +241,8 @@ void Framework::Expand::Strategy::assertPoint(VarIdx idx, Float val) {
     assertPointNoSplit(idx, EqBound{val});
 }
 
-void Framework::Expand::Strategy::assertPoint(VarIdx idx, EqBound const & eq, bool splitEq) {
-    if (not splitEq) {
+void Framework::Expand::Strategy::assertPoint(VarIdx idx, EqBound const & eq, bool splitIntervals) {
+    if (not splitIntervals) {
         assertPointNoSplit(idx, eq);
     } else {
         assertPointSplit(idx, eq);
@@ -261,13 +279,6 @@ void Framework::Expand::Strategy::assertBound(VarIdx idx, Bound const & bnd) {
     }
 }
 
-void Framework::Expand::Strategy::assertEquality(VarIdx idx, EqBound const & eq) {
-    Float const val = eq.getValue();
-    assert(val >= expand.getFramework().getNetwork().getInputLowerBound(idx));
-    assert(val <= expand.getFramework().getNetwork().getInputUpperBound(idx));
-    getVerifier().addEquality(0, idx, val, storeNamedTerms());
-}
-
 void Framework::Expand::Strategy::assertLowerBound(VarIdx idx, LowerBound const & lo) {
     Float const val = lo.getValue();
     assert(val > expand.getFramework().getNetwork().getInputLowerBound(idx));
@@ -280,6 +291,13 @@ void Framework::Expand::Strategy::assertUpperBound(VarIdx idx, UpperBound const 
     assert(val > expand.getFramework().getNetwork().getInputLowerBound(idx));
     assert(val < expand.getFramework().getNetwork().getInputUpperBound(idx));
     getVerifier().addUpperBound(0, idx, val, storeNamedTerms());
+}
+
+void Framework::Expand::Strategy::assertEquality(VarIdx idx, EqBound const & eq) {
+    Float const val = eq.getValue();
+    assert(val >= expand.getFramework().getNetwork().getInputLowerBound(idx));
+    assert(val <= expand.getFramework().getNetwork().getInputUpperBound(idx));
+    getVerifier().addEquality(0, idx, val, storeNamedTerms());
 }
 
 bool Framework::Expand::Strategy::checkFormsExplanation() {

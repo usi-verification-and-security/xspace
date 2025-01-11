@@ -29,7 +29,9 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
     assertFormulaExplanation(phiexplanation, AssertExplanationConf{});
 }
 
-void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanation, AssertExplanationConf const &) {
+void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanation, [[maybe_unused]] AssertExplanationConf const & conf) {
+    assert(not conf.splitIntervals);
+
     static std::size_t counter{};
 
     Formula const & phi = phiexplanation.getFormula();
@@ -37,6 +39,8 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
     solver.insertFormula(phi);
-    if (storeNamedTerms()) { solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi); }
+    if (not storeNamedTerms()) { return; }
+
+    solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi);
 }
 } // namespace xspace::expand::opensmt

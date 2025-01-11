@@ -26,6 +26,8 @@ public:
 
     // Including null pointers
     std::size_t size() const { return conjunction.size(); }
+    // Discluding null ponters
+    std::size_t validSize() const;
 
     Conjunction::value_type const & operator[](std::size_t idx) const;
     Conjunction::value_type & operator[](std::size_t idx);
@@ -56,7 +58,7 @@ protected:
     virtual bool eraseExplanation(std::unique_ptr<PartialExplanation> &);
 
     //+ also store indices to a set and iterate using it if the vector is already too sparse
-    //+ see `assert-interval-maybe-using-map` git tag
+    // see `assert-interval-maybe-using-map` git tag
     Conjunction conjunction{};
 };
 } // namespace xspace

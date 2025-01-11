@@ -29,7 +29,7 @@ public:
 protected:
     struct AssertExplanationConf {
         bool ignoreVarOrder = true;
-        bool splitEq = false;
+        bool splitIntervals = false;
     };
 
     xai::verifiers::Verifier & getVerifier() { return *expand.verifierPtr; }
@@ -56,18 +56,21 @@ protected:
 
     void assertVarBound(VarBound const &);
     void assertVarBound(VarBound const &, AssertExplanationConf const &);
+
     void assertInterval(VarIdx, Interval const &);
-    void assertInnerInterval(VarIdx, Interval const &);
-    void assertInnerInterval(VarIdx, LowerBound const &, UpperBound const &);
+    void assertInnerInterval(VarIdx, Interval const &, bool splitIntervals = false);
+    void assertInnerInterval(VarIdx, LowerBound const &, UpperBound const &, bool splitIntervals = false);
+    void assertInnerIntervalNoSplit(VarIdx, LowerBound const &, UpperBound const &);
+    void assertInnerIntervalSplit(VarIdx, LowerBound const &, UpperBound const &);
     void assertPoint(VarIdx, Float);
-    void assertPoint(VarIdx, EqBound const &, bool splitEq);
+    void assertPoint(VarIdx, EqBound const &, bool splitIntervals = false);
     void assertPointNoSplit(VarIdx, EqBound const &);
     void assertPointSplit(VarIdx, EqBound const &);
 
     void assertBound(VarIdx, Bound const &);
-    void assertEquality(VarIdx, EqBound const &);
     void assertLowerBound(VarIdx, LowerBound const &);
     void assertUpperBound(VarIdx, UpperBound const &);
+    void assertEquality(VarIdx, EqBound const &);
 
     bool checkFormsExplanation();
 
