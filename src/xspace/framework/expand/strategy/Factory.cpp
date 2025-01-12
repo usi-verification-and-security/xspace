@@ -15,11 +15,15 @@ Framework::Expand::Strategy::Factory::Factory(Expand & exp, VarOrdering const & 
       varOrdering{std::move(order)} {}
 
 std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factory::parse(std::string const & str) {
+    static constexpr char paramDelim = ',';
+
     std::istringstream iss{str};
     std::string name;
     iss >> name;
     std::queue<std::string> params;
-    for (std::string param; iss >> param;) {
+    std::string param;
+    while (std::getline(iss, param, paramDelim)) {
+        param = trim(param);
         params.push(std::move(param));
     }
 
@@ -102,21 +106,19 @@ Framework::Expand::Strategy::Factory::parseUnsatCore(std::string const & str, au
 std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factory::parseTrial(std::string const & str,
                                                                                               auto & params) {
     TrialAndErrorStrategy::Config conf;
-    bool maxAttemptsFollows = false;
     while (not params.empty()) {
-        auto param = std::move(params.front());
+        std::string const paramStr = std::move(params.front());
+        std::istringstream iss{paramStr};
         params.pop();
-        if (maxAttemptsFollows) {
-            conf.maxAttempts = std::stoi(param);
-            break;
-        }
-        auto const paramLower = toLower(param);
-        if (paramLower == "n") {
-            maxAttemptsFollows = true;
-            continue;
+        std::string param;
+        if (iss >> param) {
+            auto const paramLower = toLower(param);
+            if (paramLower == "n") {
+                if (iss >> conf.maxAttempts) { continue; }
+            }
         }
 
-        throwInvalidParameterTp<TrialAndErrorStrategy>(param);
+        throwInvalidParameterTp<TrialAndErrorStrategy>(paramStr);
     }
 
     return parseReturnTp<TrialAndErrorStrategy>(str, params, conf);

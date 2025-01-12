@@ -1,11 +1,13 @@
 #include <xspace/framework/Config.h>
 #include <xspace/framework/Framework.h>
+#include <xspace/framework/expand/strategy/Strategies.h>
 #include <xspace/framework/explanation/Explanation.h>
 #include <xspace/nn/Dataset.h>
 
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -15,11 +17,11 @@
 
 namespace {
 void printUsageStrategyRow(std::ostream & os, std::string_view name, std::vector<std::string_view> params = {}) {
-    os << "    " << name;
+    os << std::setw(12) << name << ":";
     if (not params.empty()) {
-        os << "\tPARAMS:";
-        for (auto param : params) {
-            os << "  " << param;
+        os << " " << params.front();
+        for (auto param : params | std::views::drop(1)) {
+            os << ", " << param;
         }
     }
     os << '\n';
@@ -37,6 +39,9 @@ void printUsageOptRow(std::ostream & os, char opt, std::string_view arg, std::st
 }
 
 void printUsage(std::ostream & os = std::cout) {
+    using xspace::Framework;
+    using xspace::expand::opensmt::InterpolationStrategy;
+
     os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]\n";
 
     os << "VERIFIERS: opensmt";
@@ -45,13 +50,15 @@ void printUsage(std::ostream & os = std::cout) {
 #endif
     os << '\n';
 
-    os << "STRATEGIES SPEC: '<spec1>[,<spec2>]...'\n";
-    os << "Each spec: '<name>[ <param>]...'\n";
-    printUsageStrategyRow(os, "abductive");
-    printUsageStrategyRow(os, "ucore", {"sample", "interval"});
-    printUsageStrategyRow(os, "trial", {"n <int>"});
+    os << "STRATEGIES SPEC: '<spec1>[; <spec2>]...'\n";
+    os << "Each spec: '<name>[ <param>[, <param>]...]'\n";
+    os << "Strategies and parameters:\n";
+    //+ template by the strategy and move the params to the classes as well
+    printUsageStrategyRow(os, Framework::Expand::AbductiveStrategy::name());
+    printUsageStrategyRow(os, Framework::Expand::UnsatCoreStrategy::name(), {"sample", "interval"});
+    printUsageStrategyRow(os, Framework::Expand::TrialAndErrorStrategy::name(), {"n <int>"});
     printUsageStrategyRow(
-        os, "itp",
+        os, InterpolationStrategy::name(),
         {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker", "astronger"});
 
     os << "OPTIONS:\n";
@@ -62,6 +69,13 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 'i', "", "Print the resulting explanations in the form of intervals");
     printUsageOptRow(os, 'n', "<int>", "Maximum no. samples to be processed");
     printUsageOptRow(os, 'S', "", "Shuffle samples");
+
+    os << "\nEXAMPLES:\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt ucore\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'ucore interval' -rvs\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'ucore; itp aweaker, bstrong'\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'trial n 2' -n1\n";
+
     os.flush();
 }
 } // namespace
@@ -100,6 +114,7 @@ int main(int argc, char * argv[]) try {
     constexpr int formatLongOpt = 2;
     constexpr int filterLongOpt = 3;
 
+    //+ not documented
     struct ::option longOptions[] = {{"help", no_argument, nullptr, 'h'},
                                      {"verbose", no_argument, nullptr, 'v'},
                                      // {"version", no_argument, &selectedLongOpt, versionLongOpt},

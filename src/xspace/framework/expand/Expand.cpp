@@ -48,6 +48,9 @@ void Framework::Expand::setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf
 }
 
 void Framework::Expand::setStrategies(std::istream & is) {
+    // pipe character '|' reserved for disjunctions
+    static constexpr char strategyDelim = ';';
+
     auto const & config = framework.getConfig();
 
     VarOrdering defaultVarOrder{};
@@ -56,7 +59,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
     Strategy::Factory factory{*this, defaultVarOrder};
 
     std::string line;
-    while (std::getline(is, line, ',')) {
+    while (std::getline(is, line, strategyDelim)) {
         auto strategyPtr = factory.parse(line);
         addStrategy(std::move(strategyPtr));
     }

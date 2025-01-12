@@ -17,13 +17,13 @@ EXPERIMENT_STRATEGIES=(
     'ucore sample'
     'ucore interval'
 
-    'abductive,trial'
-    # 'ucore,trial'
+    'abductive; trial'
+    # 'ucore; trial'
 
-    'ucore sample,itp'
-    'ucore interval,itp'
-    'ucore sample,itp,ucore'
-    'ucore interval,itp,ucore'
+    'ucore sample; itp'
+    'ucore interval; itp'
+    'ucore sample; itp; ucore'
+    'ucore interval; itp; ucore'
 )
 
 (( ${#EXPERIMENTS[@]} == ${#EXPERIMENT_STRATEGIES[@]} )) || {
