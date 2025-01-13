@@ -11,6 +11,8 @@
 #include <cassert>
 
 namespace xspace {
+//! only some things are shared with ConjunctExplanation but not all - there should be a common base class
+// then it will also hold that IntervalExplanation is not ConjunctExplanation, only e.g. ConjunctExplanationBase
 class IntervalExplanation : public ConjunctExplanation {
 public:
     enum class PrintFormat { smtlib2, bounds, intervals };
@@ -54,8 +56,6 @@ public:
     void printIntervals(std::ostream &, PrintConfig const &) const;
 
 protected:
-    void insertExplanation(std::unique_ptr<PartialExplanation>) override;
-
     std::size_t computeFixedCount() const override;
 
     PrintFormat const & getPrintFormat() const;
@@ -71,7 +71,11 @@ private:
         return static_cast<VarBound *>(expPtr);
     }
 
+    void insertExplanation(std::unique_ptr<PartialExplanation>) override;
+
     void condense() override;
+
+    void merge(ConjunctExplanation &&) override;
 
     template<bool skipFixed>
     Float computeRelativeVolumeTp() const;

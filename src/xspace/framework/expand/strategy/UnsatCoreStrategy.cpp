@@ -36,6 +36,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanati
 }
 
 void Framework::Expand::UnsatCoreStrategy::executeBody(ConjunctExplanation & cexplanation) {
+    assert(not dynamic_cast<IntervalExplanation *>(&cexplanation));
     //+ not supported for general conjunctions
     assert(not config.splitIntervals);
 

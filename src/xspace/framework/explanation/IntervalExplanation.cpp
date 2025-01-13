@@ -16,9 +16,9 @@ std::size_t IntervalExplanation::varSize() const {
     return validSize();
 }
 
-void IntervalExplanation::insertExplanation(std::unique_ptr<PartialExplanation> pexplanationPtr) {
-    assert(dynamic_cast<VarBound *>(pexplanationPtr.get()));
-    ConjunctExplanation::insertExplanation(std::move(pexplanationPtr));
+void IntervalExplanation::insertExplanation(std::unique_ptr<PartialExplanation>) {
+    // Not compatible
+    assert(false);
 }
 
 void IntervalExplanation::insertVarBound(VarBound varBnd) {
@@ -63,6 +63,11 @@ void IntervalExplanation::condense() {
     assert(false);
 }
 
+void IntervalExplanation::merge(ConjunctExplanation &&) {
+    // Would result in non-IntervalExplanation
+    assert(false);
+}
+
 std::size_t IntervalExplanation::computeFixedCount() const {
     return std::ranges::count_if(*this, [](auto const & expPtr) {
         if (not expPtr) { return false; }
@@ -74,6 +79,7 @@ std::size_t IntervalExplanation::computeFixedCount() const {
 Float IntervalExplanation::getRelativeVolume() const {
     return computeRelativeVolumeTp<false>();
 }
+
 Float IntervalExplanation::getRelativeVolumeSkipFixed() const {
     return computeRelativeVolumeTp<true>();
 }
