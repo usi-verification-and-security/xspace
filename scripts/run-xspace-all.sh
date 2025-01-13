@@ -14,7 +14,7 @@ OUTPUT_DIRS=(output/heart_attack output/obesity)
     if [[ $MAX_SAMPLES == short ]]; then
         MAX_SAMPLES=$MAX_SAMPLES_SHORT
     elif ! [[ $MAX_SAMPLES =~ ^[1-9][0-9]*$ ]]; then
-        printf "Expected a maximum number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
+        printf "Expected 'short' or a concrete number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
         exit 1
     fi
 }
@@ -29,30 +29,32 @@ for model_idx in ${!MODELS[@]}; do
 
     model="${MODELS[$model_idx]}"
     dataset="${DATASETS[$model_idx]}"
-    output_dir="${OUTPUT_DIRS[$model_idx]}"
+    _output_dir="${OUTPUT_DIRS[$model_idx]}"
 
     for exp_idx in ${!EXPERIMENTS[@]}; do
-        _experiment=${EXPERIMENTS[$exp_idx]}
+        experiment=${EXPERIMENTS[$exp_idx]}
         experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
 
         for do_reverse in 0 1; do
-            experiment=$_experiment
-            opts=-sv
-            (( $do_reverse )) && {
-                experiment+=_reverse
-                opts+=r
-            }
+            output_dir="$_output_dir"
+            opts=(-sv)
 
             [[ -n $MAX_SAMPLES ]] && {
                 if (( $MAX_SAMPLES != $MAX_SAMPLES_SHORT )); then
-                    experiment+=_n$MAX_SAMPLES
+                    output_dir+=/Sn$MAX_SAMPLES
                 else
-                    experiment+=_short
+                    output_dir+=/short
                 fi
-                opts+=Sn$MAX_SAMPLES
+                opts+=(-Sn$MAX_SAMPLES)
             }
 
-            { time ${CMD} "$model" "$dataset" opensmt "$experiment_strategies" $opts >"${output_dir}/${experiment}.phi.txt" 2>"${output_dir}/${experiment}.stats.txt" ; } 2>"${output_dir}/${experiment}.time.txt" &
+            (( $do_reverse )) && {
+                output_dir+=/reverse
+                opts+=(-r)
+            }
+
+            mkdir -p "$output_dir" >/dev/null || exit $?
+            { time ${CMD} "$model" "$dataset" opensmt "$experiment_strategies" ${opts[@]} >"${output_dir}/${experiment}.phi.txt" 2>"${output_dir}/${experiment}.stats.txt" ; } 2>"${output_dir}/${experiment}.time.txt" &
         done
     done
 done

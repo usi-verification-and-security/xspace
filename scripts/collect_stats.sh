@@ -56,8 +56,8 @@ for do_reverse in 0 1; do
 
     for experiment in ${EXPERIMENTS[@]}; do
         experiment_stem=$experiment
-        (( $do_reverse )) && experiment_stem+=_reverse
-        [[ -n $SHORT ]] && experiment_stem+=_short
+        (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
+        [[ -n $SHORT ]] && experiment_stem=short/$experiment_stem
 
         stats_file="${STATS_DIR}/${experiment_stem}.stats.txt"
         [[ -r $stats_file ]] || {

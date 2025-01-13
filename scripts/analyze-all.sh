@@ -107,8 +107,8 @@ function set_phi_filename {
     local -n lphi_file=$2
 
     local experiment_stem=$experiment
-    (( $do_reverse )) && experiment_stem+=_reverse
-    [[ -n $SHORT ]] && experiment_stem+=_short
+    (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
+    [[ -n $SHORT ]] && experiment_stem=short/$experiment_stem
 
     lphi_file="${PHI_DIR}/${experiment_stem}.phi.txt"
     [[ -r $lphi_file ]] || {
