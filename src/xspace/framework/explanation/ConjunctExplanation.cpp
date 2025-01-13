@@ -76,6 +76,16 @@ bool ConjunctExplanation::eraseExplanation(std::unique_ptr<PartialExplanation> &
     return true;
 }
 
+void ConjunctExplanation::condense() {
+    if (not isSparse()) { return; }
+
+    ConjunctExplanation cexplanation{*frameworkPtr};
+    cexplanation.merge(std::move(*this));
+    swap(cexplanation);
+
+    assert(not isSparse());
+}
+
 void ConjunctExplanation::merge(ConjunctExplanation && cexplanation) {
     for (auto & pexplanationPtr : cexplanation.conjunction) {
         if (not pexplanationPtr) { continue; }

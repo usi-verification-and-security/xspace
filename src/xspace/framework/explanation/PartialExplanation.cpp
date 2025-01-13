@@ -1,5 +1,6 @@
 #include "PartialExplanation.h"
 
+#include <cassert>
 #include <utility>
 
 namespace xspace {
@@ -12,7 +13,7 @@ std::size_t PartialExplanation::varSize() const {
     return cnt;
 }
 
-void PartialExplanation::swap(PartialExplanation & rhs) {
-    std::swap(frameworkPtr, rhs.frameworkPtr);
+void PartialExplanation::swap([[maybe_unused]] PartialExplanation & rhs) {
+    assert(frameworkPtr == rhs.frameworkPtr);
 }
 } // namespace xspace

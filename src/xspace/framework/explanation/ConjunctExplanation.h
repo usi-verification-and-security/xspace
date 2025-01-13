@@ -29,6 +29,8 @@ public:
     // Discluding null ponters
     std::size_t validSize() const;
 
+    bool isSparse() const { return validSize() < size(); }
+
     Conjunction::value_type const & operator[](std::size_t idx) const;
     Conjunction::value_type & operator[](std::size_t idx);
 
@@ -48,6 +50,8 @@ public:
     // Effectively sets the partial explanation to true value
     bool eraseExplanation(std::size_t idx);
     bool eraseExplanation(Conjunction::iterator);
+
+    virtual void condense();
 
     virtual void merge(ConjunctExplanation &&);
 

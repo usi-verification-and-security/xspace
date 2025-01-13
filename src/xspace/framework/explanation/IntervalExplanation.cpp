@@ -58,6 +58,11 @@ void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
     varBnd.insertBound(std::move(bnd));
 }
 
+void IntervalExplanation::condense() {
+    // The sparseness needs to be kept here ...
+    assert(false);
+}
+
 std::size_t IntervalExplanation::computeFixedCount() const {
     return std::ranges::count_if(*this, [](auto const & expPtr) {
         if (not expPtr) { return false; }

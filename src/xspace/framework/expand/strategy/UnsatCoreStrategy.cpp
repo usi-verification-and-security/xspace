@@ -39,6 +39,8 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(ConjunctExplanation & cex
     //+ not supported for general conjunctions
     assert(not config.splitIntervals);
 
+    // In order to map assertions to explanations, we need the conjunction not to be sparse
+    cexplanation.condense();
     assertConjunctExplanation(cexplanation, {.splitIntervals = false});
     [[maybe_unused]] bool const ok = checkFormsExplanation();
     assert(ok);
@@ -49,6 +51,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(ConjunctExplanation & cex
     assert(cexplanation.validSize() == unsatCore.includedIndices.size() + unsatCore.excludedIndices.size());
 
     // Every particular assertion corresponds to one explanation of the conjunction
+    assert(not cexplanation.isSparse());
     for (std::size_t excludedIdx : unsatCore.excludedIndices) {
         [[maybe_unused]] bool const erased = cexplanation.eraseExplanation(excludedIdx);
         assert(erased);

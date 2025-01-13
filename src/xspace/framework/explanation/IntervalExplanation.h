@@ -71,6 +71,8 @@ private:
         return static_cast<VarBound *>(expPtr);
     }
 
+    void condense() override;
+
     template<bool skipFixed>
     Float computeRelativeVolumeTp() const;
 
