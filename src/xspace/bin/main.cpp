@@ -57,9 +57,9 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageStrategyRow(os, Framework::Expand::AbductiveStrategy::name());
     printUsageStrategyRow(os, Framework::Expand::UnsatCoreStrategy::name(), {"sample", "interval"});
     printUsageStrategyRow(os, Framework::Expand::TrialAndErrorStrategy::name(), {"n <int>"});
-    printUsageStrategyRow(
-        os, InterpolationStrategy::name(),
-        {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker", "astronger"});
+    printUsageStrategyRow(os, InterpolationStrategy::name(),
+                          {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
+                           "astronger", "vars x<i>..."});
 
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "", "Prints this help message and exits");

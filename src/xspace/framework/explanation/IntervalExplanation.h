@@ -45,6 +45,8 @@ public:
 
     bool eraseVarBound(VarIdx idx) { return eraseExplanation(idx); }
 
+    std::unique_ptr<ConjunctExplanation> toConjunctExplanation(std::vector<VarIdx> const & varOrder) &&;
+
     Float getRelativeVolume() const override;
     Float getRelativeVolumeSkipFixed() const override;
 

@@ -3,6 +3,8 @@
 
 #include "Strategy.h"
 
+#include <vector>
+
 namespace xspace::expand::opensmt {
 class InterpolationStrategy : public Strategy {
 public:
@@ -12,6 +14,7 @@ public:
     struct Config {
         BoolInterpolationAlg boolInterpolationAlg{BoolInterpolationAlg::strong};
         ArithInterpolationAlg arithInterpolationAlg{ArithInterpolationAlg::weak};
+        std::vector<VarIdx> varIndicesFilter{};
     };
 
     using Strategy::Strategy;

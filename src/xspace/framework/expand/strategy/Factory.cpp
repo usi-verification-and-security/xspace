@@ -130,31 +130,36 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
 
     InterpolationStrategy::Config conf;
     while (not params.empty()) {
-        auto param = std::move(params.front());
+        std::string const paramStr = std::move(params.front());
+        std::istringstream iss{paramStr};
         params.pop();
+        std::string param;
+        iss >> param;
+        if (not iss) { throwInvalidParameterTp<InterpolationStrategy>(paramStr); }
         auto const paramLower = toLower(param);
+
         if (paramLower == "weak") {
             conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::weak;
             conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weak;
-            break;
+            continue;
         }
 
         if (paramLower == "strong") {
             conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::strong;
             conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::strong;
-            break;
+            continue;
         }
 
         if (paramLower == "weaker") {
             conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::weak;
             conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::weaker;
-            break;
+            continue;
         }
 
         if (paramLower == "stronger") {
             conf.boolInterpolationAlg = InterpolationStrategy::BoolInterpolationAlg::strong;
             conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::stronger;
-            break;
+            continue;
         }
 
         if (paramLower == "bweak") {
@@ -187,7 +192,18 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
             continue;
         }
 
-        throwInvalidParameterTp<InterpolationStrategy>(param);
+        if (paramLower == "vars") {
+            //+ not handled when no vars are provided
+            while (iss >> param) {
+                //+ no checks
+                VarName const & varName = param;
+                VarIdx idx = getVarIdx(varName);
+                conf.varIndicesFilter.push_back(idx);
+            }
+            continue;
+        }
+
+        throwInvalidParameterTp<InterpolationStrategy>(paramStr);
     }
 
     return parseReturnTp<InterpolationStrategy>(str, params, conf);

@@ -68,6 +68,23 @@ void IntervalExplanation::merge(ConjunctExplanation &&) {
     assert(false);
 }
 
+std::unique_ptr<ConjunctExplanation> IntervalExplanation::toConjunctExplanation(std::vector<VarIdx> const & varOrder) && {
+    [[maybe_unused]] auto const varSize_ = varSize();
+
+    ConjunctExplanation cexplanation{*frameworkPtr};
+
+    for (VarIdx idx : varOrder) {
+        auto & varBndPtr = operator[](idx);
+        if (not varBndPtr) { continue; }
+        cexplanation.insertExplanation(std::move(varBndPtr));
+    }
+
+    assert(cexplanation.size() == varSize_);
+    assert(not cexplanation.isSparse());
+
+    return MAKE_UNIQUE(std::move(cexplanation));
+}
+
 std::size_t IntervalExplanation::computeFixedCount() const {
     return std::ranges::count_if(*this, [](auto const & expPtr) {
         if (not expPtr) { return false; }

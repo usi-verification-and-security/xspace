@@ -67,14 +67,10 @@ void Framework::Expand::Strategy::assertExplanation(PartialExplanation const & p
 
 bool Framework::Expand::Strategy::assertExplanationImpl(PartialExplanation const & pexplanation,
                                                         AssertExplanationConf const & conf) {
-    // Not necessary yet
-    assert(not dynamic_cast<VarBound const *>(&pexplanation));
-    /*
     if (auto * varBndPtr = dynamic_cast<VarBound const *>(&pexplanation)) {
         assertVarBound(*varBndPtr, conf);
         return true;
     }
-    */
 
     if (auto * cexpPtr = dynamic_cast<ConjunctExplanation const *>(&pexplanation)) {
         assertConjunctExplanation(*cexpPtr, conf);

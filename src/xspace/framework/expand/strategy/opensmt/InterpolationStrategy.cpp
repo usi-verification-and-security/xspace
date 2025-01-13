@@ -1,7 +1,7 @@
 #include "InterpolationStrategy.h"
 
 #include <xspace/framework/explanation/ConjunctExplanation.h>
-#include <xspace/framework/explanation/Explanation.h>
+#include <xspace/framework/explanation/IntervalExplanation.h>
 #include <xspace/framework/explanation/opensmt/FormulaExplanation.h>
 
 #include <xspace/common/Utils.h>
@@ -46,22 +46,50 @@ void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanati
 }
 
 void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    auto & explanation = *explanationPtr;
+    if (auto * optIntExp = dynamic_cast<IntervalExplanation *>(explanationPtr.get())) {
+        explanationPtr = std::move(*optIntExp).toConjunctExplanation(varOrdering.order);
+    }
+
+    assert(dynamic_cast<ConjunctExplanation *>(explanationPtr.get()));
+    auto & cexplanation = static_cast<ConjunctExplanation &>(*explanationPtr);
+
+    auto const & varIndicesFilter = config.varIndicesFilter;
+    // Would not work for non-conj. explanations
+    bool const filteringVars = not varIndicesFilter.empty();
 
     auto & fw = expand.getFramework();
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
 
-    auto const firstIdx = solver.getInsertedFormulasCount();
-    assertExplanation(explanation);
-    auto const lastIdx = solver.getInsertedFormulasCount() - 1;
+    cexplanation.condense();
+    auto const firstFormulaIdx = solver.getInsertedFormulasCount();
+    // We already took care of possible var ordering in toConjunctExplanation
+    assertConjunctExplanation(cexplanation, {.ignoreVarOrder = true});
+    auto const lastFormulaIdx = solver.getInsertedFormulasCount() - 1;
 
     [[maybe_unused]] bool const ok = checkFormsExplanation();
     assert(ok);
 
     ::opensmt::ipartitions_t part = 0;
-    for (auto idx = firstIdx; idx <= lastIdx; ++idx) {
-        ::opensmt::setbit(part, idx);
+    assert(not cexplanation.isSparse());
+    for (auto formulaIdx = firstFormulaIdx; formulaIdx <= lastFormulaIdx; ++formulaIdx) {
+        std::size_t const expIdx = formulaIdx - firstFormulaIdx;
+        if (filteringVars) {
+            assert(expIdx < cexplanation.size());
+            auto * optExp = cexplanation.tryGetExplanation(expIdx);
+            assert(optExp);
+            auto & pexplanation = *optExp;
+            if (std::ranges::none_of(varIndicesFilter,
+                                     [&pexplanation](VarIdx varIdx) { return pexplanation.contains(varIdx); })) {
+                continue;
+            }
+        }
+
+        ::opensmt::setbit(part, formulaIdx);
+        if (not filteringVars) { continue; }
+
+        [[maybe_unused]] bool const erased = cexplanation.eraseExplanation(expIdx);
+        assert(erased);
     }
 
     ::opensmt::vec<Formula> itps;
@@ -72,20 +100,42 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
 
     auto const & logic = solver.getLogic();
 
-    if (not logic.isAnd(itp)) {
-        assert(config.boolInterpolationAlg != BoolInterpolationAlg::strong);
+    bool const itpIsConj = logic.isAnd(itp);
+#ifndef NDEBUG
+    bool const strongBoolItpAlg = config.boolInterpolationAlg == BoolInterpolationAlg::strong;
+    auto const isLit = [&logic](auto & phi) {
+        if (logic.isAtom(phi)) { return true; }
+        if (not logic.isNot(phi)) { return false; }
+        auto & phiTerm = logic.getPterm(phi);
+        assert(phiTerm.size() == 1);
+        return logic.isAtom(phiTerm[0]);
+    };
+    assert(not strongBoolItpAlg or itpIsConj or isLit(itp));
+#endif
+
+    if (not filteringVars and not itpIsConj) {
         assignNew<FormulaExplanation>(explanationPtr, fw, itp);
         return;
     }
 
-    ConjunctExplanation cexplanation{fw};
+    ConjunctExplanation newConjExplanation{fw};
 
-    for (Formula const & phi : logic.getPterm(itp)) {
-        assert(not logic.isAnd(phi));
+    auto const insertItp = [&](Formula const & phi) {
+        assert(logic.isOr(phi) or isLit(phi));
         auto phiexplanationPtr = std::make_unique<FormulaExplanation>(fw, phi);
-        cexplanation.insertExplanation(std::move(phiexplanationPtr));
+        newConjExplanation.insertExplanation(std::move(phiexplanationPtr));
+    };
+
+    if (itpIsConj) {
+        for (Formula const & phi : logic.getPterm(itp)) {
+            insertItp(phi);
+        }
+    } else {
+        insertItp(itp);
     }
 
-    assignNew<ConjunctExplanation>(explanationPtr, std::move(cexplanation));
+    if (filteringVars) { newConjExplanation.merge(std::move(cexplanation)); }
+
+    assignNew<ConjunctExplanation>(explanationPtr, std::move(newConjExplanation));
 }
 } // namespace xspace::expand::opensmt
