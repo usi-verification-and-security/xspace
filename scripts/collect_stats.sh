@@ -6,15 +6,32 @@ STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
 
 source "$SCRIPTS_DIR/experiments"
 
+function usage {
+    printf "USAGE: %s <dir> [short]\n" "$0"
+
+    [[ -n $1 ]] && exit $1
+}
+
 [[ -z $1 ]] && {
     printf "Provide stats data directory.\n" >&2
-    exit 1
+    usage 1 >&2
 }
 
 STATS_DIR="$1"
+shift
 [[ -d $STATS_DIR && -r $STATS_DIR ]] || {
     printf "'%s' is not a readable directory.\n" "$STATS_DIR" >&2
-    exit 1
+    usage 1 >&2
+}
+
+[[ -n $1 ]] && {
+    SHORT="$1"
+    shift
+
+    [[ $SHORT == short ]] || {
+        printf "Expected 'short' to collect stats from shortened experiments, got: %s\n" "$SHORT" >&2
+        usage 1 >&2
+    }
 }
 
 EXPERIMENT_MAX_WIDTH=40
@@ -32,9 +49,8 @@ printf "%${EXPERIMENT_MAX_WIDTH}s | %s | %s | %s\n\n" experiment "$DIMENSION_CAP
 
 for do_reverse in 0 1; do
     for experiment in ${EXPERIMENTS[@]}; do
-        (( $do_reverse )) && {
-            experiment+=_reverse
-        }
+        (( $do_reverse )) && experiment+=_reverse
+        [[ -n $SHORT ]] && experiment+=_short
 
         stats_file="${STATS_DIR}/${experiment}.stats.txt"
         [[ -r $stats_file ]] || {

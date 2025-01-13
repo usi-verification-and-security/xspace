@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "$(dirname "$0")/experiments"
+
 MODELS=(models/Heart_attack/heartAttack50.nnet models/obesity/obesity-10-20-10.nnet)
 DATASETS=(data/heartAttack.csv data/obesity_test_data_noWeight.csv)
 OUTPUT_DIRS=(output/heart_attack output/obesity)
@@ -21,8 +23,6 @@ OUTPUT_DIRS=(output/heart_attack output/obesity)
 
 ## Default for now ..
 MAX_MODELS=1
-
-source "$(dirname "$0")/experiments"
 
 for model_idx in ${!MODELS[@]}; do
     [[ -n $MAX_MODELS ]] && (( model_idx >= MAX_MODELS )) && break

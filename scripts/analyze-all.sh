@@ -6,9 +6,15 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 
 source "$SCRIPTS_DIR/experiments"
 
+function usage {
+    printf "USAGE: %s <action> <dir> [short]\n" "$0"
+    $ANALYZE_SCRIPT |& grep ACTIONS
+
+    [[ -n $1 ]] && exit $1
+}
+
 [[ -z $1 ]] && {
-    printf "Provide an action for the '%s' script:\n" $ANALYZE_SCRIPT >&2
-    exec $ANALYZE_SCRIPT
+    usage 1 >&2
 }
 
 ACTION=$1
@@ -16,14 +22,14 @@ shift
 
 [[ -z $1 ]] && {
     printf "Provide phi data directory.\n" >&2
-    exit 1
+    usage 1 >&2
 }
 
 PHI_DIR="$1"
 shift
 [[ -d $PHI_DIR && -r $PHI_DIR ]] || {
     printf "'%s' is not a readable directory.\n" "$PHI_DIR" >&2
-    exit 1
+    usage 1 >&2
 }
 
 PSI_FILE="$PHI_DIR/psi_"
@@ -38,7 +44,17 @@ esac
 PSI_FILE+=.smt2
 [[ -r $PSI_FILE ]] || {
     printf "Psi file '%s' is not readable.\n" "$PSI_FILE" >&2
-    exit 2
+    usage 2 >&2
+}
+
+[[ -n $1 ]] && {
+    SHORT="$1"
+    shift
+
+    [[ $SHORT == short ]] || {
+        printf "Expected 'short' to analyze shortened experiments, got: %s\n" "$SHORT" >&2
+        usage 1 >&2
+    }
 }
 
 case $ACTION in
@@ -88,9 +104,8 @@ esac
 
 function set_phi_filename {
     local -n lexperiment=$1
-    (( $do_reverse )) && {
-        lexperiment+=_reverse
-    }
+    (( $do_reverse )) && lexperiment+=_reverse
+    [[ -n $SHORT ]] && lexperiment+=_short
 
     local -n lphi_file=$2
     lphi_file="${PHI_DIR}/${lexperiment}.phi.txt"
