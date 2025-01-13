@@ -59,7 +59,7 @@ PSI_FILE+=.smt2
 
 case $ACTION in
 compare-subset)
-    EXPERIMENT_MAX_WIDTH=80
+    EXPERIMENT_MAX_WIDTH=70
     ;;
 *)
     EXPERIMENT_MAX_WIDTH=40
@@ -98,17 +98,19 @@ esac
 
 case $ACTION in
 count-fixed|compare-subset)
-    printf "\n\n"
+    printf "\n"
     ;;
 esac
 
 function set_phi_filename {
-    local -n lexperiment=$1
-    (( $do_reverse )) && lexperiment+=_reverse
-    [[ -n $SHORT ]] && lexperiment+=_short
-
+    local experiment=$1
     local -n lphi_file=$2
-    lphi_file="${PHI_DIR}/${lexperiment}.phi.txt"
+
+    local experiment_stem=$experiment
+    (( $do_reverse )) && experiment_stem+=_reverse
+    [[ -n $SHORT ]] && experiment_stem+=_short
+
+    lphi_file="${PHI_DIR}/${experiment_stem}.phi.txt"
     [[ -r $lphi_file ]] || {
         printf "File '%s' is not a readable.\n" "$lphi_file" >&2
         exit 1
@@ -116,10 +118,20 @@ function set_phi_filename {
 }
 
 for do_reverse in 0 1; do
+    case $ACTION in
+    count-fixed|compare-subset)
+        if (( $do_reverse )); then
+            printf "REVERSE:\n"
+        else
+            printf "REGULAR:\n"
+        fi
+        ;;
+    esac
+
     for exp_idx in ${!EXPERIMENTS[@]}; do
         experiment=${EXPERIMENTS[$exp_idx]}
 
-        set_phi_filename experiment phi_file
+        set_phi_filename $experiment phi_file
 
         case $ACTION in
         compare-subset)
@@ -142,7 +154,7 @@ for do_reverse in 0 1; do
                 ;;
             compare-subset)
                 experiment2=$arg
-                set_phi_filename experiment2 phi_file2
+                set_phi_filename $experiment2 phi_file2
                 phi_files+=("$phi_file2")
 
                 printf "%${EXPERIMENT_MAX_WIDTH}s" "$experiment vs. $experiment2"
@@ -190,8 +202,6 @@ for do_reverse in 0 1; do
             ;;
         esac
     done
-
-    printf "\n"
 done
 
 case $ACTION in

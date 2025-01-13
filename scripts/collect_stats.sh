@@ -45,14 +45,21 @@ TERMS_MAX_WIDTH=${#TERMS_CAPTION}
 CHECKS_CAPTION='#checks'
 CHECKS_MAX_WIDTH=${#CHECKS_CAPTION}
 
-printf "%${EXPERIMENT_MAX_WIDTH}s | %s | %s | %s\n\n" experiment "$DIMENSION_CAPTION" "$TERMS_CAPTION" "$CHECKS_CAPTION"
+printf "%${EXPERIMENT_MAX_WIDTH}s | %s | %s | %s\n" experiment "$DIMENSION_CAPTION" "$TERMS_CAPTION" "$CHECKS_CAPTION"
 
 for do_reverse in 0 1; do
-    for experiment in ${EXPERIMENTS[@]}; do
-        (( $do_reverse )) && experiment+=_reverse
-        [[ -n $SHORT ]] && experiment+=_short
+    if (( $do_reverse )); then
+        printf "REVERSE:\n"
+    else
+        printf "REGULAR:\n"
+    fi
 
-        stats_file="${STATS_DIR}/${experiment}.stats.txt"
+    for experiment in ${EXPERIMENTS[@]}; do
+        experiment_stem=$experiment
+        (( $do_reverse )) && experiment_stem+=_reverse
+        [[ -n $SHORT ]] && experiment_stem+=_short
+
+        stats_file="${STATS_DIR}/${experiment_stem}.stats.txt"
         [[ -r $stats_file ]] || {
             printf "File '%s' is not a readable.\n" "$stats_file" >&2
             exit 1
@@ -72,6 +79,4 @@ for do_reverse in 0 1; do
         printf " | %${CHECKS_MAX_WIDTH}.1f" $nchecks
         printf "\n"
     done
-
-    printf "\n"
 done
