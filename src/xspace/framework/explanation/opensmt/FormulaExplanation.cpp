@@ -11,10 +11,6 @@
 
 #include <cassert>
 
-#ifndef NDEBUG
-#include <algorithm>
-#endif
-
 namespace xspace::opensmt {
 FormulaExplanation::FormulaExplanation(Framework const & fw, Formula const & phi)
     : Explanation{fw},
@@ -43,27 +39,31 @@ std::size_t FormulaExplanation::termSizeOf(Formula const & phi) const {
     auto & logic = solver.getLogic();
     auto & phiTerm = logic.getPterm(phi);
 
-    assert(not logic.isXor(phi));
-    assert(not logic.isImplies(phi));
-    assert(not logic.isIff(phi));
-    if (logic.isAnd(phi) or logic.isOr(phi)) {
-        assert(std::ranges::none_of(phiTerm,
-                                    [&logic](Formula const & arg) { return logic.isAnd(arg) or logic.isOr(arg); }));
-        return phiTerm.size();
+    if (logic.isAtom(phi)) { return 1; }
+
+    if (logic.isNot(phi)) {
+        assert(phiTerm.size() == 1);
+        auto & negPhi = *phiTerm.begin();
+        assert(not logic.isNot(negPhi));
+        return termSizeOf(negPhi) + 1;
     }
 
-    if (not logic.isNot(phi)) { return 1; }
-
-    assert(phiTerm.size() == 1);
-    auto & negPhi = *phiTerm.begin();
-    assert(not logic.isNot(negPhi));
-    return termSizeOf(negPhi) + 1;
+    assert(logic.isAnd(phi) or logic.isOr(phi));
+    std::size_t totalSize{};
+    for (Formula const & argPhi : phiTerm) {
+        totalSize += termSizeOf(argPhi);
+    }
+    return totalSize;
 }
 
 void FormulaExplanation::clear() {
     Explanation::clear();
 
     resetFormula();
+}
+
+void FormulaExplanation::resetFormula() {
+    formulaPtr.reset();
 }
 
 void FormulaExplanation::swap(FormulaExplanation & rhs) {

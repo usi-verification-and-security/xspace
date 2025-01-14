@@ -38,7 +38,7 @@ protected:
 
     std::size_t termSizeOf(Formula const &) const;
 
-    void resetFormula() { formulaPtr.reset(); }
+    void resetFormula();
 
     std::unique_ptr<Formula> formulaPtr{};
 };
