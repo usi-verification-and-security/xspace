@@ -21,10 +21,8 @@ public:
     struct VarOrdering {
         enum class Type { regular, reverse, manual };
 
-        using ManualOrder = std::vector<VarIdx>;
-
         Type type{Type::regular};
-        ManualOrder manualOrder{};
+        std::vector<VarIdx> order{};
     };
 
     class Strategy;

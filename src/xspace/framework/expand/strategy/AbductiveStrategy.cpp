@@ -15,9 +15,9 @@ void Framework::Expand::AbductiveStrategy::executeBody(std::unique_ptr<Explanati
 
     auto & verifier = getVerifier();
 
-    for (VarIdx idxToOmit : varOrdering.manualOrder) {
+    for (VarIdx idxToOmit : varOrdering.order) {
         verifier.push();
-        assertIntervalExplanationExcept(iexplanation, idxToOmit);
+        assertIntervalExplanationExcept(iexplanation, idxToOmit, {.ignoreVarOrder = true});
         bool const ok = checkFormsExplanation();
         verifier.pop();
         // It is no longer explanation after the removal -> we cannot remove it

@@ -12,7 +12,7 @@
 
 namespace xspace {
 Framework::Expand::Strategy::Strategy(Expand & exp, VarOrdering order) : expand{exp}, varOrdering{std::move(order)} {
-    assert((varOrdering.type == VarOrdering::Type::manual) xor varOrdering.manualOrder.empty());
+    assert((varOrdering.type == VarOrdering::Type::manual) xor varOrdering.order.empty());
 }
 
 void Framework::Expand::Strategy::execute(std::unique_ptr<Explanation> & explanationPtr) {
@@ -36,7 +36,7 @@ void Framework::Expand::Strategy::executeFinish(std::unique_ptr<Explanation> &) 
 
 void Framework::Expand::Strategy::initVarOrdering() {
     auto const & orderType = varOrdering.type;
-    auto & varOrder = varOrdering.manualOrder;
+    auto & varOrder = varOrdering.order;
     std::size_t const varSize = expand.getFramework().varSize();
     assert(varSize > 0);
     if (orderType == VarOrdering::Type::manual) {
@@ -96,7 +96,6 @@ void Framework::Expand::Strategy::assertConjunctExplanation(ConjunctExplanation 
     }
 
     // Does not consider var ordering, unlike interval explanations
-    assert(conf.ignoreVarOrder);
     for (auto & pexplanationPtr : cexplanation) {
         if (not pexplanationPtr) { continue; }
         assertExplanation(*pexplanationPtr, conf);
@@ -145,7 +144,7 @@ void Framework::Expand::Strategy::assertIntervalExplanationTp(IntervalExplanatio
         return;
     }
 
-    for (VarIdx idx : varOrdering.manualOrder) {
+    for (VarIdx idx : varOrdering.order) {
         if constexpr (omitIdx) {
             if (idx == idxToOmit) { continue; }
         } else {

@@ -42,7 +42,7 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(ConjunctExplanation & cex
 
     // In order to map assertions to explanations, we need the conjunction not to be sparse
     cexplanation.condense();
-    assertConjunctExplanation(cexplanation, {.splitIntervals = false});
+    assertConjunctExplanation(cexplanation, {.ignoreVarOrder = true, .splitIntervals = false});
     [[maybe_unused]] bool const ok = checkFormsExplanation();
     assert(ok);
 

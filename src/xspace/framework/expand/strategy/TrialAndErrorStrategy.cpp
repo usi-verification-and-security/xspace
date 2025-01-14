@@ -19,12 +19,12 @@ void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Expla
     auto const maxAttempts = config.maxAttempts;
     assert(maxAttempts > 0);
 
-    for (VarIdx idxToRelax : varOrdering.manualOrder) {
+    for (VarIdx idxToRelax : varOrdering.order) {
         auto * optVarBndToRelax = iexplanation.tryGetVarBound(idxToRelax);
         if (not optVarBndToRelax) { continue; }
 
         verifier.push();
-        assertIntervalExplanationExcept(iexplanation, idxToRelax);
+        assertIntervalExplanationExcept(iexplanation, idxToRelax, {.ignoreVarOrder = true});
 
         auto & varBndToRelax = *optVarBndToRelax;
         Interval origInterval = varBndToRelax.toInterval();
