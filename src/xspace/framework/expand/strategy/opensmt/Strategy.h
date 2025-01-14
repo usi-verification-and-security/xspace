@@ -17,6 +17,7 @@ using namespace xspace::opensmt;
 //+ make templated with Formula
 class Strategy : virtual public Framework::Expand::Strategy {
 protected:
+    xai::verifiers::OpenSMTVerifier const & getVerifier() const;
     xai::verifiers::OpenSMTVerifier & getVerifier();
 
     bool assertExplanationImpl(PartialExplanation const &, AssertExplanationConf const &) override;

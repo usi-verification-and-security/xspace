@@ -29,6 +29,7 @@ public:
     bool isAbductiveOnly() const override { return not config.splitIntervals; }
 
 protected:
+    xai::verifiers::UnsatCoreVerifier const & getVerifier() const;
     xai::verifiers::UnsatCoreVerifier & getVerifier();
 
     bool storeNamedTerms() const override { return true; }

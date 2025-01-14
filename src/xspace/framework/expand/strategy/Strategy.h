@@ -32,6 +32,7 @@ protected:
         bool splitIntervals = false;
     };
 
+    xai::verifiers::Verifier const & getVerifier() const { return expand.getVerifier(); }
     xai::verifiers::Verifier & getVerifier() { return *expand.verifierPtr; }
 
     virtual bool storeNamedTerms() const { return false; }

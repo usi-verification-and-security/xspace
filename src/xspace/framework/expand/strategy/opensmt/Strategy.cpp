@@ -9,10 +9,14 @@
 #include <cassert>
 
 namespace xspace::expand::opensmt {
-xai::verifiers::OpenSMTVerifier & Strategy::getVerifier() {
+xai::verifiers::OpenSMTVerifier const & Strategy::getVerifier() const {
     auto & verifier = Framework::Expand::Strategy::getVerifier();
-    assert(dynamic_cast<xai::verifiers::OpenSMTVerifier *>(&verifier));
-    return static_cast<xai::verifiers::OpenSMTVerifier &>(verifier);
+    assert(dynamic_cast<xai::verifiers::OpenSMTVerifier const *>(&verifier));
+    return static_cast<xai::verifiers::OpenSMTVerifier const &>(verifier);
+}
+
+xai::verifiers::OpenSMTVerifier & Strategy::getVerifier() {
+    return const_cast<xai::verifiers::OpenSMTVerifier &>(std::as_const(*this).getVerifier());
 }
 
 bool Strategy::assertExplanationImpl(PartialExplanation const & pexplanation, AssertExplanationConf const & conf) {

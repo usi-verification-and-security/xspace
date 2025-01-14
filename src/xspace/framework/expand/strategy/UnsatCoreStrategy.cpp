@@ -13,10 +13,14 @@
 #endif
 
 namespace xspace {
-xai::verifiers::UnsatCoreVerifier & Framework::Expand::UnsatCoreStrategy::getVerifier() {
+xai::verifiers::UnsatCoreVerifier const & Framework::Expand::UnsatCoreStrategy::getVerifier() const {
     auto & verifier = Strategy::getVerifier();
-    assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier *>(&verifier));
-    return static_cast<xai::verifiers::UnsatCoreVerifier &>(verifier);
+    assert(dynamic_cast<xai::verifiers::UnsatCoreVerifier const *>(&verifier));
+    return static_cast<xai::verifiers::UnsatCoreVerifier const &>(verifier);
+}
+
+xai::verifiers::UnsatCoreVerifier & Framework::Expand::UnsatCoreStrategy::getVerifier() {
+    return const_cast<xai::verifiers::UnsatCoreVerifier &>(std::as_const(*this).getVerifier());
 }
 
 void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
