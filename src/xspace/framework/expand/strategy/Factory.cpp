@@ -33,6 +33,9 @@ std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factor
     if (nameLower == TrialAndErrorStrategy::name()) { return parseTrial(str, params); }
     if (nameLower == expand::opensmt::UnsatCoreStrategy::name()) { return parseUnsatCore(str, params); }
     if (nameLower == expand::opensmt::InterpolationStrategy::name()) { return parseInterpolation(str, params); }
+    if (nameLower == expand::opensmt::IntervalInterpolationStrategy::name()) {
+        return parseIntervalInterpolation(str, params);
+    }
 
     throw std::invalid_argument{"Unrecognized strategy name: "s + name};
 }
@@ -134,6 +137,24 @@ std::unique_ptr<Framework::Expand::Strategy>
 Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str, auto & params) {
     using expand::opensmt::InterpolationStrategy;
 
+    InterpolationStrategy::Config conf = parseInterpolationConfig(params);
+
+    return parseReturnTp<InterpolationStrategy>(str, params, conf);
+}
+
+std::unique_ptr<Framework::Expand::Strategy>
+Framework::Expand::Strategy::Factory::parseIntervalInterpolation(std::string const & str, auto & params) {
+    using expand::opensmt::InterpolationStrategy;
+    using expand::opensmt::IntervalInterpolationStrategy;
+
+    InterpolationStrategy::Config conf = parseInterpolationConfig(params);
+
+    return parseReturnTp<IntervalInterpolationStrategy>(str, params, conf);
+}
+
+auto Framework::Expand::Strategy::Factory::parseInterpolationConfig(auto & params) {
+    using expand::opensmt::InterpolationStrategy;
+
     InterpolationStrategy::Config conf;
     while (not params.empty()) {
         std::string const paramStr = std::move(params.front());
@@ -223,6 +244,6 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
         throwInvalidParameterTp<InterpolationStrategy>(paramStr);
     }
 
-    return parseReturnTp<InterpolationStrategy>(str, params, conf);
+    return conf;
 }
 } // namespace xspace

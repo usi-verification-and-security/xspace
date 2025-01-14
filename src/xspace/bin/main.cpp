@@ -17,7 +17,7 @@
 
 namespace {
 void printUsageStrategyRow(std::ostream & os, std::string_view name, std::vector<std::string_view> params = {}) {
-    os << std::setw(12) << name << ":";
+    os << std::setw(13) << name << ":";
     if (not params.empty()) {
         os << " " << params.front();
         for (auto param : params | std::views::drop(1)) {
@@ -42,6 +42,7 @@ void printUsage(std::ostream & os = std::cout) {
     using xspace::Framework;
     using xspace::expand::opensmt::UnsatCoreStrategy;
     using xspace::expand::opensmt::InterpolationStrategy;
+    using xspace::expand::opensmt::IntervalInterpolationStrategy;
 
     os << "USAGE: xspace <nn_model_fn> <dataset_fn> <exp_strategies_spec> [<options>]\n";
 
@@ -55,6 +56,7 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageStrategyRow(os, InterpolationStrategy::name(),
                           {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
                            "astronger", "afactor <factor>", "vars x<i>..."});
+    printUsageStrategyRow(os, IntervalInterpolationStrategy::name());
 
     os << "VERIFIERS: opensmt";
 #ifdef MARABOU

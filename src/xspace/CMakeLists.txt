@@ -19,6 +19,7 @@ PRIVATE
     framework/expand/strategy/opensmt/Strategy.cpp
     framework/expand/strategy/opensmt/UnsatCoreStrategy.cpp
     framework/expand/strategy/opensmt/InterpolationStrategy.cpp
+    framework/expand/strategy/opensmt/IntervalInterpolationStrategy.cpp
     framework/explanation/ConjunctExplanation.cpp
     framework/explanation/Explanation.cpp
     framework/explanation/IntervalExplanation.cpp

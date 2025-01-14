@@ -41,6 +41,9 @@ private:
     std::unique_ptr<Strategy> parseTrial(std::string const &, auto & params);
     std::unique_ptr<Strategy> parseUnsatCore(std::string const &, auto & params);
     std::unique_ptr<Strategy> parseInterpolation(std::string const &, auto & params);
+    std::unique_ptr<Strategy> parseIntervalInterpolation(std::string const &, auto & params);
+
+    auto parseInterpolationConfig(auto & params);
 };
 } // namespace xspace
 

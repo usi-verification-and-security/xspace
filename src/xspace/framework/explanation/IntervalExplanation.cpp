@@ -30,18 +30,16 @@ void IntervalExplanation::insertVarBound(VarBound varBnd) {
 }
 
 void IntervalExplanation::insertBound(VarIdx idx, Bound bnd) {
-#ifndef NDEBUG
     auto & network = frameworkPtr->getNetwork();
     Float domainLower = network.getInputLowerBound(idx);
     Float domainUpper = network.getInputUpperBound(idx);
     Float val = bnd.getValue();
-    bool const valIsLower = (val == domainLower);
-    bool const valIsUpper = (val == domainUpper);
-    assert(not valIsLower or not valIsUpper);
-    // It is worthless to assert bounds that already correspond to the bounds of the domain
-    assert(not valIsLower or bnd.isEq());
-    assert(not valIsUpper or bnd.isEq());
-#endif
+    bool const valIsDomainLower = (val == domainLower);
+    bool const valIsDomainUpper = (val == domainUpper);
+    assert(not valIsDomainLower or not valIsDomainUpper);
+    // Do not assert bounds that already correspond to the bounds of the domain
+    if (valIsDomainLower and bnd.isLower()) { return; }
+    if (valIsDomainUpper and bnd.isUpper()) { return; }
 
     auto * optVarBnd = tryGetVarBound(idx);
     if (not optVarBnd) {
