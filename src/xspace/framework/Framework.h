@@ -29,6 +29,7 @@ public:
     Framework();
     Framework(Config const &);
     Framework(Config const &, std::unique_ptr<xai::nn::NNet>);
+    Framework(Config const &, std::unique_ptr<xai::nn::NNet>, std::istream & expandStrategiesSpec);
     Framework(Config const &, std::unique_ptr<xai::nn::NNet>, std::string_view verifierName,
               std::istream & expandStrategiesSpec);
     ~Framework();
@@ -47,6 +48,7 @@ public:
         return *networkPtr;
     }
 
+    void setExpand(std::istream & strategiesSpec);
     void setExpand(std::string_view verifierName, std::istream & strategiesSpec);
 
     std::size_t varSize() const { return varNames.size(); }

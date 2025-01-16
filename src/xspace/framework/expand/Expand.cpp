@@ -26,27 +26,6 @@
 namespace xspace {
 Framework::Expand::Expand(Framework & fw) : framework{fw} {}
 
-std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
-    if (toLower(name) == "opensmt") {
-        return std::make_unique<xai::verifiers::OpenSMTVerifier>();
-#ifdef MARABOU
-    } else if (toLower(name) == "marabou") {
-        return std::make_unique<xai::verifiers::MarabouVerifier>();
-#endif
-    }
-
-    throw std::invalid_argument{"Unrecognized verifier name: "s + std::string{name}};
-}
-
-void Framework::Expand::setVerifier(std::string_view name) {
-    setVerifier(makeVerifier(name));
-}
-
-void Framework::Expand::setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf) {
-    assert(vf);
-    verifierPtr = std::move(vf);
-}
-
 void Framework::Expand::setStrategies(std::istream & is) {
     // pipe character '|' reserved for disjunctions
     static constexpr char strategyDelim = ';';
@@ -69,6 +48,31 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
     isAbductiveOnly &= strategy->isAbductiveOnly();
 
     strategies.push_back(std::move(strategy));
+}
+
+std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
+    if (name.empty() or toLower(name) == "opensmt") {
+        return std::make_unique<xai::verifiers::OpenSMTVerifier>();
+#ifdef MARABOU
+    } else if (toLower(name) == "marabou") {
+        return std::make_unique<xai::verifiers::MarabouVerifier>();
+#endif
+    }
+
+    throw std::invalid_argument{"Unrecognized verifier name: "s + std::string{name}};
+}
+
+void Framework::Expand::setVerifier() {
+    setVerifier(""sv);
+}
+
+void Framework::Expand::setVerifier(std::string_view name) {
+    setVerifier(makeVerifier(name));
+}
+
+void Framework::Expand::setVerifier(std::unique_ptr<xai::verifiers::Verifier> vf) {
+    assert(vf);
+    verifierPtr = std::move(vf);
 }
 
 Dataset::SampleIndices Framework::Expand::makeSampleIndices(Dataset const & data) const {

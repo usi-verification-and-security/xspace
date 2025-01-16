@@ -36,6 +36,9 @@ public:
 
     Framework const & getFramework() const { return framework; }
 
+    void setStrategies(std::istream &);
+
+    void setVerifier();
     void setVerifier(std::string_view name);
 
     xai::verifiers::Verifier const & getVerifier() const {
@@ -43,15 +46,13 @@ public:
         return *verifierPtr;
     }
 
-    void setStrategies(std::istream &);
-
     void operator()(Explanations &, Dataset &);
 
 protected:
+    void addStrategy(std::unique_ptr<Strategy>);
+
     static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
     void setVerifier(std::unique_ptr<xai::verifiers::Verifier>);
-
-    void addStrategy(std::unique_ptr<Strategy>);
 
     Dataset::SampleIndices makeSampleIndices(Dataset const &) const;
 

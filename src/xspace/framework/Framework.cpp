@@ -24,6 +24,11 @@ Framework::Framework(Config const & config, std::unique_ptr<xai::nn::NNet> netwo
     setNetwork(std::move(network));
 }
 
+Framework::Framework(Config const & config, std::unique_ptr<xai::nn::NNet> network, std::istream & expandStrategiesSpec)
+    : Framework(config, std::move(network)) {
+    setExpand(expandStrategiesSpec);
+}
+
 Framework::Framework(Config const & config, std::unique_ptr<xai::nn::NNet> network, std::string_view verifierName,
                      std::istream & expandStrategiesSpec)
     : Framework(config, std::move(network)) {
@@ -50,10 +55,16 @@ void Framework::setNetwork(std::unique_ptr<xai::nn::NNet> nn) {
     }
 }
 
+void Framework::setExpand(std::istream & strategiesSpec) {
+    assert(expandPtr);
+    expandPtr->setStrategies(strategiesSpec);
+    expandPtr->setVerifier();
+}
+
 void Framework::setExpand(std::string_view verifierName, std::istream & strategiesSpec) {
     assert(expandPtr);
-    expandPtr->setVerifier(verifierName);
     expandPtr->setStrategies(strategiesSpec);
+    expandPtr->setVerifier(verifierName);
 }
 
 Explanations Framework::explain(Dataset & data) {

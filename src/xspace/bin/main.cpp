@@ -42,13 +42,7 @@ void printUsage(std::ostream & os = std::cout) {
     using xspace::Framework;
     using xspace::expand::opensmt::InterpolationStrategy;
 
-    os << "USAGE: xspace <nn_model_fn> <dataset_fn> <verifier_name> <exp_strategies_spec> [<options>]\n";
-
-    os << "VERIFIERS: opensmt";
-#ifdef MARABOU
-    os << " marabou";
-#endif
-    os << '\n';
+    os << "USAGE: xspace <nn_model_fn> <dataset_fn> <exp_strategies_spec> [<options>]\n";
 
     os << "STRATEGIES SPEC: '<spec1>[; <spec2>]...'\n";
     os << "Each spec: '<name>[ <param>[, <param>]...]'\n";
@@ -61,8 +55,15 @@ void printUsage(std::ostream & os = std::cout) {
                           {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
                            "astronger", "vars x<i>..."});
 
+    os << "VERIFIERS: opensmt";
+#ifdef MARABOU
+    os << " marabou";
+#endif
+    os << '\n';
+
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "", "Prints this help message and exits");
+    printUsageOptRow(os, 'V', "", "Set the verifier");
     printUsageOptRow(os, 'v', "", "Run in verbose mode");
     printUsageOptRow(os, 'r', "", "Reverse the order of variables");
     printUsageOptRow(os, 's', "", "Print the resulting explanations in the SMT-LIB2 format");
@@ -71,17 +72,17 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 'S', "", "Shuffle samples");
 
     os << "\nEXAMPLES:\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt ucore\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'ucore interval' -rvs\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'ucore; itp aweaker, bstrong'\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv opensmt 'trial n 2' -n1\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv ucore\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore interval' -rvs\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore; itp aweaker, bstrong'\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'trial n 2' -n1\n";
 
     os.flush();
 }
 } // namespace
 
 int main(int argc, char * argv[]) try {
-    constexpr int minArgs = 4;
+    constexpr int minArgs = 3;
 
     int const nArgs = argc - 1;
     assert(nArgs >= 0);
@@ -103,9 +104,9 @@ int main(int argc, char * argv[]) try {
 
     std::string_view const datasetFn = argv[++i];
 
-    std::string_view const verifierName = argv[++i];
-
     std::string_view const strategiesSpec = argv[++i];
+
+    std::string verifierName;
 
     xspace::Framework::Config config;
 
@@ -116,6 +117,7 @@ int main(int argc, char * argv[]) try {
 
     //+ not documented
     struct ::option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                     {"verifier", required_argument, nullptr, 'V'},
                                      {"verbose", no_argument, nullptr, 'v'},
                                      // {"version", no_argument, &selectedLongOpt, versionLongOpt},
                                      {"reverse-var", no_argument, nullptr, 'r'},
@@ -127,7 +129,7 @@ int main(int argc, char * argv[]) try {
 
     while (true) {
         int optIndex = 0;
-        int c = getopt_long(argc, argv, ":hvrsiSn:", longOptions, &optIndex);
+        int c = getopt_long(argc, argv, ":hV:vrsiSn:", longOptions, &optIndex);
         if (c == -1) { break; }
 
         switch (c) {
@@ -179,6 +181,9 @@ int main(int argc, char * argv[]) try {
             case 'h':
                 printUsage();
                 return 0;
+            case 'V':
+                verifierName = optarg;
+                break;
             case 'v':
                 config.beVerbose();
                 break;
