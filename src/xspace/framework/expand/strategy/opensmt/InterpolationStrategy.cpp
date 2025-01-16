@@ -57,6 +57,13 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     // Would not work for non-conj. explanations
     bool const filteringVars = not varIndicesFilter.empty();
 
+    if (filteringVars) {
+        if (std::ranges::none_of(varIndicesFilter,
+                                 [&cexplanation](VarIdx varIdx) { return cexplanation.contains(varIdx); })) {
+            return;
+        }
+    }
+
     auto & fw = expand.getFramework();
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
@@ -91,6 +98,7 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
         [[maybe_unused]] bool const erased = cexplanation.eraseExplanation(expIdx);
         assert(erased);
     }
+    assert(part > 0);
 
     ::opensmt::vec<Formula> itps;
     auto interpolationContext = solver.getInterpolationContext();
@@ -104,6 +112,8 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
 #ifndef NDEBUG
     bool const strongBoolItpAlg = config.boolInterpolationAlg == BoolInterpolationAlg::strong;
     auto const isLit = [&logic](auto & phi) {
+        assert(not logic.isFalse(phi));
+        assert(not logic.isTrue(phi));
         if (logic.isAtom(phi)) { return true; }
         if (not logic.isNot(phi)) { return false; }
         auto & phiTerm = logic.getPterm(phi);
