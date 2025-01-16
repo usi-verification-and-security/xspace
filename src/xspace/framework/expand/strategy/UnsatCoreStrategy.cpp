@@ -104,16 +104,16 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & iex
     for (VarIdx idx : unsatCore.lowerBounds) {
         auto * optVarBnd = iexplanation.tryGetVarBound(idx);
         assert(optVarBnd);
-        assert(not optVarBnd->isInterval());
-        auto & bnd = optVarBnd->getBound();
-        newExplanation.insertBound(idx, LowerBound{std::move(bnd)});
+        auto & varBnd = *optVarBnd;
+        Bound const & bnd = varBnd.isInterval() ? varBnd.getIntervalLower() : varBnd.getBound();
+        newExplanation.insertBound(idx, LowerBound{bnd});
     }
     for (VarIdx idx : unsatCore.upperBounds) {
         auto * optVarBnd = iexplanation.tryGetVarBound(idx);
         assert(optVarBnd);
-        assert(not optVarBnd->isInterval());
-        auto & bnd = optVarBnd->getBound();
-        newExplanation.insertBound(idx, UpperBound{std::move(bnd)});
+        auto & varBnd = *optVarBnd;
+        Bound const & bnd = varBnd.isInterval() ? varBnd.getIntervalUpper() : varBnd.getBound();
+        newExplanation.insertBound(idx, UpperBound{bnd});
     }
 
     for (auto & indices : {unsatCore.equalities, unsatCore.intervals}) {
