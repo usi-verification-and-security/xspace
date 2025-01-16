@@ -5,6 +5,9 @@ EXPERIMENTS=(
 
     trial_n_4_abductive
     # trial_n_4_ucore_sample_min
+    itp_interval
+    itp_interval_ucore_sample_min
+    itp_interval_ucore_interval_min
 
     itp
     # itp_ucore_sample_min
@@ -24,6 +27,9 @@ EXPERIMENT_STRATEGIES=(
 
     'abductive; trial n 4'
     # 'ucore sample, min; trial n 4'
+    'itp-interval'
+    'ucore sample; itp-interval'
+    'ucore interval; itp-interval'
 
     'itp'
     # 'ucore sample, min; itp'
