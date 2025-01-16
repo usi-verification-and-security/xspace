@@ -102,17 +102,27 @@ void Framework::Expand::UnsatCoreStrategy::executeBody(IntervalExplanation & iex
     IntervalExplanation newExplanation{fw};
 
     for (VarIdx idx : unsatCore.lowerBounds) {
-        newExplanation.insertBound(idx, LowerBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
+        auto * optVarBnd = iexplanation.tryGetVarBound(idx);
+        assert(optVarBnd);
+        assert(not optVarBnd->isInterval());
+        auto & bnd = optVarBnd->getBound();
+        newExplanation.insertBound(idx, LowerBound{std::move(bnd)});
     }
     for (VarIdx idx : unsatCore.upperBounds) {
-        newExplanation.insertBound(idx, UpperBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
+        auto * optVarBnd = iexplanation.tryGetVarBound(idx);
+        assert(optVarBnd);
+        assert(not optVarBnd->isInterval());
+        auto & bnd = optVarBnd->getBound();
+        newExplanation.insertBound(idx, UpperBound{std::move(bnd)});
     }
-    for (VarIdx idx : unsatCore.equalities) {
-        newExplanation.insertBound(idx, EqBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
-    }
-    for (VarIdx idx : unsatCore.intervals) {
-        newExplanation.insertBound(idx, LowerBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
-        newExplanation.insertBound(idx, UpperBound{iexplanation.tryGetVarBound(idx)->getBound().getValue()});
+
+    for (auto & indices : {unsatCore.equalities, unsatCore.intervals}) {
+        for (VarIdx idx : indices) {
+            auto * optVarBnd = iexplanation.tryGetVarBound(idx);
+            assert(optVarBnd);
+            assert(optVarBnd->isPoint() or optVarBnd->isInterval());
+            newExplanation.insertVarBound(std::move(*optVarBnd));
+        }
     }
 
     iexplanation.swap(newExplanation);

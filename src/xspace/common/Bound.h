@@ -87,13 +87,18 @@ protected:
 };
 
 struct EqBound : public Bound {
-    explicit EqBound(Float val) : Bound(EqTag{}, val) {}
+    explicit EqBound(Float val) : Bound{EqTag{}, val} {}
+    explicit EqBound(Bound const & bnd) : EqBound(bnd.getValue()) {}
 };
+
 struct LtEqBound : public Bound {
-    explicit LtEqBound(Float val) : Bound(LtEqTag{}, val) {}
+    explicit LtEqBound(Float val) : Bound{LtEqTag{}, val} {}
+    explicit LtEqBound(Bound const & bnd) : LtEqBound(bnd.getValue()) {}
 };
+
 struct GtEqBound : public Bound {
-    explicit GtEqBound(Float val) : Bound(GtEqTag{}, val) {}
+    explicit GtEqBound(Float val) : Bound{GtEqTag{}, val} {}
+    explicit GtEqBound(Bound const & bnd) : GtEqBound(bnd.getValue()) {}
 };
 
 using LowerBound = GtEqBound;
