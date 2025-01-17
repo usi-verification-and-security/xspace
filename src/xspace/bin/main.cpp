@@ -40,6 +40,7 @@ void printUsageOptRow(std::ostream & os, char opt, std::string_view arg, std::st
 
 void printUsage(std::ostream & os = std::cout) {
     using xspace::Framework;
+    using xspace::expand::opensmt::UnsatCoreStrategy;
     using xspace::expand::opensmt::InterpolationStrategy;
 
     os << "USAGE: xspace <nn_model_fn> <dataset_fn> <exp_strategies_spec> [<options>]\n";
@@ -49,8 +50,8 @@ void printUsage(std::ostream & os = std::cout) {
     os << "Strategies and parameters:\n";
     //+ template by the strategy and move the params to the classes as well
     printUsageStrategyRow(os, Framework::Expand::AbductiveStrategy::name());
-    printUsageStrategyRow(os, Framework::Expand::UnsatCoreStrategy::name(), {"sample", "interval"});
     printUsageStrategyRow(os, Framework::Expand::TrialAndErrorStrategy::name(), {"n <int>"});
+    printUsageStrategyRow(os, UnsatCoreStrategy::name(), {"sample", "interval", "min"});
     printUsageStrategyRow(os, InterpolationStrategy::name(),
                           {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
                            "astronger", "vars x<i>..."});
@@ -73,9 +74,9 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 'S', "", "Shuffle samples");
 
     os << "\nEXAMPLES:\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv ucore\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore interval' -rvs\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore; itp aweaker, bstrong'\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv abductive\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore interval, min' -rvs\n";
+    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'itp aweaker, bstrong; ucore'\n";
     os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'trial n 2' -n1\n";
 
     os.flush();

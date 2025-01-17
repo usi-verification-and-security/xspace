@@ -30,8 +30,8 @@ std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factor
     auto const nameLower = toLower(name);
 
     if (nameLower == AbductiveStrategy::name()) { return parseAbductive(str, params); }
-    if (nameLower == UnsatCoreStrategy::name()) { return parseUnsatCore(str, params); }
     if (nameLower == TrialAndErrorStrategy::name()) { return parseTrial(str, params); }
+    if (nameLower == expand::opensmt::UnsatCoreStrategy::name()) { return parseUnsatCore(str, params); }
     if (nameLower == expand::opensmt::InterpolationStrategy::name()) { return parseInterpolation(str, params); }
 
     throw std::invalid_argument{"Unrecognized strategy name: "s + name};
@@ -78,31 +78,6 @@ Framework::Expand::Strategy::Factory::parseAbductive(std::string const & str, au
     return parseReturnTp<AbductiveStrategy>(str, params);
 }
 
-std::unique_ptr<Framework::Expand::Strategy>
-Framework::Expand::Strategy::Factory::parseUnsatCore(std::string const & str, auto & params) {
-    using expand::opensmt::UnsatCoreStrategy;
-
-    UnsatCoreStrategy::Config conf;
-    while (not params.empty()) {
-        auto param = std::move(params.front());
-        params.pop();
-        auto const paramLower = toLower(param);
-        if (paramLower == "sample") {
-            conf.splitIntervals = false;
-            break;
-        }
-
-        if (paramLower == "interval") {
-            conf.splitIntervals = true;
-            break;
-        }
-
-        throwInvalidParameterTp<UnsatCoreStrategy>(param);
-    }
-
-    return parseReturnTp<UnsatCoreStrategy>(str, params, conf);
-}
-
 std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factory::parseTrial(std::string const & str,
                                                                                               auto & params) {
     TrialAndErrorStrategy::Config conf;
@@ -122,6 +97,37 @@ std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factor
     }
 
     return parseReturnTp<TrialAndErrorStrategy>(str, params, conf);
+}
+
+std::unique_ptr<Framework::Expand::Strategy>
+Framework::Expand::Strategy::Factory::parseUnsatCore(std::string const & str, auto & params) {
+    using expand::opensmt::UnsatCoreStrategy;
+
+    UnsatCoreStrategy::Base::Config baseConf;
+    UnsatCoreStrategy::Config conf;
+    while (not params.empty()) {
+        auto param = std::move(params.front());
+        params.pop();
+        auto const paramLower = toLower(param);
+        if (paramLower == "sample") {
+            baseConf.splitIntervals = false;
+            continue;
+        }
+
+        if (paramLower == "interval") {
+            baseConf.splitIntervals = true;
+            continue;
+        }
+
+        if (paramLower == "min") {
+            conf.minimal = true;
+            continue;
+        }
+
+        throwInvalidParameterTp<UnsatCoreStrategy>(param);
+    }
+
+    return parseReturnTp<UnsatCoreStrategy>(str, params, baseConf, conf);
 }
 
 std::unique_ptr<Framework::Expand::Strategy>

@@ -20,6 +20,9 @@ void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanati
     auto & solver = verifier.getSolver();
     auto & solverConf = solver.getConfig();
 
+    solverConf.setReduction(true);
+    solverConf.setSimplifyInterpolant(4);
+
     switch (config.boolInterpolationAlg) {
         case BoolInterpolationAlg::weak:
             solverConf.setBooleanInterpolationAlgorithm(::opensmt::itp_alg_mcmillanp);

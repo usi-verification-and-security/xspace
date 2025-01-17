@@ -19,7 +19,7 @@ public:
 
     using Strategy::Strategy;
     InterpolationStrategy(Framework::Expand & exp, Config const & conf, Framework::Expand::VarOrdering order = {})
-        : Framework::Expand::Strategy{exp, std::move(order)},
+        : Strategy::Base{exp, std::move(order)},
           config{conf} {}
 
     static char const * name() { return "itp"; }

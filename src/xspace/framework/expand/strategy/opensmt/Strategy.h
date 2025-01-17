@@ -17,6 +17,8 @@ using namespace xspace::opensmt;
 //+ make templated with Formula
 class Strategy : virtual public Framework::Expand::Strategy {
 public:
+    using Base = Framework::Expand::Strategy;
+
     bool requiresSMTSolver() const override { return true; }
 
 protected:

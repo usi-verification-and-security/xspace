@@ -375,14 +375,11 @@ Verifier::Answer OpenSMTVerifier::OpenSMTImpl::check() {
 
 void OpenSMTVerifier::OpenSMTImpl::init() {
     config = std::make_unique<SMTConfig>();
-    const char* msg = "ok";
-    //+ make configurable
-    config->setOption(SMTConfig::o_produce_unsat_cores, SMTOption(true), msg);
-    config->setOption(SMTConfig::o_minimal_unsat_cores, SMTOption(true), msg);
+    char const * msg = "ok";
+
+    // Must be set before initialization
+    config->setProduceProofs();
     config->setOption(SMTConfig::o_produce_inter, SMTOption(true), msg);
-    config->setLRAInterpolationAlgorithm(itp_lra_alg_weak);
-    config->setReduction(true);
-    config->setSimplifyInterpolant(4);
 
     // reset() is called by Verifier
 }
