@@ -1,6 +1,7 @@
 #include "Framework.h"
 
 #include "Config.h"
+#include "Parse.h"
 #include "Preprocess.h"
 #include "Print.h"
 #include "expand/Expand.h"
@@ -68,12 +69,26 @@ void Framework::setExpand(std::string_view verifierName, std::istream & strategi
 }
 
 Explanations Framework::explain(Dataset & data) {
-    Preprocess preprocess{*this};
-    auto explanations = preprocess(data);
+    Preprocess preprocess{*this, data};
+    auto explanations = preprocess.makeExplanationsFromSamples();
 
-    auto & expand = *expandPtr;
     expand(explanations, data);
 
     return explanations;
+}
+
+Explanations Framework::expand(std::string_view fileName, Dataset & data) {
+    Preprocess preprocess{*this, data};
+    Parse parse{*this};
+    //+ only interval explanations supported
+    auto explanations = parse.parseIntervalExplanations(fileName, data);
+
+    expand(explanations, data);
+
+    return explanations;
+}
+
+void Framework::expand(Explanations & explanations, Dataset const & data) {
+    (*expandPtr)(explanations, data);
 }
 } // namespace xspace

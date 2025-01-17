@@ -58,10 +58,17 @@ public:
 
     Explanations explain(Dataset &);
 
+    // Allows further expansion of explanations in a file
+    Explanations expand(std::string_view fileName, Dataset &);
+
+    // Allows further expansion of already existing explanations
+    void expand(Explanations &, Dataset const &);
+
 protected:
     friend class PartialExplanation;
 
     class Preprocess;
+    class Parse;
 
     class Print;
 

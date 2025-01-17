@@ -8,9 +8,9 @@
 namespace xspace {
 class Framework::Preprocess {
 public:
-    Preprocess(Framework &);
+    Preprocess(Framework &, Dataset &);
 
-    Explanations operator()(Dataset &);
+    Explanations makeExplanationsFromSamples() const;
 
     static bool isBinaryClassification(Dataset::Output::Values const &);
 
@@ -19,9 +19,13 @@ public:
     static Dataset::Classification::Label computeNonBinaryClassificationLabel(Dataset::Output::Values const &);
 
 protected:
+    void initDataset();
+
     Dataset::Output computeOutput(Dataset::Sample const &) const;
 
     Framework & framework;
+
+    Dataset & dataset;
 };
 } // namespace xspace
 

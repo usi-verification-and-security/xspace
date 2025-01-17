@@ -63,7 +63,8 @@ void printUsage(std::ostream & os = std::cout) {
 
     os << "OPTIONS:\n";
     printUsageOptRow(os, 'h', "", "Prints this help message and exits");
-    printUsageOptRow(os, 'V', "", "Set the verifier");
+    printUsageOptRow(os, 'V', "<name>", "Set the verifier");
+    printUsageOptRow(os, 'E', "<file>", "Use explanations from file as starting points");
     printUsageOptRow(os, 'v', "", "Run in verbose mode");
     printUsageOptRow(os, 'r', "", "Reverse the order of variables");
     printUsageOptRow(os, 's', "", "Print the resulting explanations in the SMT-LIB2 format");
@@ -107,6 +108,7 @@ int main(int argc, char * argv[]) try {
     std::string_view const strategiesSpec = argv[++i];
 
     std::string verifierName;
+    std::string explanationsFn;
 
     xspace::Framework::Config config;
 
@@ -118,6 +120,7 @@ int main(int argc, char * argv[]) try {
     //+ not documented
     struct ::option longOptions[] = {{"help", no_argument, nullptr, 'h'},
                                      {"verifier", required_argument, nullptr, 'V'},
+                                     {"input-explanations", required_argument, nullptr, 'E'},
                                      {"verbose", no_argument, nullptr, 'v'},
                                      // {"version", no_argument, &selectedLongOpt, versionLongOpt},
                                      {"reverse-var", no_argument, nullptr, 'r'},
@@ -129,7 +132,7 @@ int main(int argc, char * argv[]) try {
 
     while (true) {
         int optIndex = 0;
-        int c = getopt_long(argc, argv, ":hV:vrsiSn:", longOptions, &optIndex);
+        int c = getopt_long(argc, argv, ":hV:E:vrsiSn:", longOptions, &optIndex);
         if (c == -1) { break; }
 
         switch (c) {
@@ -183,6 +186,8 @@ int main(int argc, char * argv[]) try {
                 return 0;
             case 'V':
                 verifierName = optarg;
+            case 'E':
+                explanationsFn = optarg;
                 break;
             case 'v':
                 config.beVerbose();
@@ -218,7 +223,8 @@ int main(int argc, char * argv[]) try {
     std::istringstream strategiesSpecIss{std::string{strategiesSpec}};
     xspace::Framework framework{config, std::move(network), verifierName, strategiesSpecIss};
 
-    auto explanations = framework.explain(dataset);
+    xspace::Explanations explanations =
+        explanationsFn.empty() ? framework.explain(dataset) : framework.expand(explanationsFn, dataset);
     assert(explanations.size() == size);
 
     return 0;

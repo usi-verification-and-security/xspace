@@ -23,6 +23,8 @@ public:
     static constexpr Type lowerType = Type::gteq;
     static constexpr Type upperType = Type::lteq;
 
+    Bound() = default;
+
     // Run-time type
     explicit Bound(Type const & type, Float val)
         : Bound(type == Type::eq     ? Bound(EqTag{}, val)
@@ -81,9 +83,9 @@ protected:
 
     void printRegular(std::ostream &) const;
 
-    Op op;
+    Op op{};
 
-    Float value;
+    Float value{};
 };
 
 struct EqBound : public Bound {

@@ -1,6 +1,7 @@
 #include "Preprocess.h"
 
 #include "explanation/IntervalExplanation.h"
+#include "explanation/VarBound.h"
 
 #include <xspace/common/Macro.h>
 
@@ -11,39 +12,48 @@
 #include <concepts>
 
 namespace xspace {
-Framework::Preprocess::Preprocess(Framework & fw) : framework{fw} {}
-
-Explanations Framework::Preprocess::operator()(Dataset & data) {
-    auto & samples = data.getSamples();
-    assert(not samples.empty());
+Framework::Preprocess::Preprocess(Framework & fw, Dataset & data) : framework{fw}, dataset{data} {
     assert(not framework.varNames.empty());
 
-    std::size_t const size = samples.size();
-    assert(size == data.size());
-    Explanations explanations;
+    initDataset();
+}
+
+void Framework::Preprocess::initDataset() {
+    auto const & samples = dataset.getSamples();
+    std::size_t const size = dataset.size();
+    assert(size == samples.size());
+    assert(not samples.empty());
     Dataset::Outputs outputs;
-    explanations.reserve(size);
     outputs.reserve(size);
+    for (auto const & sample : samples) {
+        assert(sample.size() == framework.varSize());
+        Dataset::Output output = computeOutput(sample);
+        outputs.push_back(std::move(output));
+    }
+
+    assert(outputs.size() == size);
+    dataset.setComputedOutputs(std::move(outputs));
+}
+
+Explanations Framework::Preprocess::makeExplanationsFromSamples() const {
+    auto const & samples = dataset.getSamples();
+    std::size_t const size = dataset.size();
+    assert(size == samples.size());
+    Explanations explanations;
+    explanations.reserve(size);
     std::size_t const vSize = framework.varSize();
     for (auto const & sample : samples) {
         assert(sample.size() == vSize);
 
         IntervalExplanation iexplanation{framework};
         for (VarIdx idx = 0; idx < vSize; ++idx) {
-            Float const val = sample[idx];
+            Float val = sample[idx];
             iexplanation.insertVarBound(VarBound{framework, idx, val});
         }
         explanations.push_back(MAKE_UNIQUE(std::move(iexplanation)));
-
-        Dataset::Output output = computeOutput(sample);
-        outputs.push_back(std::move(output));
     }
 
     assert(explanations.size() == size);
-    assert(explanations.size() == outputs.size());
-
-    data.setComputedOutputs(std::move(outputs));
-
     return explanations;
 }
 

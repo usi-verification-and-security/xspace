@@ -46,7 +46,7 @@ public:
         return *verifierPtr;
     }
 
-    void operator()(Explanations &, Dataset &);
+    void operator()(Explanations &, Dataset const &);
 
 protected:
     void addStrategy(std::unique_ptr<Strategy>);

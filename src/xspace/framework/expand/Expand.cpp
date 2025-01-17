@@ -111,7 +111,7 @@ Dataset::SampleIndices Framework::Expand::getSampleIndices(Dataset const & data)
     return data.getSampleIndicesOfExpectedClass(label);
 }
 
-void Framework::Expand::operator()(Explanations & explanations, Dataset & data) {
+void Framework::Expand::operator()(Explanations & explanations, Dataset const & data) {
     assert(explanations.size() == data.size());
     assert(not strategies.empty());
 
