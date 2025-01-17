@@ -73,7 +73,7 @@ protected:
 
     Strategies strategies{};
 
-    bool isAbductiveOnly{true};
+    bool requiresSMTSolver{false};
 
 private:
     Dataset::SampleIndices getSampleIndices(Dataset const &) const;

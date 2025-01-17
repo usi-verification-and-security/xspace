@@ -17,8 +17,6 @@ public:
 
     static char const * name() { return "trial"; }
 
-    bool isAbductiveOnly() const override { return false; }
-
 protected:
     void executeBody(std::unique_ptr<Explanation> &) override;
 

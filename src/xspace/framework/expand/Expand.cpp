@@ -45,7 +45,7 @@ void Framework::Expand::setStrategies(std::istream & is) {
 }
 
 void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
-    isAbductiveOnly &= strategy->isAbductiveOnly();
+    requiresSMTSolver |= strategy->requiresSMTSolver();
 
     strategies.push_back(std::move(strategy));
 }
@@ -244,9 +244,10 @@ void Framework::Expand::printStats(Explanation const & explanation, Dataset cons
     assert(explanation.getRelativeVolumeSkipFixed() <= 1);
     assert((explanation.getRelativeVolumeSkipFixed() < 1) == (fixedCount < expVarSize));
 
-    if (isAbductiveOnly) {
-        assert(fixedCount == expVarSize);
+    bool const isAbductive = (fixedCount == expVarSize);
+    if (isAbductive) {
         assert(termSize == expVarSize);
+        assert(explanation.supportsVolume());
         assert(explanation.getRelativeVolumeSkipFixed() == 1);
         return;
     }

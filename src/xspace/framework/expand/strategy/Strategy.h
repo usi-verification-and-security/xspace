@@ -22,7 +22,7 @@ public:
 
     static char const * name() = delete;
 
-    virtual bool isAbductiveOnly() const { return true; }
+    virtual bool requiresSMTSolver() const { return false; }
 
     virtual void execute(std::unique_ptr<Explanation> &);
 

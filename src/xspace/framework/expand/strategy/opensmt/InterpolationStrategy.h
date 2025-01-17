@@ -24,8 +24,6 @@ public:
 
     static char const * name() { return "itp"; }
 
-    bool isAbductiveOnly() const override { return false; }
-
 protected:
     void executeInit(std::unique_ptr<Explanation> &) override;
     void executeBody(std::unique_ptr<Explanation> &) override;

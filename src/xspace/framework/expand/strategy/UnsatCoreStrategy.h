@@ -24,9 +24,8 @@ public:
 
     static char const * name() { return "ucore"; }
 
-    //! not true if the previous strategy yielded non-abductive explanation
-    // but currently harmless because Expand checks if ALL strategies are only abductive
-    bool isAbductiveOnly() const override { return not config.splitIntervals; }
+    // Does not strictly require SMT solver
+    using Strategy::requiresSMTSolver;
 
 protected:
     xai::verifiers::UnsatCoreVerifier const & getVerifier() const;

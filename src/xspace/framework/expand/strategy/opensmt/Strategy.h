@@ -16,6 +16,9 @@ using namespace xspace::opensmt;
 
 //+ make templated with Formula
 class Strategy : virtual public Framework::Expand::Strategy {
+public:
+    bool requiresSMTSolver() const override { return true; }
+
 protected:
     xai::verifiers::OpenSMTVerifier const & getVerifier() const;
     xai::verifiers::OpenSMTVerifier & getVerifier();
