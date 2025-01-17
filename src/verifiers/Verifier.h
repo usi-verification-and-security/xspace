@@ -30,8 +30,8 @@ public:
         addInterval(layer, var, value, value, explanationTerm);
     }
     virtual void addInterval(LayerIndex layer, NodeIndex var, float lo, float hi, bool explanationTerm = false) {
-        addUpperBound(layer, var, lo, explanationTerm);
-        addLowerBound(layer, var, hi, explanationTerm);
+        addUpperBound(layer, var, hi, explanationTerm);
+        addLowerBound(layer, var, lo, explanationTerm);
     }
 
     virtual void addClassificationConstraint(NodeIndex node, float threshold) = 0;
