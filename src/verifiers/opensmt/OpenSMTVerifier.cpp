@@ -131,11 +131,11 @@ void OpenSMTVerifier::initImpl() {
     pimpl->init();
 }
 
-void OpenSMTVerifier::push() {
+void OpenSMTVerifier::pushImpl() {
     pimpl->push();
 }
 
-void OpenSMTVerifier::pop() {
+void OpenSMTVerifier::popImpl() {
     pimpl->pop();
 }
 

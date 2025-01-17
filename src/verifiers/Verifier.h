@@ -43,8 +43,8 @@ public:
         reset();
     }
 
-    virtual void push() = 0;
-    virtual void pop() = 0;
+    virtual void push() { pushImpl(); }
+    virtual void pop() { popImpl(); }
 
     virtual Answer check() {
         ++checksCount;
@@ -63,9 +63,13 @@ public:
 protected:
     virtual void initImpl() {}
 
-    virtual Answer checkImpl() = 0;
-
     std::size_t checksCount{};
+
+private:
+    virtual void pushImpl() = 0;
+    virtual void popImpl() = 0;
+
+    virtual Answer checkImpl() = 0;
 };
 } // namespace xai::verifiers
 

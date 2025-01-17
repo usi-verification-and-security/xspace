@@ -26,10 +26,11 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
-    void push() override;
-    void pop() override;
 
 protected:
+    void pushImpl() override;
+    void popImpl() override;
+
     Answer checkImpl() override;
 
 private:

@@ -32,9 +32,6 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
-    void push() override;
-    void pop() override;
-
     void resetSampleQuery() override;
     void resetSample() override;
     void reset() override;
@@ -46,6 +43,9 @@ public:
 
 protected:
     void initImpl() override;
+
+    void pushImpl() override;
+    void popImpl() override;
 
     Answer checkImpl() override;
 

@@ -99,11 +99,11 @@ void MarabouVerifier::addConstraint(LayerIndex layer, std::vector<std::pair<Node
     pimpl->addConstraint(layer, lhs, rhs);
 }
 
-void MarabouVerifier::push() {
+void MarabouVerifier::pushImpl() {
     pimpl->push();
 }
 
-void MarabouVerifier::pop() {
+void MarabouVerifier::popImpl() {
     pimpl->pop();
 }
 
