@@ -28,10 +28,15 @@ PRIVATE
 PUBLIC
 )
 
-target_include_directories(xspace SYSTEM
-PUBLIC
+target_include_directories(xspace SYSTEM PUBLIC
     ${opensmt_SOURCE_DIR}/src
 )
+
+if (ENABLE_MARABOU)
+    target_include_directories(xspace SYSTEM PUBLIC
+        ${MARABOU_INCLUDE_DIRS}
+    )
+endif()
 
 target_compile_options(xspace
 PRIVATE
@@ -51,14 +56,25 @@ add_executable(XSpace-bin
     ${SOURCE_DIR}/verifiers/opensmt/OpenSMTVerifier.cpp
 )
 
+if (ENABLE_MARABOU)
+    target_sources(XSpace-bin PUBLIC
+        ${SOURCE_DIR}/verifiers/marabou/MarabouVerifier.cpp
+    )
+endif()
+
 set_target_properties(XSpace-bin
 PROPERTIES
     OUTPUT_NAME xspace
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(XSpace-bin
-PUBLIC
+target_link_libraries(XSpace-bin PUBLIC
     xspace
     OpenSMT::OpenSMT
 )
+
+if (ENABLE_MARABOU)
+    target_link_libraries(XSpace-bin PUBLIC
+        MarabouHelper
+    )
+endif()

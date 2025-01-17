@@ -50,7 +50,11 @@ void Framework::Expand::addStrategy(std::unique_ptr<Strategy> strategy) {
     strategies.push_back(std::move(strategy));
 }
 
-std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) {
+std::unique_ptr<xai::verifiers::Verifier> Framework::Expand::makeVerifier(std::string_view name) const {
+#ifdef MARABOU
+    if (name.empty() and not requiresSMTSolver) { name = "marabou"sv; }
+#endif
+
     if (name.empty() or toLower(name) == "opensmt") {
         return std::make_unique<xai::verifiers::OpenSMTVerifier>();
 #ifdef MARABOU

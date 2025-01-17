@@ -26,7 +26,6 @@ public:
 
     void addConstraint(LayerIndex layer, std::vector<std::pair<NodeIndex, int>> lhs, float rhs) override;
 
-
 protected:
     void pushImpl() override;
     void popImpl() override;
@@ -37,8 +36,6 @@ private:
     class MarabouImpl;
     std::unique_ptr<MarabouImpl> pimpl;
 };
-}
+} // namespace xai::verifiers
 
-
-
-#endif //XAI_SMT_MARABOUVERIFIER_H
+#endif // XAI_SMT_MARABOUVERIFIER_H

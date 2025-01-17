@@ -26,6 +26,13 @@ public:
 
     void addClassificationConstraint(NodeIndex node, float threshold);
 
+protected:
+    std::unordered_map<VarIndex, float> const & getLowerBounds() const { assert(not scopedLowerBounds.empty()); return scopedLowerBounds.back(); };
+    std::unordered_map<VarIndex, float> const & getUpperBounds() const { assert(not scopedUpperBounds.empty()); return scopedUpperBounds.back(); };
+    std::vector<Equation> const & getExtraEquations() const { assert(not scopedExtraEquations.empty()); return scopedExtraEquations.back(); };
+    std::unordered_map<VarIndex, float> & getLowerBounds() { assert(not scopedLowerBounds.empty()); return scopedLowerBounds.back(); };
+    std::unordered_map<VarIndex, float> & getUpperBounds() { assert(not scopedUpperBounds.empty()); return scopedUpperBounds.back(); };
+    std::vector<Equation> & getExtraEquations() { assert(not scopedExtraEquations.empty()); return scopedExtraEquations.back(); };
 
 private:
     std::size_t registerNewVariable();
@@ -47,9 +54,9 @@ private:
     std::unordered_map<VarIndex, float> hardInputLowerBounds;
     std::unordered_map<VarIndex, float> hardInputUpperBounds;
 
-    std::unordered_map<VarIndex, float> lowerBounds;
-    std::unordered_map<VarIndex, float> upperBounds;
-    std::vector<Equation> extraEquations;
+    std::vector<std::unordered_map<VarIndex, float>> scopedLowerBounds;
+    std::vector<std::unordered_map<VarIndex, float>> scopedUpperBounds;
+    std::vector<std::vector<Equation>> scopedExtraEquations;
 };
 }
 
@@ -135,6 +142,9 @@ VarIndex QueryIncrementalWrapper::getVarIndex(LayerIndex layerNum, NodeIndex nod
         case VariableType::FORWARD:
             return offset + layerSizes[layerNum] + nodeIndex;
     }
+
+    assert(false);
+    return 0;
 }
 
 void QueryIncrementalWrapper::markInputVariable(VarIndex var) {
@@ -147,12 +157,12 @@ void QueryIncrementalWrapper::markOutputVariable(VarIndex var) {
 
 void QueryIncrementalWrapper::setLowerBound(LayerIndex layer, NodeIndex node, float val) {
     auto var = getVarIndex(layer, node, layer == 0 ? VariableType::FORWARD : VariableType::BACKWARD);
-    lowerBounds[var] = val;
+    getLowerBounds()[var] = val;
 }
 
 void QueryIncrementalWrapper::setUpperBound(LayerIndex layer, NodeIndex node, float val) {
     auto var = getVarIndex(layer, node, layer == 0 ? VariableType::FORWARD : VariableType::BACKWARD);
-    upperBounds[var] = val;
+    getUpperBounds()[var] = val;
 }
 
 void QueryIncrementalWrapper::addClassificationConstraint(NodeIndex node, float threshold) {
@@ -276,8 +286,10 @@ std::unique_ptr<InputQuery> QueryIncrementalWrapper::buildQuery() const {
         query->setUpperBound(var, val);
     }
 
-    for (auto const & eq : extraEquations) {
-        query->addEquation(eq);
+    for (auto const & eqs : scopedExtraEquations) {
+        for (auto const & eq : eqs) {
+            query->addEquation(eq);
+        }
     }
 
     for (auto && [incoming, outgoing] : reluList) {
@@ -285,23 +297,34 @@ std::unique_ptr<InputQuery> QueryIncrementalWrapper::buildQuery() const {
         query->addPiecewiseLinearConstraint(new ReluConstraint(incoming, outgoing));
     }
 
-    for (auto && [var, val] : lowerBounds) {
-        query->setLowerBound(var, val);
+    for (auto const & los : scopedLowerBounds) {
+        for (auto && [var, val] : los) {
+            query->setLowerBound(var, val);
+        }
     }
 
-    for (auto && [var, val] : upperBounds) {
-        query->setUpperBound(var, val);
+    for (auto const & his : scopedUpperBounds) {
+        for (auto && [var, val] : his) {
+            query->setUpperBound(var, val);
+        }
     }
 
     return query;
 }
 
-void QueryIncrementalWrapper::push() {}
+void QueryIncrementalWrapper::push() {
+    scopedExtraEquations.emplace_back();
+    scopedLowerBounds.emplace_back();
+    scopedUpperBounds.emplace_back();
+}
 
 void QueryIncrementalWrapper::pop() {
-    extraEquations.clear();
-    lowerBounds.clear();
-    upperBounds.clear();
+    assert(not scopedExtraEquations.empty());
+    assert(not scopedLowerBounds.empty());
+    assert(not scopedUpperBounds.empty());
+    scopedExtraEquations.pop_back();
+    scopedLowerBounds.pop_back();
+    scopedUpperBounds.pop_back();
 }
 
 }
@@ -315,10 +338,12 @@ void MarabouVerifier::MarabouImpl::loadModel(const nn::NNet & network) {
 }
 
 void MarabouVerifier::MarabouImpl::push() {
+    assert(queryWrapper);
     queryWrapper->push();
 }
 
 void MarabouVerifier::MarabouImpl::pop() {
+    assert(queryWrapper);
     queryWrapper->pop();
 }
 

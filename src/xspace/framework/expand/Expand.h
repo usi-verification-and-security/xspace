@@ -51,7 +51,7 @@ public:
 protected:
     void addStrategy(std::unique_ptr<Strategy>);
 
-    static std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name);
+    std::unique_ptr<xai::verifiers::Verifier> makeVerifier(std::string_view name) const;
     void setVerifier(std::unique_ptr<xai::verifiers::Verifier>);
 
     Dataset::SampleIndices makeSampleIndices(Dataset const &) const;
