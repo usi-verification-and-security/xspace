@@ -44,8 +44,10 @@ endif()
 if (ENABLE_MARABOU)
     FetchContent_Declare(
             Marabou
-            GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
-            GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
+            # GIT_REPOSITORY https://github.com/NeuralNetworkVerification/Marabou.git
+            # GIT_TAG 215828c64e624be7917e69e4e873c746d8df25a2
+            GIT_REPOSITORY https://github.com/Tomaqa/Marabou.git
+            GIT_TAG e40d37346f4583ad70bce7c167245322556e30d7
             GIT_SHALLOW true
             GIT_PROGRESS true
         )
