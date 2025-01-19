@@ -6,9 +6,9 @@ MODELS=(models/Heart_attack/heartAttack50.nnet models/obesity/obesity-10-20-10.n
 DATASETS=(data/heartAttack.csv data/obesity_test_data_noWeight.csv)
 OUTPUT_DIRS=(output/heart_attack output/obesity)
 
-[[ -n $1 ]] && {
+[[ -n $1 && $1 =~ ^(short|[0-9]+)$ ]] && {
     MAX_SAMPLES_SHORT=20
-    MAX_SAMPLES="$1"
+    MAX_SAMPLES=$1
     shift
 
     if [[ $MAX_SAMPLES == short ]]; then
@@ -17,6 +17,11 @@ OUTPUT_DIRS=(output/heart_attack output/obesity)
         printf "Expected 'short' or a concrete number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
         exit 1
     fi
+}
+
+[[ -n $1 ]] && {
+    FILTER="$1"
+    shift
 }
 
 [[ -z $CMD ]] && CMD=build/xspace
@@ -28,11 +33,20 @@ for model_idx in ${!MODELS[@]}; do
     [[ -n $MAX_MODELS ]] && (( model_idx >= MAX_MODELS )) && break
 
     model="${MODELS[$model_idx]}"
+    printf "Dataset %s:\n\n" $model
+
     dataset="${DATASETS[$model_idx]}"
     _output_dir="${OUTPUT_DIRS[$model_idx]}"
 
     for exp_idx in ${!EXPERIMENTS[@]}; do
         experiment=${EXPERIMENTS[$exp_idx]}
+        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
+            printf "Skipping %s ...\n" $experiment
+            continue
+        }
+
+        printf "Running %s ...\n" $experiment
+
         experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
 
         for do_reverse in 0 1; do
@@ -58,3 +72,6 @@ for model_idx in ${!MODELS[@]}; do
         done
     done
 done
+
+printf "\nDone.\n"
+exit 0

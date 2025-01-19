@@ -7,7 +7,7 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> [short]\n" "$0"
+    printf "USAGE: %s <action> <dir> [short] [<filter_regex>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
 
     [[ -n $1 ]] && exit $1
@@ -47,14 +47,14 @@ PSI_FILE+=.smt2
     usage 2 >&2
 }
 
-[[ -n $1 ]] && {
-    SHORT="$1"
+[[ $1 == short ]] && {
+    SHORT=$1
     shift
+}
 
-    [[ $SHORT == short ]] || {
-        printf "Expected 'short' to analyze shortened experiments, got: %s\n" "$SHORT" >&2
-        usage 1 >&2
-    }
+[[ -n $1 ]] && {
+    FILTER="$1"
+    shift
 }
 
 case $ACTION in
@@ -130,6 +130,7 @@ for do_reverse in 0 1; do
 
     for exp_idx in ${!EXPERIMENTS[@]}; do
         experiment=${EXPERIMENTS[$exp_idx]}
+        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
 
         set_phi_filename $experiment phi_file
 
