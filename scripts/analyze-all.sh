@@ -14,9 +14,7 @@ function usage {
     [[ -n $1 ]] && exit $1
 }
 
-[[ -z $1 ]] && {
-    usage 1 >&2
-}
+[[ -z $1 ]] && usage 1 >&2
 
 ACTION=$1
 shift
