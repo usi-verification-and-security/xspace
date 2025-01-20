@@ -45,7 +45,11 @@ TERMS_MAX_WIDTH=${#TERMS_CAPTION}
 CHECKS_CAPTION='#checks'
 CHECKS_MAX_WIDTH=${#CHECKS_CAPTION}
 
-printf "%${EXPERIMENT_MAX_WIDTH}s | %s | %s | %s\n" experiment "$DIMENSION_CAPTION" "$TERMS_CAPTION" "$CHECKS_CAPTION"
+printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
+printf " | %s" "$DIMENSION_CAPTION"
+printf " | %s" "$TERMS_CAPTION"
+printf " | %s" "$CHECKS_CAPTION"
+printf " | avg. time [s]\n"
 
 for do_reverse in 0 1; do
     if (( $do_reverse )); then
@@ -65,18 +69,34 @@ for do_reverse in 0 1; do
             exit 1
         }
 
+        time_file="${STATS_DIR}/${experiment_stem}.time.txt"
+        [[ -r $time_file ]] || {
+            printf "File '%s' is not a readable.\n" "$time_file" >&2
+            exit 1
+        }
+
         stats=$($STATS_SCRIPT "$stats_file")
-        perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p'  <<<"$stats")
-        perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p'  <<<"$stats")
-        nterms=$(sed -n 's/^.*#terms: \(.*\)$/\1/p'  <<<"$stats")
-        nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p'  <<<"$stats")
+        size=$(sed -n 's/^Total:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
+        perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
+        perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
+        nterms=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
+        nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p' <<<"$stats")
 
         perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
+
+        time_str=$(sed -n 's/^user[^0-9]*\([0-9].*\)$/\1/p' <"$time_file")
+
+        time_min=${time_str%%m*}
+        time_s=${time_str##*m}
+        time_s=${time_s%s}
+        total_time_s=$(bc -l <<<"${time_min}*60 + ${time_s}")
+        avg_time_s=$(bc -l <<<"${total_time_s}/${size}")
 
         printf "%${EXPERIMENT_MAX_WIDTH}s" $experiment
         printf " |%${DIMENSION_MAX_WIDTH}.1f%%" $perc_dimension
         printf " | %${TERMS_MAX_WIDTH}.1f" $nterms
         printf " | %${CHECKS_MAX_WIDTH}.1f" $nchecks
+        printf " | %.2f" $avg_time_s
         printf "\n"
     done
 done
