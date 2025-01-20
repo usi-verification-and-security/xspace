@@ -7,8 +7,9 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> [short] [<filter_regex>]\n" "$0"
+    printf "USAGE: %s <action> <dir> [short] [<filter_regex>] [<filter_regex2>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
+    printf "\t[<filter_regex2>] is only to be used with binary actions\n"
 
     [[ -n $1 ]] && exit $1
 }
@@ -59,12 +60,22 @@ PSI_FILE+=.smt2
 
 case $ACTION in
 compare-subset)
+    [[ -n $1 ]] && {
+        FILTER2="$1"
+        shift
+    }
+
     EXPERIMENT_MAX_WIDTH=70
     ;;
 *)
     EXPERIMENT_MAX_WIDTH=40
     ;;
 esac
+
+[[ -n $1 ]] && {
+    printf "Additional arguments: %s\n" "$*" >&2
+    usage 1 >&2
+}
 
 case $ACTION in
 count-fixed|compare-subset)
@@ -117,6 +128,14 @@ function set_phi_filename {
     }
 }
 
+[[ -n $FILTER ]] && {
+    KEPT_IDXS=()
+    for exp_idx in ${!EXPERIMENTS[@]}; do
+        experiment=${EXPERIMENTS[$exp_idx]}
+        [[ $experiment =~ $FILTER ]] && KEPT_IDXS+=($exp_idx)
+    done
+}
+
 for do_reverse in 0 1; do
     case $ACTION in
     count-fixed|compare-subset)
@@ -137,6 +156,14 @@ for do_reverse in 0 1; do
         case $ACTION in
         compare-subset)
             ARGS=(${EXPERIMENTS[@]:$(($exp_idx+1))})
+            [[ -n $FILTER ]] && {
+                aux=(${EXPERIMENTS[@]::$exp_idx})
+                for fidx in ${KEPT_IDXS[@]}; do
+                    (( $fidx >= $exp_idx )) && break
+                    unset -v aux[$fidx]
+                done
+                ARGS=(${aux[@]} ${ARGS[@]})
+            }
             ;;
         *)
             ARGS=(dummy)
@@ -155,6 +182,8 @@ for do_reverse in 0 1; do
                 ;;
             compare-subset)
                 experiment2=$arg
+                [[ -n $FILTER2 && ! $experiment2 =~ $FILTER2 ]] && continue
+
                 set_phi_filename $experiment2 phi_file2
                 phi_files+=("$phi_file2")
 
