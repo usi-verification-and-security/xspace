@@ -217,3 +217,9 @@ EXPERIMENT_STRATEGIES=(
     # 'itp vars x5 x9; ucore min'
     # 'itp vars x5 x13; ucore min'
 )
+
+CONSECUTIVE_EXPERIMENTS=(
+    'trial_n_4_abductive;itp_aweak_bstrong'
+    'trial_n_4_abductive;ucore_itp_aweak_bstrong'
+    'trial_n_4_abductive;ucore_min_itp_aweak_bstrong'
+)

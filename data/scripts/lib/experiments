@@ -3,6 +3,46 @@
 source "$DIRNAME/spec/models_datasets"
 source "$DIRNAME/spec/experiments"
 
+# 1 - input string
+#<2>- array var. name to write into
+#(3)- field separator to use
+function _split_string {
+   [[ -n $3 ]] && local IFS=$3
+   local -n larray=$2
+   larray=($1)
+}
+
+function _split_consecutive_experiments {
+    local array_var=$1
+    local dst_array_of_src_var=$2
+    local dst_array_of_dst_var=$3
+
+    local -n larray=$array_var
+    local -n ldst_array_of_src=$dst_array_of_src_var
+    local -n ldst_array_of_dst=$dst_array_of_dst_var
+
+    local ary=()
+
+    for spec in "${larray[@]}"; do
+        _split_string "$spec" ary ';'
+        (( ${#ary[@]} == 2 )) || {
+            printf "Two consecutive experiments expected, got: %s\n" "$spec" >&2
+            exit 1
+        }
+
+        local src="${ary[0]}"
+        local dst="${ary[1]}"
+
+        ldst_array_of_src+=("$src")
+        ldst_array_of_dst+=("$dst")
+    done
+}
+
+CONSECUTIVE_EXPERIMENTS_SRC=()
+CONSECUTIVE_EXPERIMENTS_DST=()
+
+_split_consecutive_experiments CONSECUTIVE_EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC CONSECUTIVE_EXPERIMENTS_DST
+
 function _check_array_sizes {
     local array_var1=$1
     local array_var2=$2
@@ -19,3 +59,68 @@ function _check_array_sizes {
 _check_array_sizes OUTPUT_DIRS MODELS
 _check_array_sizes OUTPUT_DIRS DATASETS
 _check_array_sizes EXPERIMENTS EXPERIMENT_STRATEGIES
+
+_check_array_sizes CONSECUTIVE_EXPERIMENTS_SRC CONSECUTIVE_EXPERIMENTS_DST
+
+function __contains {
+    local array_var=$1
+    local elem="$2"
+
+    local -n larray=$array_var
+
+    local e
+    for e in "${larray[@]}"; do
+        [[ $e == $elem ]] && return 0
+    done
+
+    return 1
+}
+
+function _includes {
+    local array_var1=$1
+    local array_var2=$2
+
+    local -n larray1=$array_var1
+    local -n larray2=$array_var2
+
+    local e
+    for e in "${larray2[@]}"; do
+        __contains $array_var1 "$e" && continue
+
+        printf "Element '%s' of array %s is not included in array %s\n" "$e" $array_var2 $array_var1 >&2
+        exit 9
+    done
+
+    return 0
+}
+
+_includes EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC
+_includes EXPERIMENTS CONSECUTIVE_EXPERIMENTS_DST
+
+## Functions to be used in scripts follow ...
+
+declare -A EXPERIMENT_TO_STRATEGIES
+
+## Use if the index is not available
+function find_strategies_for_experiment {
+    local experiment="$1"
+    local -n lexperiment_strategies=$2
+
+    local strategies="${EXPERIMENT_TO_STRATEGIES[$experiment]}"
+    [[ -n $strategies ]] && {
+        lexperiment_strategies="$strategies"
+        return 0
+    }
+
+    local eidx
+    for eidx in ${!EXPERIMENTS[@]}; do
+        [[ $experiment == ${EXPERIMENTS[$eidx]} ]] || continue
+        strategies="${EXPERIMENT_STRATEGIES[$eidx]}"
+        EXPERIMENT_TO_STRATEGIES[$experiment]="$strategies"
+        lexperiment_strategies="$strategies"
+        return 0
+    done
+
+    printf "UNEXPECTED\n" >&2
+    exit 37
+}

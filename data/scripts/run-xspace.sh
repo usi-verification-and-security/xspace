@@ -15,7 +15,7 @@ function usage {
 read_output_dir "$1" && shift
 
 [[ -z $1 || $1 =~ ^(reverse|short)$ ]] && usage 1 >&2
-EXPERIMENT_STRATEGIES="$1"
+STRATEGIES="$1"
 shift
 
 [[ -z $1 || $1 =~ ^(reverse|short)$ ]] && usage 1 >&2
@@ -50,4 +50,35 @@ OPTIONS=(-sv)
 }
 
 mkdir -p "$OUTPUT_DIR" >/dev/null || exit $?
-{ time ${CMD} "$MODEL" "$DATASET" "$EXPERIMENT_STRATEGIES" ${OPTIONS[@]} "$@" >"${OUTPUT_DIR}/${EXPERIMENT}.phi.txt" 2>"${OUTPUT_DIR}/${EXPERIMENT}.stats.txt" ; } 2>"${OUTPUT_DIR}/${EXPERIMENT}.time.txt"
+
+function set_file {
+    local file_var=$1
+    local experiment="$2"
+    local type=$3
+    local src_experiment="$4"
+
+    local aux_experiment
+    if [[ -z $src_experiment ]]; then
+        aux_experiment="$experiment"
+    else
+        aux_experiment="${experiment}__${src_experiment}"
+    fi
+
+    local -n lfile=$file_var
+    lfile="${OUTPUT_DIR}/${aux_experiment}.${type}.txt"
+}
+
+ARGS=()
+
+## SRC_EXPERIMENT may be empty
+for t in phi stats time; do
+    set_file ${t}_file "$EXPERIMENT" $t "$SRC_EXPERIMENT"
+done
+
+[[ -n $SRC_EXPERIMENT ]] && {
+    set_file src_phi_file "$SRC_EXPERIMENT" phi
+
+    ARGS+=(-E "$src_phi_file")
+}
+
+{ time ${CMD} "$MODEL" "$DATASET" "$STRATEGIES" ${OPTIONS[@]} "${ARGS[@]}" "$@" >"$phi_file" 2>"$stats_file" ; } 2>"$time_file"
