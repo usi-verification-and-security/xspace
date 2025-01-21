@@ -1,0 +1,64 @@
+OUTPUT_DIRS=(output/heart_attack output/obesity)
+
+## Models and datasets that correspond to the output directories
+MODELS=(models/Heart_attack/heartAttack50.nnet models/obesity/obesity-10-20-10.nnet)
+DATASETS=(data/heartAttack.csv data/obesity_test_data_noWeight.csv)
+
+function read_output_dir {
+    OUTPUT_DIR="$1"
+
+    OUTPUT_DIR="${OUTPUT_DIR%%/}"
+    for odir_idx in ${!OUTPUT_DIRS[@]}; do
+        odir="${OUTPUT_DIRS[$odir_idx]}"
+        [[ $odir == $OUTPUT_DIR ]] || continue
+        OUTPUT_DIR_IDX=$odir_idx
+        break
+    done
+
+    [[ -z $OUTPUT_DIR_IDX ]] && {
+        printf "Unrecognized output directory: %s\n" "$OUTPUT_DIR" >&2
+        printf "Expected one of: %s\n" "${OUTPUT_DIRS[*]}" >&2
+        exit 1
+    }
+
+    [[ -d $OUTPUT_DIR && -w $OUTPUT_DIR ]] || {
+        printf "Output directory %s is not writable directory.\n" "$OUTPUT_DIR" >&2
+        exit 2
+    }
+
+    MODEL="${MODELS[$OUTPUT_DIR_IDX]}"
+    DATASET="${DATASETS[$OUTPUT_DIR_IDX]}"
+
+    [[ -r $MODEL ]] || {
+        printf "Model file %s is not readable.\n" "$MODEL" >&2
+        exit 2
+    }
+
+    [[ -r $DATASET ]] || {
+        printf "Dataset file %s is not readable.\n" "$DATASET" >&2
+        exit 2
+    }
+
+    return 0
+}
+
+function read_max_samples {
+    [[ $1 =~ ^(short|[0-9]+)$ ]] || return 1
+
+    MAX_SAMPLES_SHORT=20
+    MAX_SAMPLES=$1
+    shift
+
+    if [[ $MAX_SAMPLES == short ]]; then
+        MAX_SAMPLES=$MAX_SAMPLES_SHORT
+    elif ! [[ $MAX_SAMPLES =~ ^[1-9][0-9]*$ ]]; then
+        printf "Expected 'short' or a concrete number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
+        exit 1
+    fi
+
+    return 0
+}
+
+function set_cmd {
+    [[ -z $CMD ]] && CMD=build/xspace
+}
