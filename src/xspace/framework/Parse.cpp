@@ -27,9 +27,9 @@ Explanations Framework::Parse::parseIntervalExplanations(std::string_view fileNa
 }
 
 Explanations Framework::Parse::parseIntervalExplanationsSmtLib2(std::istream & is, Dataset const & data) const {
-    std::size_t const size = data.size();
+    std::size_t const maxSize = data.size();
     Explanations explanations;
-    explanations.reserve(size);
+    explanations.reserve(maxSize);
 
     std::string line;
     while (std::getline(is, line)) {
@@ -43,7 +43,7 @@ Explanations Framework::Parse::parseIntervalExplanationsSmtLib2(std::istream & i
         throw std::logic_error{iss.str()};
     }
 
-    assert(explanations.size() == size);
+    assert(explanations.size() <= maxSize);
     return explanations;
 }
 

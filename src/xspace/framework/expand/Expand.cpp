@@ -112,8 +112,16 @@ Dataset::SampleIndices Framework::Expand::getSampleIndices(Dataset const & data)
 }
 
 void Framework::Expand::operator()(Explanations & explanations, Dataset const & data) {
-    assert(explanations.size() == data.size());
     assert(not strategies.empty());
+
+    assert(explanations.size() <= data.size());
+    //+ if we start from file where filtering (and possibly also shuffling) happened,
+    // we would have to sync the explanations with the sample points in the dataset
+    // The output variable must also be compatible with this, now we always keep all
+    if (explanations.size() < data.size()) {
+        throw std::invalid_argument{"Expansion of lower no. explanations than the dataset size is not supported: "s +
+                                    std::to_string(explanations.size()) + " < " + std::to_string(data.size())};
+    }
 
     Print & print = *framework.printPtr;
     bool const printingStats = not print.ignoringStats();
