@@ -10,6 +10,9 @@
 
 #include <api/MainSolver.h>
 
+//+ ideally get rid of these
+#include <common/StringConv.h>
+
 #include <cassert>
 
 namespace xspace::expand::opensmt {
@@ -44,6 +47,16 @@ void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanati
             break;
         case ArithInterpolationAlg::stronger:
             solverConf.setLRAInterpolationAlgorithm(::opensmt::itp_lra_alg_decomposing_strong); // seems too strong ...
+            break;
+        case ArithInterpolationAlg::factor:
+            solverConf.setLRAInterpolationAlgorithm(::opensmt::itp_lra_alg_factor);
+            // 0 corresponds to strong, ~ 1 does not seem to be weak though
+            assert(config.arithInterpolationAlgFactor >= 0);
+            assert(config.arithInterpolationAlgFactor < 1);
+            // the internal rational type cannot accept floats directly
+            char * rationalString;
+            ::opensmt::stringToRational(rationalString, std::to_string(config.arithInterpolationAlgFactor).c_str());
+            solverConf.setLRAStrengthFactor(rationalString);
             break;
     }
 }

@@ -198,6 +198,17 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
             continue;
         }
 
+        if (paramLower == "afactor") {
+            conf.arithInterpolationAlg = InterpolationStrategy::ArithInterpolationAlg::factor;
+
+            float factor;
+            iss >> factor;
+            if (not iss) { throwInvalidParameterTp<InterpolationStrategy>(paramStr); }
+            //+ additional args not handled
+            conf.arithInterpolationAlgFactor = factor;
+            continue;
+        }
+
         if (paramLower == "vars") {
             //+ not handled when no vars are provided
             while (iss >> param) {

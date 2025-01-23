@@ -54,7 +54,7 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageStrategyRow(os, UnsatCoreStrategy::name(), {"sample", "interval", "min"});
     printUsageStrategyRow(os, InterpolationStrategy::name(),
                           {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
-                           "astronger", "vars x<i>..."});
+                           "astronger", "afactor <factor>", "vars x<i>..."});
 
     os << "VERIFIERS: opensmt";
 #ifdef MARABOU

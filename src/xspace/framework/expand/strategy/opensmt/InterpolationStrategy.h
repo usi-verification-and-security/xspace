@@ -9,11 +9,12 @@ namespace xspace::expand::opensmt {
 class InterpolationStrategy : public Strategy {
 public:
     enum class BoolInterpolationAlg { weak, strong };
-    enum class ArithInterpolationAlg { weak, weaker, strong, stronger };
+    enum class ArithInterpolationAlg { weak, weaker, strong, stronger, factor };
 
     struct Config {
         BoolInterpolationAlg boolInterpolationAlg{BoolInterpolationAlg::strong};
         ArithInterpolationAlg arithInterpolationAlg{ArithInterpolationAlg::weak};
+        float arithInterpolationAlgFactor{};
         std::vector<VarIdx> varIndicesFilter{};
     };
 
