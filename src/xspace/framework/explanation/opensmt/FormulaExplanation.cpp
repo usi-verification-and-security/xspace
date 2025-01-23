@@ -45,7 +45,8 @@ std::size_t FormulaExplanation::termSizeOf(Formula const & phi) const {
         assert(phiTerm.size() == 1);
         auto & negPhi = *phiTerm.begin();
         assert(not logic.isNot(negPhi));
-        return termSizeOf(negPhi) + 1;
+        // just care about no. literals, so ignore the negations themselves
+        return termSizeOf(negPhi);
     }
 
     assert(logic.isAnd(phi) or logic.isOr(phi));
