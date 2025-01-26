@@ -266,6 +266,7 @@ while true; do
 
         case $ACTION in
         check)
+            ## + we do not check that psi alone and also phi alone are both SAT
             printf "(assert %s)" "$line" >>$ifile
             ;;
         count-fixed)

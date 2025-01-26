@@ -4,7 +4,7 @@ SCRIPTS_DIR=$(dirname "$0")
 
 STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
 
-source "$SCRIPTS_DIR/experiments"
+source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
     printf "USAGE: %s <dir> [short]\n" "$0"

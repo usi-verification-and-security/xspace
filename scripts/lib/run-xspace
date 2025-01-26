@@ -1,8 +1,6 @@
-OUTPUT_DIRS=(output/heart_attack output/obesity)
+[[ -z $DIRNAME ]] && DIRNAME=$(dirname "$0")
 
-## Models and datasets that correspond to the output directories
-MODELS=(models/Heart_attack/heartAttack50.nnet models/obesity/obesity-10-20-10.nnet)
-DATASETS=(data/heartAttack.csv data/obesity_test_data_noWeight.csv)
+source "$DIRNAME/lib/experiments"
 
 function read_output_dir {
     OUTPUT_DIR="$1"

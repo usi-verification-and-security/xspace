@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source "$(dirname "$0")/run-xspace_lib"
+DIRNAME=$(dirname "$0")
+
+source "$DIRNAME/lib/run-xspace"
 
 function usage {
     printf "USAGE: %s <output_dir> <exp_strategies_spec> <name> [reverse] [short | <max_samples>] <args>...\n" "$0"

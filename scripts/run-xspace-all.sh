@@ -2,8 +2,7 @@
 
 DIRNAME=$(dirname "$0")
 
-source "$DIRNAME/run-xspace_lib"
-source "$DIRNAME/experiments"
+source "$DIRNAME/lib/run-xspace"
 
 function usage {
     printf "USAGE: %s <output_dir> [short] [<filter_regex>]\n" "$0"

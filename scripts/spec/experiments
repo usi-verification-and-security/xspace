@@ -35,8 +35,3 @@ EXPERIMENT_STRATEGIES=(
     # 'ucore sample, min; itp; ucore min'
     # 'ucore interval, min; itp; ucore min'
 )
-
-(( ${#EXPERIMENTS[@]} == ${#EXPERIMENT_STRATEGIES[@]} )) || {
-    printf "Mismatch of the size of arrays %s and %s: %d != %d\n" EXPERIMENTS EXPERIMENT_STRATEGIES ${#EXPERIMENTS[@]} ${#EXPERIMENT_STRATEGIES[@]} >&2
-    exit 9
-}

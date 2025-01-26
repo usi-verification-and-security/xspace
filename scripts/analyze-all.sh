@@ -4,7 +4,7 @@ SCRIPTS_DIR=$(dirname "$0")
 
 ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 
-source "$SCRIPTS_DIR/experiments"
+source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
     printf "USAGE: %s <action> <dir> [short] [<filter_regex>] [<filter_regex2>]\n" "$0"
