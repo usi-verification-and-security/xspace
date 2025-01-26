@@ -36,7 +36,7 @@ for exp_idx in ${!EXPERIMENTS[@]}; do
         continue
     }
 
-    printf "Running %s ...\n" $experiment
+    printf "Running %s in the background ...\n" $experiment
 
     experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
 
