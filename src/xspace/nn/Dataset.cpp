@@ -115,7 +115,13 @@ bool Dataset::isCorrect(Sample::Idx idx) {
 }
 
 void Dataset::setCorrectAndIncorrectSamples() {
-    std::size_t size_ = size();
+    std::size_t const classificationSize_ = classificationSize();
+    for (std::size_t label = 0; label < classificationSize_; ++label) {
+        getCorrectSampleIndicesOfClass(label);
+        getIncorrectSampleIndicesOfClass(label);
+    }
+
+    std::size_t const size_ = size();
     for (Sample::Idx idx = 0; idx < size_; ++idx) {
         bool const correct = isCorrect(idx);
 
@@ -130,8 +136,8 @@ void Dataset::setCorrectAndIncorrectSamples() {
 
     assert(size() == correctSampleIndices.size() + incorrectSampleIndices.size());
 
-    assert(classificationSize() == correctSampleIndicesOfClasses.size());
-    assert(classificationSize() == incorrectSampleIndicesOfClasses.size());
+    assert(classificationSize_ == correctSampleIndicesOfClasses.size());
+    assert(classificationSize_ == incorrectSampleIndicesOfClasses.size());
 }
 
 Dataset::SampleIndices const & Dataset::getCorrectSampleIndices() const {
