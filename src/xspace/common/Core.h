@@ -4,7 +4,7 @@
 #include <utility>
 
 namespace xspace {
-using Float = float;
+using Float = double;
 } // namespace xspace
 
 #endif // XSPACE_CORE_H

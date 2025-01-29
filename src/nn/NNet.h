@@ -6,10 +6,12 @@
 #include <vector>
 
 namespace xai::nn {
+using Float = double;
+
 class NNet {
 public:
-    using input_t = std::vector<float>;
-    using output_t = std::vector<float>;
+    using input_t = std::vector<Float>;
+    using output_t = std::vector<Float>;
 
     static std::unique_ptr<NNet> fromFile(std::string_view filename);
 
@@ -18,25 +20,25 @@ public:
     std::size_t getLayerSize(std::size_t layerNum) const;
     std::size_t getInputSize() const;
 
-    std::vector<float> const & getWeights(std::size_t layerNum, std::size_t nodeIndex) const;
+    std::vector<Float> const & getWeights(std::size_t layerNum, std::size_t nodeIndex) const;
 
-    float getBias(std::size_t layerNum, std::size_t nodeIndex) const;
+    Float getBias(std::size_t layerNum, std::size_t nodeIndex) const;
 
-    float getInputLowerBound(std::size_t node) const;
-    float getInputUpperBound(std::size_t node) const;
+    Float getInputLowerBound(std::size_t node) const;
+    Float getInputUpperBound(std::size_t node) const;
 
 private:
     NNet() = default;
 
-    using weights_t = std::vector<std::vector<std::vector<float>>>;
-    using biases_t = std::vector<std::vector<float>>;
+    using weights_t = std::vector<std::vector<std::vector<Float>>>;
+    using biases_t = std::vector<std::vector<Float>>;
 
     std::size_t numLayers;
     std::size_t numInputs;
     std::size_t numOutputs;
     std::size_t maxLayerSize;
-    std::vector<float> inputMinimums;
-    std::vector<float> inputMaximums;
+    std::vector<Float> inputMinimums;
+    std::vector<Float> inputMaximums;
     weights_t weights;
     biases_t biases;
 };

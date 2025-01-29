@@ -83,11 +83,11 @@ std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
     std::getline(file, line);
 
     // Min and max input values
-    auto transformation = [](auto const & val) { return std::stof(val); };
+    auto transformation = [](auto const & val) { return std::stod(val); };
     std::getline(file, line);
-    std::vector<float> inputMinValues = parseValues(line, transformation);
+    std::vector<Float> inputMinValues = parseValues(line, transformation);
     std::getline(file, line);
-    std::vector<float> inputMaxValues = parseValues(line, transformation);
+    std::vector<Float> inputMaxValues = parseValues(line, transformation);
     assert(inputMinValues.size() == numInputs and inputMaxValues.size() == numInputs);
 
     // Skip normalization information
@@ -97,7 +97,7 @@ std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
 
     // Parse model parameters
     weights_t weights(numLayers);
-    std::vector<std::vector<float>> biases(numLayers);
+    std::vector<std::vector<Float>> biases(numLayers);
     for (int layer = 0; layer < numLayers - 1; layer++) {
         // Parse weights
         auto layerSize = layer_sizes.at(layer + 1);
@@ -106,7 +106,7 @@ std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
             std::vector<std::string> weightStrings = split(line, ',');
             weights[layer].emplace_back();
             for (const auto& weightString : weightStrings) {
-                weights[layer][i].push_back(std::stof(weightString));
+                weights[layer][i].push_back(std::stod(weightString));
             }
         }
 
@@ -115,7 +115,7 @@ std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
             std::getline(file, line);
             std::vector<std::string> biasStrings = split(line, ',');
             std::string biasString = biasStrings[0];
-            biases[layer].push_back(std::stof(biasString));
+            biases[layer].push_back(std::stod(biasString));
         }
     }
     file.close();
@@ -142,24 +142,24 @@ std::size_t NNet::getLayerSize(std::size_t layerNum) const {
     return biases[layerNum - 1].size();
 }
 
-std::vector<float> const & NNet::getWeights(std::size_t layerNum, std::size_t nodeIndex) const {
+std::vector<Float> const & NNet::getWeights(std::size_t layerNum, std::size_t nodeIndex) const {
     assert(layerNum > 0);
     assert(nodeIndex < getLayerSize(layerNum));
     return weights[layerNum - 1][nodeIndex];
 }
 
-float NNet::getBias(std::size_t layerNum, std::size_t nodeIndex) const {
+Float NNet::getBias(std::size_t layerNum, std::size_t nodeIndex) const {
     assert(layerNum > 0);
     assert(nodeIndex < getLayerSize(layerNum));
     return biases[layerNum - 1][nodeIndex];
 }
 
-float NNet::getInputLowerBound(std::size_t nodeIndex) const {
+Float NNet::getInputLowerBound(std::size_t nodeIndex) const {
     assert(nodeIndex < getLayerSize(0));
     return inputMinimums.at(nodeIndex);
 }
 
-float NNet::getInputUpperBound(std::size_t nodeIndex) const {
+Float NNet::getInputUpperBound(std::size_t nodeIndex) const {
     assert(nodeIndex < getLayerSize(0));
     return inputMaximums.at(nodeIndex);
 }
@@ -169,19 +169,19 @@ NNet::output_t computeOutput(NNet::input_t const & inputValues, NNet const & net
     if (inputValues.size() != inputSize) { throw std::logic_error("Input values do not have expected size!"); }
 
     auto previousLayerValues = inputValues;
-    std::vector<float> currentLayerValues;
+    std::vector<Float> currentLayerValues;
     for (auto layer = 1u; layer < network.getNumLayers(); ++layer) {
         for (auto node = 0u; node < network.getLayerSize(layer); ++node) {
             auto const & incomingWeights = network.getWeights(layer, node);
             assert(incomingWeights.size() == previousLayerValues.size());
-            std::vector<float> addends;
+            std::vector<Float> addends;
             for (std::size_t i = 0; i < incomingWeights.size(); ++i) {
                 addends.push_back(incomingWeights[i] * previousLayerValues[i]);
             }
             currentLayerValues.push_back(std::accumulate(addends.begin(), addends.end(), network.getBias(layer, node)));
         }
         if (layer < network.getNumLayers() - 1) {
-            std::transform(currentLayerValues.begin(), currentLayerValues.end(), currentLayerValues.begin(), [](float val) {
+            std::transform(currentLayerValues.begin(), currentLayerValues.end(), currentLayerValues.begin(), [](Float val) {
                return val >= 0.0f ? val : 0.0f;
             });
             previousLayerValues = std::move(currentLayerValues);
