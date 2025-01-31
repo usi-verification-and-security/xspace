@@ -45,6 +45,14 @@ TERMS_MAX_WIDTH=${#TERMS_CAPTION}
 CHECKS_CAPTION='#checks'
 CHECKS_MAX_WIDTH=${#CHECKS_CAPTION}
 
+## Workaround until all experiments with outdated termSize are re-run
+function compute_term_size {
+    local phi_file="$1"
+    local n_lines=$2
+
+    tr ' ' '\n' <"$phi_file" | grep -c '=' | { tr -d '\n'; printf "/$n_lines\n"; } | bc -l
+}
+
 printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
 printf " | %s" "$DIMENSION_CAPTION"
 printf " | %s" "$TERMS_CAPTION"
@@ -75,11 +83,18 @@ for do_reverse in 0 1; do
             exit 1
         }
 
+        phi_file="${STATS_DIR}/${experiment_stem}.phi.txt"
+        [[ -r $phi_file ]] || {
+            printf "File '%s' is not a readable.\n" "$phi_file" >&2
+            exit 1
+        }
+
         stats=$($STATS_SCRIPT "$stats_file")
         size=$(sed -n 's/^Total:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
         perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
         perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
-        nterms=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
+        # nterms=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
+        nterms=$(compute_term_size "$phi_file" $size)
         nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p' <<<"$stats")
 
         perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
