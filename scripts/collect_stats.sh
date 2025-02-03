@@ -36,6 +36,12 @@ shift
 
 EXPERIMENT_MAX_WIDTH=40
 
+FEATURES_CAPTION='%features'
+FEATURES_MAX_WIDTH=${#FEATURES_CAPTION}
+
+FIXED_CAPTION='%fixed'
+FIXED_MAX_WIDTH=${#FIXED_CAPTION}
+
 DIMENSION_CAPTION='%dimension'
 DIMENSION_MAX_WIDTH=${#DIMENSION_CAPTION}
 
@@ -54,6 +60,8 @@ function compute_term_size {
 }
 
 printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
+printf " | %s" "$FEATURES_CAPTION"
+printf " | %s" "$FIXED_CAPTION"
 printf " | %s" "$DIMENSION_CAPTION"
 printf " | %s" "$TERMS_CAPTION"
 printf " | %s" "$CHECKS_CAPTION"
@@ -108,6 +116,8 @@ for do_reverse in 0 1; do
         avg_time_s=$(bc -l <<<"${total_time_s}/${size}")
 
         printf "%${EXPERIMENT_MAX_WIDTH}s" $experiment
+        printf " |%${FEATURES_MAX_WIDTH}.1f%%" $perc_features
+        printf " |%${FIXED_MAX_WIDTH}.1f%%" $perc_fixed_features
         printf " |%${DIMENSION_MAX_WIDTH}.1f%%" $perc_dimension
         printf " | %${TERMS_MAX_WIDTH}.1f" $nterms
         printf " | %${CHECKS_MAX_WIDTH}.1f" $nchecks
