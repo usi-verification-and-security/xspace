@@ -24,14 +24,14 @@ shift
     usage 1 >&2
 }
 
-[[ -n $1 ]] && {
-    SHORT="$1"
+[[ $1 == short ]] && {
+    SHORT=$1
     shift
+}
 
-    [[ $SHORT == short ]] || {
-        printf "Expected 'short' to collect stats from shortened experiments, got: %s\n" "$SHORT" >&2
-        usage 1 >&2
-    }
+[[ -n $1 ]] && {
+    FILTER="$1"
+    shift
 }
 
 EXPERIMENT_MAX_WIDTH=40
@@ -51,12 +51,11 @@ TERMS_MAX_WIDTH=${#TERMS_CAPTION}
 CHECKS_CAPTION='#checks'
 CHECKS_MAX_WIDTH=${#CHECKS_CAPTION}
 
-## Workaround until all experiments with outdated termSize are re-run
 function compute_term_size {
     local phi_file="$1"
     local n_lines=$2
 
-    tr ' ' '\n' <"$phi_file" | grep -c '=' | { tr -d '\n'; printf "/$n_lines\n"; } | bc -l
+    tr ' ' '\n' <"$phi_file" | grep -c '=' | { tr -d '\n'; printf "/$n_lines\n"; } | bc -l | xargs -i printf '%.1f' {}
 }
 
 printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
@@ -76,6 +75,8 @@ for do_reverse in 0 1; do
 
     for experiment in ${EXPERIMENTS[@]}; do
         experiment_stem=$experiment
+        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
+
         (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
         [[ -n $SHORT ]] && experiment_stem=short/$experiment_stem
 
@@ -101,11 +102,16 @@ for do_reverse in 0 1; do
         size=$(sed -n 's/^Total:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
         perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
         perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
-        # nterms=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
-        nterms=$(compute_term_size "$phi_file" $size)
+        nterms_stats=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
         nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p' <<<"$stats")
 
         perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
+
+        nterms=$(compute_term_size "$phi_file" $size)
+        [[ $nterms == $nterms_stats ]] || {
+            printf "Encountered inconsistency: stats.termSize != termSize(phi): %s != %s\n" "$nterms_stats" "$nterms" >&2
+            exit 3
+        }
 
         time_str=$(sed -n 's/^user[^0-9]*\([0-9].*\)$/\1/p' <"$time_file")
 
