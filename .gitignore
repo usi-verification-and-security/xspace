@@ -52,4 +52,4 @@ venv/
 
 build*/
 
-.ccls-cache/
+*cache/

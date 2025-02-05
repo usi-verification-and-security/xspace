@@ -138,7 +138,67 @@ function set_phi_filename {
     done
 }
 
+MODEL=$(basename "$PHI_DIR")
+
+SCRIPT_NAME=$(basename -s .sh "$0")
+SCRIPT_OUTPUT_CACHE_FILE_REVERSE="$SCRIPTS_DIR/cache/$MODEL/${SHORT}/reverse/${SCRIPT_NAME}.${ACTION}.txt"
+SCRIPT_OUTPUT_CACHE_FILE="${SCRIPT_OUTPUT_CACHE_FILE_REVERSE/reverse\//}"
+
+mkdir -p $(dirname "$SCRIPT_OUTPUT_CACHE_FILE_REVERSE") >/dev/null || exit $?
+
+function get_cache_line {
+    local -n lcache_line=$1
+    local experiment=$2
+    local experiment2=$3
+
+    [[ -z $CACHE ]] && return 1
+
+    local prefix=' '
+    local suffix=' '
+
+    case $ACTION in
+    check)
+        prefix=/
+        suffix=.
+        ;;
+    esac
+
+    case $ACTION in
+    check|count-fixed)
+        lcache_line=$(grep "${prefix}${experiment}${suffix}" <<<"$CACHE")
+        ;;
+    compare-subset)
+        local lhs="${prefix}${experiment}${suffix}"
+        local mid='vs.'
+        local rhs=
+        [[ $experiment2 == all ]] || rhs="${prefix}${experiment2}${suffix}"
+        lcache_line=$(grep "${lhs}${mid}${rhs}" <<<"$CACHE")
+        ;;
+    esac
+
+    [[ -n $lcache_line ]]
+}
+
 for do_reverse in 0 1; do
+    if (( $do_reverse )); then
+        declare -n lSCRIPT_OUTPUT_CACHE_FILE=SCRIPT_OUTPUT_CACHE_FILE_REVERSE
+    else
+        declare -n lSCRIPT_OUTPUT_CACHE_FILE=SCRIPT_OUTPUT_CACHE_FILE
+    fi
+
+    [[ -r $lSCRIPT_OUTPUT_CACHE_FILE ]] && {
+        CACHE=$(<"$lSCRIPT_OUTPUT_CACHE_FILE")
+    }
+
+    case $ACTION in
+    *)
+        exec 3>&1
+        exec > >(tee -i "${lSCRIPT_OUTPUT_CACHE_FILE}")
+        >"${lSCRIPT_OUTPUT_CACHE_FILE}"
+        [[ -n $FILTER ]] && FILTERED_OUTPUT_CACHE_FILE=$(mktemp)
+        ;;
+    esac
+
     case $ACTION in
     count-fixed|compare-subset)
         if (( $do_reverse )); then
@@ -151,7 +211,10 @@ for do_reverse in 0 1; do
 
     for exp_idx in ${!EXPERIMENTS[@]}; do
         experiment=${EXPERIMENTS[$exp_idx]}
-        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
+        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
+            get_cache_line cache_line $experiment all && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
+            continue
+        }
 
         set_phi_filename $experiment phi_file
 
@@ -174,24 +237,35 @@ for do_reverse in 0 1; do
 
         for arg in ${ARGS[@]}; do
             phi_files=("$phi_file")
+            unset experiment2
+
+            case $ACTION in
+            compare-subset)
+                experiment2=$arg
+                [[ -n $FILTER2 && ! $experiment2 =~ $FILTER2 ]] && {
+                    get_cache_line cache_line $experiment $experiment2 && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
+                    continue
+                }
+
+                set_phi_filename $experiment2 phi_file2
+                phi_files+=("$phi_file2")
+                ;;
+            esac
+
+            get_cache_line cache_line $experiment $experiment2 && {
+                printf "%s\n" "$cache_line"
+                continue
+            }
 
             case $ACTION in
             check)
-                printf "Analyzing %s ...\n" "$phi_file"
+                printf "Analyzing %s ... " "$phi_file"
                 ;;
             count-fixed)
                 printf "%${EXPERIMENT_MAX_WIDTH}s" $experiment
                 ;;
             compare-subset)
-                experiment2=$arg
-                [[ -n $FILTER2 && ! $experiment2 =~ $FILTER2 ]] && continue
-
-                set_phi_filename $experiment2 phi_file2
-                phi_files+=("$phi_file2")
-
                 printf "%${EXPERIMENT_MAX_WIDTH}s" "$experiment vs. $experiment2"
-                ;;
-            *)
                 ;;
             esac
 
@@ -199,10 +273,12 @@ for do_reverse in 0 1; do
 
             case $ACTION in
             check)
-                [[ $out =~ ^OK ]] || {
+                if [[ $out =~ ^OK ]]; then
+                    printf "%s\n" "$out"
+                else
                     printf "\n%s\n" "$out" >&2
                     exit 4
-                }
+                fi
                 ;;
             count-fixed)
                 perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p'  <<<"$out")
@@ -235,12 +311,16 @@ for do_reverse in 0 1; do
             ;;
         esac
     done
-done
 
-case $ACTION in
-check)
-    printf "OK!\n"
-    ;;
-esac
+    case $ACTION in
+    *)
+        exec >&3 3>&-
+        [[ -n $FILTER ]] && {
+            cat "$FILTERED_OUTPUT_CACHE_FILE" >>"${lSCRIPT_OUTPUT_CACHE_FILE}"
+            rm "$FILTERED_OUTPUT_CACHE_FILE"
+        }
+        ;;
+    esac
+done
 
 exit 0
