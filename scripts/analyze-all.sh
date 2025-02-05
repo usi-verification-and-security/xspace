@@ -150,8 +150,11 @@ function get_cache_line {
     local -n lcache_line=$1
     local experiment=$2
     local experiment2=$3
+    local try_swap=$4
 
     [[ -z $CACHE ]] && return 1
+
+    local grep_cmd=(grep -m 1)
 
     local prefix=' '
     local suffix=' '
@@ -159,20 +162,35 @@ function get_cache_line {
     case $ACTION in
     check)
         prefix=/
-        suffix=.
+        suffix=\.
         ;;
     esac
 
+    local experiment_regex="${prefix}${experiment}${suffix}"
+
     case $ACTION in
     check|count-fixed)
-        lcache_line=$(grep "${prefix}${experiment}${suffix}" <<<"$CACHE")
+        lcache_line=$(${grep_cmd[@]} "${experiment_regex}" <<<"$CACHE")
         ;;
     compare-subset)
-        local lhs="${prefix}${experiment}${suffix}"
         local mid='vs.'
-        local rhs=
-        [[ $experiment2 == all ]] || rhs="${prefix}${experiment2}${suffix}"
-        lcache_line=$(grep "${lhs}${mid}${rhs}" <<<"$CACHE")
+        local experiment2_regex="${prefix}${experiment2}${suffix}"
+        lcache_line=$(${grep_cmd[@]} "${experiment_regex}${mid}${experiment2_regex}" <<<"$CACHE")
+        [[ -n $try_swap && -z $lcache_line ]] && {
+            lcache_line=$(${grep_cmd[@]} "${experiment2_regex}${mid}${experiment_regex}" <<<"$CACHE")
+            [[ -n $lcache_line ]] && {
+                lcache_line="${lcache_line/${experiment2_regex}/|${experiment2_regex}}"
+                local IFS='|'
+                local array=($lcache_line)
+
+                array[1]="${experiment_regex}${mid}${experiment2_regex}"
+                local tmp="${array[2]}"
+                array[2]="${array[4]}"
+                array[4]="$tmp"
+                lcache_line="${array[*]}"
+                lcache_line="${lcache_line/|/}"
+            }
+        }
         ;;
     esac
 
@@ -211,10 +229,6 @@ for do_reverse in 0 1; do
 
     for exp_idx in ${!EXPERIMENTS[@]}; do
         experiment=${EXPERIMENTS[$exp_idx]}
-        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
-            get_cache_line cache_line $experiment all && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
-            continue
-        }
 
         set_phi_filename $experiment phi_file
 
@@ -235,6 +249,7 @@ for do_reverse in 0 1; do
             ;;
         esac
 
+        any=0
         for arg in ${ARGS[@]}; do
             phi_files=("$phi_file")
             unset experiment2
@@ -242,17 +257,29 @@ for do_reverse in 0 1; do
             case $ACTION in
             compare-subset)
                 experiment2=$arg
-                [[ -n $FILTER2 && ! $experiment2 =~ $FILTER2 ]] && {
-                    get_cache_line cache_line $experiment $experiment2 && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
-                    continue
-                }
 
                 set_phi_filename $experiment2 phi_file2
                 phi_files+=("$phi_file2")
                 ;;
             esac
 
-            get_cache_line cache_line $experiment $experiment2 && {
+            [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
+                get_cache_line cache_line $experiment $experiment2 && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
+                continue
+            }
+
+            case $ACTION in
+            compare-subset)
+                [[ -n $FILTER2 && ! $experiment2 =~ $FILTER2 ]] && {
+                    get_cache_line cache_line $experiment $experiment2 1 && printf "%s\n" "$cache_line" >>"$FILTERED_OUTPUT_CACHE_FILE"
+                    continue
+                }
+                ;;
+            esac
+
+            any=1
+
+            get_cache_line cache_line $experiment $experiment2 1 && {
                 printf "%s\n" "$cache_line"
                 continue
             }
@@ -307,7 +334,7 @@ for do_reverse in 0 1; do
 
         case $ACTION in
         compare-subset)
-            printf "\n"
+            (( $any )) && printf "\n"
             ;;
         esac
     done
