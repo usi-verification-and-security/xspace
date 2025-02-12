@@ -1,4 +1,4 @@
-OUTPUT_DIRS=(output/heart_attack output/obesity)
+OUTPUT_DIRS=(explanations/heart_attack explanations/obesity)
 
 ## Models and datasets that correspond to the output directories
 MODELS=(models/heart_attack/heart_attack-50.nnet models/obesity/obesity-10-20-10.nnet)
