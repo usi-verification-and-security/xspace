@@ -58,5 +58,5 @@ function read_max_samples {
 }
 
 function set_cmd {
-    [[ -z $CMD ]] && CMD=build/xspace
+    [[ -z $CMD ]] && CMD="$DIRNAME/../../build/xspace"
 }
