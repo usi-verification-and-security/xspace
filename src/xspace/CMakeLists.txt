@@ -31,6 +31,7 @@ PUBLIC
 
 target_include_directories(xspace SYSTEM PUBLIC
     ${opensmt_SOURCE_DIR}/src
+    ${GMP_INCLUDE_DIR}
 )
 
 if (ENABLE_MARABOU)

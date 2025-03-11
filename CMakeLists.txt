@@ -9,10 +9,10 @@ include(FetchContent)
 
 # Find OpenSMT2
 SET(OPENSMT_HOME CACHE STRING "OpenSMT installation directory")
-find_package(OpenSMT 2.6.0 EXACT CONFIG PATHS ${OPENSMT_HOME} NO_DEFAULT_PATH)
+# find_package(OpenSMT 2.6.0 EXACT CONFIG PATHS ${OPENSMT_HOME} NO_DEFAULT_PATH)
 
-if (OpenSMT_FOUND)
-else(OpenSMT_FOUND)
+# if (OpenSMT_FOUND)
+# else(OpenSMT_FOUND)
     FetchContent_Declare(
         OpenSMT
         GIT_REPOSITORY https://github.com/usi-verification-and-security/opensmt.git
@@ -28,17 +28,15 @@ else(OpenSMT_FOUND)
     FetchContent_MakeAvailable(OpenSMT)
     message("OpenSMT downloaded")
     add_library(OpenSMT::OpenSMT ALIAS OpenSMT-static)
-endif(OpenSMT_FOUND)
+# endif(OpenSMT_FOUND)
 
-if (NOT OpenSMT_FOUND)
+# if (NOT OpenSMT_FOUND)
     # target_compile_definitions(XAI-SMT PUBLIC OPENSMT_LOCAL_BUILD)
     #message("Directories:${opensmt_SOURCE_DIR}; ${opensmt_BINARY_DIR}")
     target_include_directories(OpenSMT-static PUBLIC
     ${opensmt_SOURCE_DIR}/src
     )
-    #message("GMP dirs:${GMP_INCLUDE_DIR}")
-    # target_include_directories(XAI-SMT PUBLIC ${GMP_INCLUDE_DIR})
-endif()
+# endif()
 
 
 if (ENABLE_MARABOU)
@@ -54,7 +52,6 @@ if (ENABLE_MARABOU)
     FetchContent_MakeAvailable(Marabou)
     add_library(Marabou::Marabou ALIAS MarabouHelper)
     get_target_property(MARABOU_INCLUDE_DIRS MarabouHelper INCLUDE_DIRECTORIES)
-    #message(STATUS "Include directories for Marabou: ${MARABOU_INCLUDE_DIRS}")
 
     add_definitions(-DMARABOU)
 endif()
