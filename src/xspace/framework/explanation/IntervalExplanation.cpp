@@ -6,6 +6,7 @@
 #include <xspace/common/Print.h>
 
 #include <algorithm>
+#include <ostream>
 
 namespace xspace {
 IntervalExplanation::IntervalExplanation(Framework const & fw) : ConjunctExplanation{fw, fw.varSize()} {
@@ -68,7 +69,8 @@ void IntervalExplanation::merge(ConjunctExplanation &&) {
     assert(false);
 }
 
-std::unique_ptr<ConjunctExplanation> IntervalExplanation::toConjunctExplanation(std::vector<VarIdx> const & varOrder) && {
+std::unique_ptr<ConjunctExplanation>
+IntervalExplanation::toConjunctExplanation(std::vector<VarIdx> const & varOrder) && {
     [[maybe_unused]] auto const varSize_ = varSize();
 
     ConjunctExplanation cexplanation{*frameworkPtr};

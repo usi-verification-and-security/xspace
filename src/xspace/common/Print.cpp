@@ -4,6 +4,7 @@
 #include <common/FastRational.h>
 #include <common/StringConv.h>
 
+#include <ostream>
 #include <string>
 
 namespace xspace {

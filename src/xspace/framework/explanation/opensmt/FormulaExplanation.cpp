@@ -10,6 +10,7 @@
 #include <api/MainSolver.h>
 
 #include <cassert>
+#include <ostream>
 
 namespace xspace::opensmt {
 FormulaExplanation::FormulaExplanation(Framework const & fw, Formula const & phi)

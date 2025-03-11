@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <ostream>
 
 namespace xspace {
 ConjunctExplanation::Conjunction::value_type const & ConjunctExplanation::operator[](std::size_t idx) const {

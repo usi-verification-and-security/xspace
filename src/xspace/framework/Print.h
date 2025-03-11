@@ -6,7 +6,7 @@
 #include <xspace/common/Print.h>
 
 #include <cassert>
-#include <iosfwd>
+#include <ostream>
 
 namespace xspace {
 class Framework::Print {
