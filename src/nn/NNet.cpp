@@ -48,14 +48,9 @@ auto parseValues(std::string const & s, TTransform transformation, char delimite
 /// 8: Range values of inputs and one value for all outputs (used for normalization)
 /// 9+: Begin defining the weight matrix for the first layer, followed by the bias vector. The weights and biases for the second layer follow after, until the weights and biases for the output layer are defined.
 std::unique_ptr<NNet> NNet::fromFile(std::string_view filename) {
-    if (!std::filesystem::exists(filename)) {
-        std::cerr << "File does not exist: " << filename << std::endl;
-        return nullptr;
-    }
     std::ifstream file{std::string{filename}};
-    if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return nullptr;
+    if (not file.good()) {
+        throw std::ifstream::failure{"Could not open model file " + std::string{filename}};
     }
 
     std::string line;

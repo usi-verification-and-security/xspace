@@ -101,8 +101,8 @@ int main(int argc, char * argv[]) try {
 
     int i = 0;
     std::string_view const nnModelFn = argv[++i];
-    auto network = xai::nn::NNet::fromFile(nnModelFn);
-    if (not network) { return 2; }
+    auto networkPtr = xai::nn::NNet::fromFile(nnModelFn);
+    assert(networkPtr);
 
     std::string_view const datasetFn = argv[++i];
 
@@ -223,7 +223,7 @@ int main(int argc, char * argv[]) try {
     std::size_t const size = dataset.size();
 
     std::istringstream strategiesSpecIss{std::string{strategiesSpec}};
-    xspace::Framework framework{config, std::move(network), verifierName, strategiesSpecIss};
+    xspace::Framework framework{config, std::move(networkPtr), verifierName, strategiesSpecIss};
 
     xspace::Explanations explanations =
         explanationsFn.empty() ? framework.explain(dataset) : framework.expand(explanationsFn, dataset);
