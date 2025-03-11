@@ -38,12 +38,16 @@ void printUsageOptRow(std::ostream & os, char opt, std::string_view arg, std::st
     os << desc << '\n';
 }
 
-void printUsage(std::ostream & os = std::cout) {
+void printUsage(char * const argv[], std::ostream & os = std::cout) {
     using xspace::Framework;
     using xspace::expand::opensmt::UnsatCoreStrategy;
     using xspace::expand::opensmt::InterpolationStrategy;
 
-    os << "USAGE: xspace <nn_model_fn> <dataset_fn> <exp_strategies_spec> [<options>]\n";
+    assert(argv);
+    std::string const cmd = argv[0];
+
+    os << "USAGE: " << cmd;
+    os << " <nn_model_fn> <dataset_fn> <exp_strategies_spec> [<options>]\n";
 
     os << "STRATEGIES SPEC: '<spec1>[; <spec2>]...'\n";
     os << "Each spec: '<name>[ <param>[, <param>]...]'\n";
@@ -74,10 +78,10 @@ void printUsage(std::ostream & os = std::cout) {
     printUsageOptRow(os, 'S', "", "Shuffle samples");
 
     os << "\nEXAMPLES:\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv abductive\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'ucore interval, min' -rvs\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'itp aweaker, bstrong; ucore'\n";
-    os << "xspace models/Heart_attack/heartAttack50.nnet data/heartAttack.csv 'trial n 2' -n1\n";
+    os << cmd << " data/models/toy.nnet data/datasets/toy.csv abductive\n";
+    os << cmd << " data/models/toy.nnet data/datasets/toy.csv 'ucore interval, min' -rvs\n";
+    os << cmd << " data/models/toy.nnet data/datasets/toy.csv 'itp aweaker, bstrong; ucore'\n";
+    os << cmd << " data/models/toy.nnet data/datasets/toy.csv 'trial n 2' -n1\n";
 
     os.flush();
 }
@@ -89,13 +93,13 @@ int main(int argc, char * argv[]) try {
     int const nArgs = argc - 1;
     assert(nArgs >= 0);
     if (nArgs == 0) {
-        printUsage();
+        printUsage(argv);
         return 0;
     }
 
     if (nArgs < minArgs) {
         std::cerr << "Expected at least " << minArgs << " arguments, got: " << nArgs << '\n';
-        printUsage(std::cerr);
+        printUsage(argv, std::cerr);
         return 1;
     }
 
@@ -183,7 +187,7 @@ int main(int argc, char * argv[]) try {
                 break;
             }
             case 'h':
-                printUsage();
+                printUsage(argv);
                 return 0;
             case 'V':
                 verifierName = optarg;
@@ -214,7 +218,7 @@ int main(int argc, char * argv[]) try {
             default:
                 assert(c == '?');
                 std::cerr << "Unrecognized option: '-" << char(optopt) << "'\n\n";
-                printUsage(std::cerr);
+                printUsage(argv, std::cerr);
                 return 1;
         }
     }
@@ -232,10 +236,10 @@ int main(int argc, char * argv[]) try {
     return 0;
 } catch (std::system_error const & e) {
     std::cerr << e.what() << '\n' << std::endl;
-    printUsage(std::cerr);
+    printUsage(argv, std::cerr);
     return e.code().value();
 } catch (std::exception const & e) {
     std::cerr << e.what() << '\n' << std::endl;
-    printUsage(std::cerr);
+    printUsage(argv, std::cerr);
     return 1;
 }
