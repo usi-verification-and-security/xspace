@@ -1,8 +1,8 @@
 #include "Print.h"
 
 //+ ideally get rid of these
-#include <common/FastRational.h>
 #include <common/StringConv.h>
+#include <common/numbers/FastRational.h>
 
 #include <ostream>
 #include <string>
