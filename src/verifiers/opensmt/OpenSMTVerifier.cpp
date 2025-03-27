@@ -263,7 +263,7 @@ void OpenSMTVerifier::OpenSMTImpl::loadModel(nn::NNet const & network) {
         bounds.push_back(logic->mkGeq(inputVars[i], logic->mkRealConst(floatToRational(lb))));
         bounds.push_back(logic->mkLeq(inputVars[i], logic->mkRealConst(floatToRational(ub))));
     }
-    solver->insertFormula(logic->mkAnd(bounds));
+    solver->addAssertion(logic->mkAnd(bounds));
 }
 
 PTRef OpenSMTVerifier::OpenSMTImpl::makeUpperBound(LayerIndex layer, NodeIndex node, FastRational value) {
@@ -288,10 +288,11 @@ PTRef OpenSMTVerifier::OpenSMTImpl::makeInterval(LayerIndex layer, NodeIndex nod
 
 PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeUpperBound(layer, node, value);
-    solver->insertFormula(term);
+    solver->addAssertion(term);
     if (not explanationTerm) { return term; }
 
-    solver->getTermNames().insert(makeTermName(layer, node, "u_"), term);
+    [[maybe_unused]] bool const success = solver->tryAddTermNameFor(term, makeTermName(layer, node, "u_"));
+    assert(success);
     auto const [_, inserted] = inputVarUpperBoundToIndex.emplace(term, node);
     assert(inserted);
     return term;
@@ -299,10 +300,11 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addUpperBound(LayerIndex layer, NodeIndex no
 
 PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeLowerBound(layer, node, value);
-    solver->insertFormula(term);
+    solver->addAssertion(term);
     if (not explanationTerm) { return term; }
 
-    solver->getTermNames().insert(makeTermName(layer, node, "l_"), term);
+    [[maybe_unused]] bool const success = solver->tryAddTermNameFor(term, makeTermName(layer, node, "l_"));
+    assert(success);
     auto const [_, inserted] = inputVarLowerBoundToIndex.emplace(term, node);
     assert(inserted);
     return term;
@@ -310,10 +312,11 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addLowerBound(LayerIndex layer, NodeIndex no
 
 PTRef OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node, float value, bool explanationTerm) {
     PTRef term = makeEquality(layer, node, value);
-    solver->insertFormula(term);
+    solver->addAssertion(term);
     if (not explanationTerm) { return term; }
 
-    solver->getTermNames().insert(makeTermName(layer, node, "e_"), term);
+    [[maybe_unused]] bool const success = solver->tryAddTermNameFor(term, makeTermName(layer, node, "e_"));
+    assert(success);
     auto const [_, inserted] = inputVarEqualityToIndex.emplace(term, node);
     assert(inserted);
     return term;
@@ -321,10 +324,11 @@ PTRef OpenSMTVerifier::OpenSMTImpl::addEquality(LayerIndex layer, NodeIndex node
 
 PTRef OpenSMTVerifier::OpenSMTImpl::addInterval(LayerIndex layer, NodeIndex node, float lo, float hi, bool explanationTerm) {
     PTRef term = makeInterval(layer, node, lo, hi);
-    solver->insertFormula(term);
+    solver->addAssertion(term);
     if (not explanationTerm) { return term; }
 
-    solver->getTermNames().insert(makeTermName(layer, node, "i_"), term);
+    [[maybe_unused]] bool const success = solver->tryAddTermNameFor(term, makeTermName(layer, node, "i_"));
+    assert(success);
     auto const [_, inserted] = inputVarIntervalToIndex.emplace(term, node);
     assert(inserted);
     return term;
@@ -351,7 +355,7 @@ void OpenSMTVerifier::OpenSMTImpl::addClassificationConstraint(NodeIndex node, f
 
     if (!constraints.empty()) {
         PTRef combinedConstraint = logic->mkOr(constraints);
-        solver->insertFormula(combinedConstraint);
+        solver->addAssertion(combinedConstraint);
     }
 }
 

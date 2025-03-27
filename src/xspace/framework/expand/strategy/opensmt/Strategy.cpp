@@ -43,9 +43,10 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
 
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
-    solver.insertFormula(phi);
+    solver.addAssertion(phi);
     if (not storeNamedTerms()) { return; }
 
-    solver.getTermNames().insert("phi_"s + std::to_string(counter++), phi);
+    [[maybe_unused]] bool const success = solver.tryAddTermNameFor(phi, "phi_"s + std::to_string(counter++));
+    assert(success);
 }
 } // namespace xspace::expand::opensmt

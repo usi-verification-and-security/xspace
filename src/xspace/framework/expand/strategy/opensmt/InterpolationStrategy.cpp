@@ -85,10 +85,10 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     auto & solver = verifier.getSolver();
 
     cexplanation.condense();
-    auto const firstFormulaIdx = solver.getInsertedFormulasCount();
+    auto const firstFormulaIdx = solver.getAssertionsCount();
     // We already took care of possible var ordering in toConjunctExplanation
     assertConjunctExplanation(cexplanation, {.ignoreVarOrder = true});
-    auto const lastFormulaIdx = solver.getInsertedFormulasCount() - 1;
+    auto const lastFormulaIdx = solver.getAssertionsCount() - 1;
 
     [[maybe_unused]] bool const ok = checkFormsExplanation();
     assert(ok);
