@@ -90,7 +90,7 @@ public:
     void printSmtLib2(std::ostream &) const override;
 
 protected:
-    bool isValid() const;
+    void assertValid() const;
 
     void printRegular(std::ostream &) const;
     void printRegularBound(std::ostream &, Bound const &) const;

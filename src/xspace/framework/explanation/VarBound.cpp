@@ -38,7 +38,7 @@ VarBound::VarBound(Framework const & fw, VarIdx idx, Bound && bnd, ConsOneBoundT
       varIdx{idx},
       firstBound{std::move(bnd)} {
     assert(not isInterval());
-    assert(isValid());
+    assertValid();
 }
 
 VarBound::VarBound(Framework const & fw, VarIdx idx, LowerBound && lo, [[maybe_unused]] UpperBound && hi, ConsPointTag)
@@ -72,26 +72,25 @@ VarBound::VarBound(Framework const & fw, VarIdx idx, LowerBound && lo, UpperBoun
         assert(not isPoint());
     }
 
-    assert(isValid());
+    assertValid();
 }
 
-bool VarBound::isValid() const {
-#ifdef NDEBUG
-    return true;
-#else
+void VarBound::assertValid() const {
+#ifndef NDEBUG
     auto const [dLo, dHi] = frameworkPtr->getDomainInterval(varIdx).getBounds();
     if (isInterval()) {
         auto ival = getInterval();
         auto const [lo, hi] = ival.getBounds();
         assert(lo <= hi);
-        return lo > dLo and hi < dHi;
+        assert(lo > dLo and hi < dHi);
+        return;
     }
     auto & bnd = getBound();
     Float const val = bnd.getValue();
     if (bnd.isEq()) {
-        return val >= dLo and val <= dHi;
+        assert(val >= dLo and val <= dHi);
     } else {
-        return val > dLo and val < dHi;
+        assert(val > dLo and val < dHi);
     }
 #endif
 }
@@ -160,7 +159,7 @@ void VarBound::insertLowerBound(LowerBound lo) {
         firstBound = std::move(lo);
         assert(isInterval());
     }
-    assert(isValid());
+    assertValid();
 }
 
 void VarBound::insertUpperBound(UpperBound hi) {
@@ -176,7 +175,7 @@ void VarBound::insertUpperBound(UpperBound hi) {
         optSecondBound.emplace(std::move(hi));
         assert(isInterval());
     }
-    assert(isValid());
+    assertValid();
 }
 
 void VarBound::eraseLowerBound() {
@@ -186,7 +185,7 @@ void VarBound::eraseLowerBound() {
     optSecondBound.reset();
     assert(not isInterval());
     assert(not isPoint());
-    assert(isValid());
+    assertValid();
 }
 
 void VarBound::eraseUpperBound() {
@@ -194,7 +193,7 @@ void VarBound::eraseUpperBound() {
     optSecondBound.reset();
     assert(not isInterval());
     assert(not isPoint());
-    assert(isValid());
+    assertValid();
 }
 
 void VarBound::printRegular(std::ostream & os) const {
