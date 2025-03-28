@@ -8,6 +8,16 @@ function assert(condition, string) {
     }
 }
 
+/Dataset size:/ {
+   assert(dataset_size == "", "Multiple occurencies of dataset size!")
+   dataset_size = $NF
+}
+
+/Number of variables:/ {
+   assert(variables_cnt == "", "Multiple occurencies of no. variables!")
+   variables_cnt = $NF
+}
+
 /expected output:/ {
    expected = $NF
 }
@@ -53,6 +63,12 @@ END {
 
    if (total_cnt > 0) {
       print("Total: " total_cnt)
+      assert(total_cnt == dataset_size, "total_cnt == dataset_size: " total_cnt " == " dataset_size)
+   }
+   if (variables_cnt > 0) {
+      print("Features: " variables_cnt)
+   }
+   if (total_cnt > 0) {
       printf("avg #correct classifications: %.1f%%\n", (correct_cnt/total_cnt)*100)
    }
    printf("avg #any features: %.1f%%\n", (sum_size/div_sum_size)*100)

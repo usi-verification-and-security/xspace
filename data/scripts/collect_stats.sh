@@ -58,21 +58,46 @@ function compute_term_size {
     tr ' ' '\n' <"$phi_file" | grep -c '=' | { tr -d '\n'; printf "/$n_lines\n"; } | bc -l | xargs -i printf '%.1f' {}
 }
 
-printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
-printf " | %s" "$FEATURES_CAPTION"
-printf " | %s" "$FIXED_CAPTION"
-printf " | %s" "$DIMENSION_CAPTION"
-printf " | %s" "$TERMS_CAPTION"
-printf " | %s" "$CHECKS_CAPTION"
-printf " | avg. time [s]\n"
+PRINTED_HEADER=0
+PRINTED_REVERSE=0
+PRINTED_REGULAR=0
+
+function print_header {
+    local reverse=$1
+    local dataset_size=$2
+    local n_features=$3
+
+    (( $PRINTED_HEADER )) || {
+        printf 'Dataset size: %d\n' $dataset_size
+        printf 'Number of features: %d\n' $n_features
+        printf '\n'
+
+        printf "%${EXPERIMENT_MAX_WIDTH}s" experiment
+        printf " | %s" "$FEATURES_CAPTION"
+        printf " | %s" "$FIXED_CAPTION"
+        printf " | %s" "$DIMENSION_CAPTION"
+        printf " | %s" "$TERMS_CAPTION"
+        printf " | %s" "$CHECKS_CAPTION"
+        printf " | avg. time [s]\n"
+
+        PRINTED_HEADER=1
+    }
+
+
+    if (( $reverse )); then
+        (( $PRINTED_REVERSE )) || {
+            printf "REVERSE:\n"
+            PRINTED_REVERSE=1
+        }
+    else
+        (( $PRINTED_REGULAR )) || {
+            printf "REGULAR:\n"
+            PRINTED_REGULAR=1
+        }
+    fi
+}
 
 for do_reverse in 0 1; do
-    if (( $do_reverse )); then
-        printf "REVERSE:\n"
-    else
-        printf "REGULAR:\n"
-    fi
-
     for experiment in ${EXPERIMENTS[@]}; do
         experiment_stem=$experiment
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
@@ -100,6 +125,10 @@ for do_reverse in 0 1; do
 
         stats=$($STATS_SCRIPT "$stats_file")
         size=$(sed -n 's/^Total:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
+        features=$(sed -n 's/^Features:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
+
+        print_header $do_reverse $size $features
+
         perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
         perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
         nterms_stats=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
@@ -108,8 +137,13 @@ for do_reverse in 0 1; do
         perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
 
         nterms=$(compute_term_size "$phi_file" $size)
+        [[ -z $nterms_stats ]] && {
+            ##! fragile
+            nterms_stats=$(bc -l <<<"($features * $perc_features)/100")
+            nterms_stats=$(printf '%.1f' $nterms_stats)
+        }
         [[ $nterms == $nterms_stats ]] || {
-            printf "Encountered inconsistency: stats.termSize != termSize(phi): %s != %s\n" "$nterms_stats" "$nterms" >&2
+            printf "%s: encountered inconsistency: stats.termSize != termSize(phi): %s != %s\n" $experiment_stem "$nterms_stats" "$nterms" >&2
             exit 3
         }
 
