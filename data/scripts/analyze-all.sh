@@ -132,8 +132,8 @@ function set_phi_filename {
 
 [[ -n $FILTER ]] && {
     KEPT_IDXS=()
-    for exp_idx in ${!EXPERIMENTS[@]}; do
-        experiment=${EXPERIMENTS[$exp_idx]}
+    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
+        experiment=${EXPERIMENT_NAMES[$exp_idx]}
         [[ $experiment =~ $FILTER ]] && KEPT_IDXS+=($exp_idx)
     done
 }
@@ -227,16 +227,16 @@ for do_reverse in 0 1; do
         ;;
     esac
 
-    for exp_idx in ${!EXPERIMENTS[@]}; do
-        experiment=${EXPERIMENTS[$exp_idx]}
+    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
+        experiment=${EXPERIMENT_NAMES[$exp_idx]}
 
         set_phi_filename $experiment phi_file
 
         case $ACTION in
         compare-subset)
-            ARGS=(${EXPERIMENTS[@]:$(($exp_idx+1))})
+            ARGS=(${EXPERIMENT_NAMES[@]:$(($exp_idx+1))})
             [[ -n $FILTER ]] && {
-                aux=(${EXPERIMENTS[@]::$exp_idx})
+                aux=(${EXPERIMENT_NAMES[@]::$exp_idx})
                 for fidx in ${KEPT_IDXS[@]}; do
                     (( $fidx >= $exp_idx )) && break
                     unset -v aux[$fidx]

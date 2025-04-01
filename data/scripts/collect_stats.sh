@@ -98,7 +98,7 @@ function print_header {
 }
 
 for do_reverse in 0 1; do
-    for experiment in ${EXPERIMENTS[@]}; do
+    for experiment in ${EXPERIMENT_NAMES[@]}; do
         experiment_stem=$experiment
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
 

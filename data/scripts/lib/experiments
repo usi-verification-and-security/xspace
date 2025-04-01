@@ -38,10 +38,10 @@ function _split_consecutive_experiments {
     done
 }
 
-CONSECUTIVE_EXPERIMENTS_SRC=()
-CONSECUTIVE_EXPERIMENTS_DST=()
+CONSECUTIVE_EXPERIMENTS_SRC_NAMES=()
+CONSECUTIVE_EXPERIMENTS_DST_NAMES=()
 
-_split_consecutive_experiments CONSECUTIVE_EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC CONSECUTIVE_EXPERIMENTS_DST
+_split_consecutive_experiments CONSECUTIVE_EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
 
 function _check_array_sizes {
     local array_var1=$1
@@ -58,9 +58,9 @@ function _check_array_sizes {
 
 _check_array_sizes OUTPUT_DIRS MODELS
 _check_array_sizes OUTPUT_DIRS DATASETS
-_check_array_sizes EXPERIMENTS EXPERIMENT_STRATEGIES
+_check_array_sizes EXPERIMENT_NAMES EXPERIMENT_STRATEGIES
 
-_check_array_sizes CONSECUTIVE_EXPERIMENTS_SRC CONSECUTIVE_EXPERIMENTS_DST
+_check_array_sizes CONSECUTIVE_EXPERIMENTS_SRC_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
 
 function __contains {
     local array_var=$1
@@ -94,8 +94,9 @@ function _includes {
     return 0
 }
 
-_includes EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC
-_includes EXPERIMENTS CONSECUTIVE_EXPERIMENTS_DST
+_includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
+_includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
+
 
 ## Functions to be used in scripts follow ...
 
@@ -113,8 +114,8 @@ function find_strategies_for_experiment {
     }
 
     local eidx
-    for eidx in ${!EXPERIMENTS[@]}; do
-        [[ $experiment == ${EXPERIMENTS[$eidx]} ]] || continue
+    for eidx in ${!EXPERIMENT_NAMES[@]}; do
+        [[ $experiment == ${EXPERIMENT_NAMES[$eidx]} ]] || continue
         strategies="${EXPERIMENT_STRATEGIES[$eidx]}"
         EXPERIMENT_TO_STRATEGIES[$experiment]="$strategies"
         lexperiment_strategies="$strategies"

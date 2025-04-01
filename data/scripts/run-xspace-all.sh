@@ -36,8 +36,8 @@ printf "Dataset: %s\n" "$DATASET"
 printf "\n"
 
 if (( ! $CONSECUTIVE )); then
-    for exp_idx in ${!EXPERIMENTS[@]}; do
-        experiment=${EXPERIMENTS[$exp_idx]}
+    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
+        experiment=${EXPERIMENT_NAMES[$exp_idx]}
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
             printf "Skipping %s ...\n" $experiment
             continue
@@ -52,9 +52,9 @@ if (( ! $CONSECUTIVE )); then
         done
     done
 else
-    for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC[@]}; do
-        src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC[$exp_idx]}
-        dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST[$exp_idx]}
+    for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
+        src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
+        dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}
         [[ -n $FILTER && ! $src_experiment =~ $FILTER && ! $dst_experiment =~ $FILTER ]] && {
             printf "Skipping %s ...\n" $src_experiment
             continue

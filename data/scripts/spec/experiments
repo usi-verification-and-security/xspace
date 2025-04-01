@@ -1,4 +1,4 @@
-EXPERIMENTS=(
+EXPERIMENT_NAMES=(
     abductive
     # ucore_sample_min
     # ucore_interval_min
