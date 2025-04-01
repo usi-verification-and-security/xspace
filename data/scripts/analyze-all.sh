@@ -130,10 +130,14 @@ function set_phi_filename {
     }
 }
 
+## Analyze consecutive experiments as well
+## It is necessary to consider all to preserve caching
+declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
+
 [[ -n $FILTER ]] && {
     KEPT_IDXS=()
-    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
-        experiment=${EXPERIMENT_NAMES[$exp_idx]}
+    for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
+        experiment=${lEXPERIMENT_NAMES[$exp_idx]}
         [[ $experiment =~ $FILTER ]] && KEPT_IDXS+=($exp_idx)
     done
 }
@@ -210,6 +214,7 @@ for do_reverse in 0 1; do
 
     case $ACTION in
     *)
+        [[ -e "${lSCRIPT_OUTPUT_CACHE_FILE}" ]] && mv "${lSCRIPT_OUTPUT_CACHE_FILE}" "${lSCRIPT_OUTPUT_CACHE_FILE}.bak"
         exec 3>&1
         exec > >(tee -i "${lSCRIPT_OUTPUT_CACHE_FILE}")
         >"${lSCRIPT_OUTPUT_CACHE_FILE}"
@@ -227,16 +232,16 @@ for do_reverse in 0 1; do
         ;;
     esac
 
-    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
-        experiment=${EXPERIMENT_NAMES[$exp_idx]}
+    for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
+        experiment=${lEXPERIMENT_NAMES[$exp_idx]}
 
         set_phi_filename $experiment phi_file
 
         case $ACTION in
         compare-subset)
-            ARGS=(${EXPERIMENT_NAMES[@]:$(($exp_idx+1))})
+            ARGS=(${lEXPERIMENT_NAMES[@]:$(($exp_idx+1))})
             [[ -n $FILTER ]] && {
-                aux=(${EXPERIMENT_NAMES[@]::$exp_idx})
+                aux=(${lEXPERIMENT_NAMES[@]::$exp_idx})
                 for fidx in ${KEPT_IDXS[@]}; do
                     (( $fidx >= $exp_idx )) && break
                     unset -v aux[$fidx]

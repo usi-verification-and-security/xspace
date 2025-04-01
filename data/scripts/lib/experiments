@@ -99,13 +99,16 @@ _includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
 
 CONSECUTIVE_EXPERIMENTS_NAMES=()
 for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
-    src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
-    dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}
+    src_experiment="${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}"
+    dst_experiment="${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}"
     experiment_name="${dst_experiment}__${src_experiment}"
     CONSECUTIVE_EXPERIMENTS_NAMES+=("$experiment_name")
 done
 
 _check_array_sizes CONSECUTIVE_EXPERIMENTS_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
+
+## Beware: use just the names, they are no more synced with strategies here!
+ALL_EXPERIMENTS_NAMES=("${EXPERIMENT_NAMES[@]}" "${CONSECUTIVE_EXPERIMENTS_NAMES[@]}")
 
 ## Functions to be used in scripts follow ...
 
