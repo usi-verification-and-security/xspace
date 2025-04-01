@@ -34,6 +34,9 @@ shift
     shift
 }
 
+## Collect consecutive experiments as well
+declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
+
 EXPERIMENT_MAX_WIDTH=40
 
 FEATURES_CAPTION='%features'
@@ -98,7 +101,7 @@ function print_header {
 }
 
 for do_reverse in 0 1; do
-    for experiment in ${EXPERIMENT_NAMES[@]}; do
+    for experiment in ${lEXPERIMENT_NAMES[@]}; do
         experiment_stem=$experiment
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
 
