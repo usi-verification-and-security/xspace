@@ -36,39 +36,35 @@ printf "Dataset: %s\n" "$DATASET"
 printf "\n"
 
 if (( ! $CONSECUTIVE )); then
-    for exp_idx in ${!EXPERIMENT_NAMES[@]}; do
-        experiment=${EXPERIMENT_NAMES[$exp_idx]}
-        [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
-            printf "Skipping %s ...\n" $experiment
-            continue
-        }
+    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES
+else
+    declare -n lEXPERIMENT_NAMES=CONSECUTIVE_EXPERIMENTS_NAMES
+fi
 
-        printf "Running %s in the background ...\n" $experiment
+for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
+    experiment=${lEXPERIMENT_NAMES[$exp_idx]}
+    [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
+        printf "Skipping %s ...\n" $experiment
+        continue
+    }
+
+    if (( ! $CONSECUTIVE )); then
+        unset {src,dst}_experiment
 
         experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
-
-        for rev in '' reverse; do
-            "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $experiment $rev $MAX_SAMPLES &
-        done
-    done
-else
-    for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
+    else
         src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
         dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}
-        [[ -n $FILTER && ! $src_experiment =~ $FILTER && ! $dst_experiment =~ $FILTER ]] && {
-            printf "Skipping %s ...\n" $src_experiment
-            continue
-        }
-
-        printf "Running %s on top of %s in the background ...\n" $dst_experiment $src_experiment
 
         find_strategies_for_experiment $dst_experiment experiment_strategies
+    fi
 
-        for rev in '' reverse; do
-            SRC_EXPERIMENT=$src_experiment "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $dst_experiment $rev $MAX_SAMPLES &
-        done
+    printf "Running %s in the background ...\n" $experiment
+
+    for rev in '' reverse; do
+        SRC_EXPERIMENT=$src_experiment "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $experiment $rev $MAX_SAMPLES &
     done
-fi
+done
 
 printf "\nDone.\n"
 exit 0

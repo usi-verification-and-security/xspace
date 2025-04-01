@@ -97,6 +97,15 @@ function _includes {
 _includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
 _includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
 
+CONSECUTIVE_EXPERIMENTS_NAMES=()
+for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
+    src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
+    dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}
+    experiment_name="${dst_experiment}__${src_experiment}"
+    CONSECUTIVE_EXPERIMENTS_NAMES+=("$experiment_name")
+done
+
+_check_array_sizes CONSECUTIVE_EXPERIMENTS_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
 
 ## Functions to be used in scripts follow ...
 

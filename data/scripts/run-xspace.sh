@@ -55,24 +55,15 @@ function set_file {
     local file_var=$1
     local experiment="$2"
     local type=$3
-    local src_experiment="$4"
-
-    local aux_experiment
-    if [[ -z $src_experiment ]]; then
-        aux_experiment="$experiment"
-    else
-        aux_experiment="${experiment}__${src_experiment}"
-    fi
 
     local -n lfile=$file_var
-    lfile="${OUTPUT_DIR}/${aux_experiment}.${type}.txt"
+    lfile="${OUTPUT_DIR}/${experiment}.${type}.txt"
 }
 
 ARGS=()
 
-## SRC_EXPERIMENT may be empty
 for t in phi stats time; do
-    set_file ${t}_file "$EXPERIMENT" $t "$SRC_EXPERIMENT"
+    set_file ${t}_file "$EXPERIMENT" $t
 done
 
 [[ -n $SRC_EXPERIMENT ]] && {
