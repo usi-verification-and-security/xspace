@@ -208,6 +208,7 @@ for do_reverse in 0 1; do
         declare -n lSCRIPT_OUTPUT_CACHE_FILE=SCRIPT_OUTPUT_CACHE_FILE
     fi
 
+    unset CACHE
     [[ -r $lSCRIPT_OUTPUT_CACHE_FILE ]] && {
         CACHE=$(<"$lSCRIPT_OUTPUT_CACHE_FILE")
     }
