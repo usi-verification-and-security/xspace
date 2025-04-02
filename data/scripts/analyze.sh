@@ -132,14 +132,44 @@ compare-subset)
     ;;
 esac
 
-SOLVER=cvc5
-# SOLVER=z3
-# SOLVER=/home/tomaqa/Data/Prog/C++/opensmt/build/opensmt
+FAST_SOLVER=opensmt
 
-command -v $SOLVER &>/dev/null || {
-    printf "Solver %s is not executable: %s\n" $SOLVER >&2
+OTHER_SOLVERS=(
+    cvc5
+    z3
+    mathsat
+)
+
+function is_executable {
+    local cmd="$1"
+
+    command -v "$cmd" &>/dev/null
+}
+
+unset OTHER_SOLVER
+for s in "${OTHER_SOLVERS[@]}"; do
+    is_executable "$s" || continue
+    OTHER_SOLVER="$s"
+    break
+done
+
+is_executable "$OTHER_SOLVER" || {
+    printf "None of the solvers is executable: %s\n" "${OTHER_SOLVERS[*]}" >&2
     exit 2
 }
+
+is_executable "$FAST_SOLVER" || FAST_SOLVER="$OTHER_SOLVER"
+
+case $ACTION in
+check)
+    ## Prefer a trusted third-party solver for verification of the results
+    SOLVER="$OTHER_SOLVER"
+    ;;
+*)
+    ## Prefer faster solver in the rest cases
+    SOLVER="$FAST_SOLVER"
+    ;;
+esac
 
 IFILES=()
 OFILES=()
