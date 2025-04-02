@@ -158,10 +158,10 @@ function get_cache_line {
 
     [[ -z $CACHE ]] && return 1
 
-    local grep_cmd=(grep -m 1)
+    local grep_cmd=(grep -Em1)
 
-    local prefix=' '
-    local suffix=' '
+    local prefix='(^| )'
+    local suffix='(^| )'
 
     case $ACTION in
     check)
