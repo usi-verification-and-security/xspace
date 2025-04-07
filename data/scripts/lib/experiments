@@ -110,6 +110,27 @@ _check_array_sizes CONSECUTIVE_EXPERIMENTS_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAM
 ## Beware: use just the names, they are no more synced with strategies here!
 ALL_EXPERIMENTS_NAMES=("${EXPERIMENT_NAMES[@]}" "${CONSECUTIVE_EXPERIMENTS_NAMES[@]}")
 
+function _max_len {
+    local array_var=$1
+    local dst_max_len_var=$2
+
+    local -n larray=$array_var
+    local -n ldst_max_len=$dst_max_len_var
+
+    local max_len=0
+    for e in "${larray[@]}"; do
+        local len=${#e}
+        (( $len <= $max_len )) && continue
+        max_len=$len
+    done
+
+    ldst_max_len=$max_len
+}
+
+_max_len EXPERIMENT_NAMES MAX_EXPERIMENT_NAMES_LEN
+_max_len CONSECUTIVE_EXPERIMENTS_NAMES MAX_CONSECUTIVE_EXPERIMENTS_NAMES_LEN
+_max_len ALL_EXPERIMENTS_NAMES MAX_ALL_EXPERIMENTS_NAMES_LEN
+
 ## Functions to be used in scripts follow ...
 
 declare -A EXPERIMENT_TO_STRATEGIES

@@ -62,11 +62,21 @@ compare-subset)
         FILTER2="$1"
         shift
     }
+esac
 
-    EXPERIMENT_MAX_WIDTH=70
+## Analyze consecutive experiments as well
+## It is necessary to consider all to preserve caching
+declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
+declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_ALL_EXPERIMENTS_NAMES_LEN
+
+## Require at least one extra space before the experiment names
+case $ACTION in
+compare-subset)
+    VS_STR='vs.'
+    EXPERIMENT_MAX_WIDTH=$(( 1 + ${#VS_STR}+2 + $lMAX_EXPERIMENT_NAMES_LEN*2 ))
     ;;
 *)
-    EXPERIMENT_MAX_WIDTH=40
+    EXPERIMENT_MAX_WIDTH=$(( 1 + $lMAX_EXPERIMENT_NAMES_LEN ))
     ;;
 esac
 
@@ -130,10 +140,6 @@ function set_phi_filename {
     }
 }
 
-## Analyze consecutive experiments as well
-## It is necessary to consider all to preserve caching
-declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
-
 [[ -n $FILTER ]] && {
     KEPT_IDXS=()
     for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
@@ -160,8 +166,8 @@ function get_cache_line {
 
     local grep_cmd=(grep -Em1)
 
-    local prefix='(^| )'
-    local suffix='(^| )'
+    local prefix=' '
+    local suffix=' '
 
     case $ACTION in
     check)
@@ -177,17 +183,17 @@ function get_cache_line {
         lcache_line=$(${grep_cmd[@]} "${experiment_regex}" <<<"$CACHE")
         ;;
     compare-subset)
-        local mid='vs.'
         local experiment2_regex="${prefix}${experiment2}${suffix}"
-        lcache_line=$(${grep_cmd[@]} "${experiment_regex}${mid}${experiment2_regex}" <<<"$CACHE")
+        lcache_line=$(${grep_cmd[@]} "${experiment_regex}${VS_STR}${experiment2_regex}" <<<"$CACHE")
         [[ -n $try_swap && -z $lcache_line ]] && {
-            lcache_line=$(${grep_cmd[@]} "${experiment2_regex}${mid}${experiment_regex}" <<<"$CACHE")
+            lcache_line=$(${grep_cmd[@]} "${experiment2_regex}${VS_STR}${experiment_regex}" <<<"$CACHE")
             [[ -n $lcache_line ]] && {
+                ##! works only if the regex contains directly printable characters!
                 lcache_line="${lcache_line/${experiment2_regex}/|${experiment2_regex}}"
                 local IFS='|'
                 local array=($lcache_line)
 
-                array[1]="${experiment_regex}${mid}${experiment2_regex}"
+                array[1]="${experiment_regex}${VS_STR}${experiment2_regex}"
                 local tmp="${array[2]}"
                 array[2]="${array[4]}"
                 array[4]="$tmp"
@@ -298,7 +304,7 @@ for do_reverse in 0 1; do
                 printf "%${EXPERIMENT_MAX_WIDTH}s" $experiment
                 ;;
             compare-subset)
-                printf "%${EXPERIMENT_MAX_WIDTH}s" "$experiment vs. $experiment2"
+                printf "%${EXPERIMENT_MAX_WIDTH}s" "$experiment $VS_STR $experiment2"
                 ;;
             esac
 
