@@ -172,7 +172,7 @@ function get_cache_line {
     case $ACTION in
     check)
         prefix=/
-        suffix=\.
+        suffix='\.'
         ;;
     esac
 
