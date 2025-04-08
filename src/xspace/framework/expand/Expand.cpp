@@ -16,6 +16,8 @@
 #include <verifiers/marabou/MarabouVerifier.h>
 #endif
 
+#include <api/MainSolver.h>
+
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
@@ -142,6 +144,15 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
 
         auto const & output = data.getComputedOutput(idx);
         assertClassification(output);
+
+        auto & verifier = static_cast<xai::verifiers::OpenSMTVerifier const &>(*verifierPtr);
+        auto & solver = verifier.getSolver();
+        auto & logic = solver.getLogic();
+        //- logic.removeAuxVars();
+        //- solver.printCurrentAssertionsAsQuery();
+        for (opensmt::PTRef phi : solver.getCurrentAssertionsView()) {
+            std::cout << logic.printTerm(phi) << std::endl;
+        }
 
         auto & explanationPtr = explanations[idx];
         for (auto & strategy : strategies) {
