@@ -131,10 +131,6 @@ function set_phi_filename {
     [[ -n $MAX_SAMPLES ]] && experiment_stem=$MAX_SAMPLES_NAME/$experiment_stem
 
     lphi_file="${PHI_DIR}/${experiment_stem}.phi.txt"
-    [[ -r $lphi_file ]] || {
-        printf "File '%s' is not a readable.\n" "$lphi_file" >&2
-        exit 1
-    }
 }
 
 [[ -n $FILTER ]] && {

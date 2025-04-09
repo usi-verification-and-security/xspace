@@ -43,7 +43,7 @@ count-fixed|compare-subset)
 esac
 
 [[ -r $PSI_FILE ]] || {
-    printf "Not readable psi file: %s\n" "$PSI_FILE" >&2
+    printf "\nNot readable psi file: %s\n" "$PSI_FILE" >&2
     usage 1
 }
 
@@ -62,12 +62,12 @@ else
 fi
 
 [[ -r $STATS_FILE ]] || {
-    printf "Not readable stats data file: %s\n" "$STATS_FILE" >&2
+    printf "\nNot readable stats data file: %s\n" "$STATS_FILE" >&2
     usage 1
 }
 
 [[ -r $PHI_FILE ]] || {
-    printf "Not readable formula data file: %s\n" "$PHI_FILE" >&2
+    printf "\nNot readable formula data file: %s\n" "$PHI_FILE" >&2
     usage 1
 }
 
@@ -77,7 +77,7 @@ compare-subset)
     shift
 
     [[ -r $PHI_FILE2 ]] || {
-        printf "Not readable second formula data file: %s\n" "$PHI_FILE2" >&2
+        printf "\nNot readable second formula data file: %s\n" "$PHI_FILE2" >&2
         usage 1
     }
     ;;
