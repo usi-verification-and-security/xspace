@@ -133,6 +133,32 @@ _max_len ALL_EXPERIMENTS_NAMES MAX_ALL_EXPERIMENTS_NAMES_LEN
 
 ## Functions to be used in scripts follow ...
 
+function read_max_samples {
+    [[ $1 =~ ^(short|[0-9]+)$ ]] || return 1
+
+    MAX_SAMPLES_SHORT=20
+    export MAX_SAMPLES=$1
+    shift
+
+    if [[ $MAX_SAMPLES == short ]]; then
+        MAX_SAMPLES=$MAX_SAMPLES_SHORT
+    elif ! [[ $MAX_SAMPLES =~ ^[1-9][0-9]*$ ]]; then
+        printf "Expected 'short' or a concrete number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
+        exit 1
+    fi
+
+    export SHORT=0
+    export MAX_SAMPLES_NAME
+    if (( $MAX_SAMPLES == $MAX_SAMPLES_SHORT )); then
+        SHORT=1
+        MAX_SAMPLES_NAME=short
+    else
+        MAX_SAMPLES_NAME=Sn$MAX_SAMPLES
+    fi
+
+    return 0
+}
+
 declare -A EXPERIMENT_TO_STRATEGIES
 
 ## Use if the index is not available

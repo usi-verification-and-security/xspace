@@ -46,10 +46,7 @@ PSI_FILE+=.smt2
     usage 2 >&2
 }
 
-[[ $1 == short ]] && {
-    SHORT=$1
-    shift
-}
+read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
     FILTER="$1"
@@ -131,7 +128,7 @@ function set_phi_filename {
 
     local experiment_stem=$experiment
     (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
-    [[ -n $SHORT ]] && experiment_stem=short/$experiment_stem
+    [[ -n $MAX_SAMPLES ]] && experiment_stem=$MAX_SAMPLES_NAME/$experiment_stem
 
     lphi_file="${PHI_DIR}/${experiment_stem}.phi.txt"
     [[ -r $lphi_file ]] || {
@@ -151,7 +148,7 @@ function set_phi_filename {
 MODEL=$(basename "$PHI_DIR")
 
 SCRIPT_NAME=$(basename -s .sh "$0")
-SCRIPT_OUTPUT_CACHE_FILE_REVERSE="$SCRIPTS_DIR/cache/$MODEL/${SHORT}/reverse/${SCRIPT_NAME}.${ACTION}.txt"
+SCRIPT_OUTPUT_CACHE_FILE_REVERSE="$SCRIPTS_DIR/cache/$MODEL/$MAX_SAMPLES_NAME/reverse/${SCRIPT_NAME}.${ACTION}.txt"
 SCRIPT_OUTPUT_CACHE_FILE="${SCRIPT_OUTPUT_CACHE_FILE_REVERSE/reverse\//}"
 
 mkdir -p $(dirname "$SCRIPT_OUTPUT_CACHE_FILE_REVERSE") >/dev/null || exit $?

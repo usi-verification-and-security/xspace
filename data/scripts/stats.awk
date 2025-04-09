@@ -13,6 +13,12 @@ function assert(condition, string) {
    dataset_size = $NF
 }
 
+/Number of samples:/ {
+   assert(max_samples == "", "Multiple occurencies of max no. samples!")
+   max_samples = $NF
+   assert(max_samples < dataset_size, "max_samples < dataset_size : " max_samples " < " dataset_size)
+}
+
 /Number of variables:/ {
    assert(variables_cnt == "", "Multiple occurencies of no. variables!")
    variables_cnt = $NF
@@ -63,7 +69,11 @@ END {
 
    if (total_cnt > 0) {
       print("Total: " total_cnt)
-      assert(total_cnt == dataset_size, "total_cnt == dataset_size: " total_cnt " == " dataset_size)
+      if (max_samples == "") {
+         assert(total_cnt == dataset_size, "total_cnt == dataset_size: " total_cnt " == " dataset_size)
+      } else {
+         assert(total_cnt == max_samples, "total_cnt == max_samples: " total_cnt " == " max_samples)
+      }
    }
    if (variables_cnt > 0) {
       print("Features: " variables_cnt)

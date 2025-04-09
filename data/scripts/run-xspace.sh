@@ -36,11 +36,7 @@ set_cmd
 OPTIONS=(-sv)
 
 [[ -n $MAX_SAMPLES ]] && {
-    if (( $MAX_SAMPLES != $MAX_SAMPLES_SHORT )); then
-        OUTPUT_DIR+=/Sn$MAX_SAMPLES
-    else
-        OUTPUT_DIR+=/short
-    fi
+    OUTPUT_DIR+=/$MAX_SAMPLES_NAME
     OPTIONS+=(-Sn$MAX_SAMPLES)
 }
 

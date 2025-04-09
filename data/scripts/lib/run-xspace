@@ -40,23 +40,6 @@ function read_output_dir {
     return 0
 }
 
-function read_max_samples {
-    [[ $1 =~ ^(short|[0-9]+)$ ]] || return 1
-
-    MAX_SAMPLES_SHORT=20
-    export MAX_SAMPLES=$1
-    shift
-
-    if [[ $MAX_SAMPLES == short ]]; then
-        MAX_SAMPLES=$MAX_SAMPLES_SHORT
-    elif ! [[ $MAX_SAMPLES =~ ^[1-9][0-9]*$ ]]; then
-        printf "Expected 'short' or a concrete number of shuffled samples to process, got: %s\n" "$MAX_SAMPLES" >&2
-        exit 1
-    fi
-
-    return 0
-}
-
 function set_cmd {
     [[ -z $CMD ]] && CMD="$DIRNAME/../../build/xspace"
     export CMD

@@ -217,8 +217,16 @@ void Framework::Expand::printStatsHead(Dataset const & data) const {
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
 
+    auto const & config = framework.getConfig();
+
     std::size_t const size = data.size();
     cstats << "Dataset size: " << size << '\n';
+    if (config.limitingMaxSamples()) {
+        auto const maxSamples = config.getMaxSamples();
+        if (maxSamples < size) {
+            cstats << "Number of samples: " << maxSamples << '\n';
+        }
+    }
     cstats << "Number of variables: " << framework.varSize() << '\n';
     cstats << std::string(60, '-') << '\n';
 }

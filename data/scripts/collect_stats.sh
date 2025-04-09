@@ -24,10 +24,7 @@ shift
     usage 1 >&2
 }
 
-[[ $1 == short ]] && {
-    SHORT=$1
-    shift
-}
+read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
     FILTER="$1"
@@ -106,7 +103,7 @@ for do_reverse in 0 1; do
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue
 
         (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
-        [[ -n $SHORT ]] && experiment_stem=short/$experiment_stem
+        [[ -n $MAX_SAMPLES ]] && experiment_stem=$MAX_SAMPLES_NAME/$experiment_stem
 
         stats_file="${STATS_DIR}/${experiment_stem}.stats.txt"
         [[ -r $stats_file ]] || {
