@@ -33,8 +33,9 @@ read_max_samples "$1" && shift
 
 ## Collect consecutive experiments as well
 declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
+declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_ALL_EXPERIMENTS_NAMES_LEN
 
-EXPERIMENT_MAX_WIDTH=40
+EXPERIMENT_MAX_WIDTH=$(( 1 + $lMAX_EXPERIMENT_NAMES_LEN ))
 
 FEATURES_CAPTION='%features'
 FEATURES_MAX_WIDTH=${#FEATURES_CAPTION}
@@ -78,7 +79,7 @@ function print_header {
         printf " | %s" "$DIMENSION_CAPTION"
         printf " | %s" "$TERMS_CAPTION"
         printf " | %s" "$CHECKS_CAPTION"
-        printf " | avg. time [s]\n"
+        printf " | time [s]\n"
 
         PRINTED_HEADER=1
     }
