@@ -158,3 +158,4 @@ function find_strategies_for_experiment {
     printf "UNEXPECTED\n" >&2
     exit 37
 }
+export -f find_strategies_for_experiment

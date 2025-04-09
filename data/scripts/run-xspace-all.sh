@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIRNAME=$(dirname "$0")
+export DIRNAME=$(dirname "$0")
 
 source "$DIRNAME/lib/run-xspace"
 
@@ -20,17 +20,23 @@ if [[ $1 == consecutive ]]; then
 else
     CONSECUTIVE=0
 fi
+export CONSECUTIVE
 
 read_max_samples "$1" && shift
 
 [[ -n $1 && $1 != -n ]] && {
-    FILTER="$1"
+    export FILTER="$1"
     shift
 }
 
-DRY_RUN=0
-[[ $1 == -n ]] && {
-    DRY_RUN=1
+export DRY_RUN=0
+[[ $1 =~ ^- ]] && {
+    if [[ $1 == -n ]]; then
+        DRY_RUN=1
+    else
+        printf "Unrecognized option: %s\n" "$1" >&2
+        usage 1 >&2
+    fi
     shift
 }
 
@@ -49,21 +55,28 @@ printf "\n"
 (( $DRY_RUN )) && printf "DRY RUN - only printing what would be run\n\n"
 
 if (( ! $CONSECUTIVE )); then
-    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES
+    EXPERIMENT_NAMES_VAR=EXPERIMENT_NAMES
 else
-    declare -n lEXPERIMENT_NAMES=CONSECUTIVE_EXPERIMENTS_NAMES
+    EXPERIMENT_NAMES_VAR=CONSECUTIVE_EXPERIMENTS_NAMES
 fi
+export EXPERIMENT_NAMES_VAR
 
-for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
-    experiment=${lEXPERIMENT_NAMES[$exp_idx]}
+function run1 {
+    source "$DIRNAME/lib/run-xspace"
+
+    local exp_idx=$1
+
+    local -n lexperiment_names=$EXPERIMENT_NAMES_VAR
+
+    local experiment=${lexperiment_names[$exp_idx]}
     [[ -n $FILTER && ! $experiment =~ $FILTER ]] && {
         printf "Skipping %s ...\n" $experiment
-        continue
+        return 0
     }
 
+    local experiment_strategies
+    local {src,dst}_experiment
     if (( ! $CONSECUTIVE )); then
-        unset {src,dst}_experiment
-
         experiment_strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
     else
         src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
@@ -74,12 +87,34 @@ for exp_idx in ${!lEXPERIMENT_NAMES[@]}; do
 
     printf "Running %s in the background ...\n" $experiment
 
-    (( $DRY_RUN )) && continue
+    (( $DRY_RUN )) && return 0
 
     for rev in '' reverse; do
         SRC_EXPERIMENT=$src_experiment "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $experiment $rev $MAX_SAMPLES &
     done
-done
+
+    wait || {
+        printf "%s failed!\n" $experiment
+        return 1
+    }
+
+    printf "Finished %s\n" $experiment
+}
+export -f run1
+
+[[ -z $CPU_PERCENTAGE ]] && CPU_PERCENTAGE=60
+
+## It also runs reverse and non-reverse in parallel -> adjust
+CPU_PERCENTAGE=$(( $CPU_PERCENTAGE/2 ))
+
+declare -n lEXPERIMENT_NAMES=$EXPERIMENT_NAMES_VAR
+
+parallel --line-buffer --jobs ${CPU_PERCENTAGE}% 'run1 {}' ::: ${!lEXPERIMENT_NAMES[@]}
+
+(( $? )) && {
+    printf "\nFailed.\n"
+    exit 1
+}
 
 printf "\nDone.\n"
 exit 0

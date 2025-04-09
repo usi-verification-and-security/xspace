@@ -3,7 +3,7 @@
 source "$DIRNAME/lib/experiments"
 
 function read_output_dir {
-    OUTPUT_DIR="$1"
+    export OUTPUT_DIR="$1"
 
     OUTPUT_DIR="${OUTPUT_DIR%%/}"
     for odir_idx in ${!OUTPUT_DIRS[@]}; do
@@ -24,8 +24,8 @@ function read_output_dir {
         exit 2
     }
 
-    MODEL="${MODELS[$OUTPUT_DIR_IDX]}"
-    DATASET="${DATASETS[$OUTPUT_DIR_IDX]}"
+    export MODEL="${MODELS[$OUTPUT_DIR_IDX]}"
+    export DATASET="${DATASETS[$OUTPUT_DIR_IDX]}"
 
     [[ -r $MODEL ]] || {
         printf "Model file %s is not readable.\n" "$MODEL" >&2
@@ -44,7 +44,7 @@ function read_max_samples {
     [[ $1 =~ ^(short|[0-9]+)$ ]] || return 1
 
     MAX_SAMPLES_SHORT=20
-    MAX_SAMPLES=$1
+    export MAX_SAMPLES=$1
     shift
 
     if [[ $MAX_SAMPLES == short ]]; then
@@ -59,4 +59,5 @@ function read_max_samples {
 
 function set_cmd {
     [[ -z $CMD ]] && CMD="$DIRNAME/../../build/xspace"
+    export CMD
 }
