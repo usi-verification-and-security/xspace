@@ -12,7 +12,8 @@ function usage {
 
 [[ -z $1 ]] && usage 1 >&2
 
-read_output_dir "$1" && shift
+read_output_dir "$1" || usage $? >&2
+shift
 
 [[ -z $1 || $1 =~ ^(reverse|short)$ ]] && usage 1 >&2
 STRATEGIES="$1"

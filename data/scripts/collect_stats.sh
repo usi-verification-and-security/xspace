@@ -7,7 +7,7 @@ STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <dir> [short]\n" "$0"
+    printf "USAGE: %s <dir> <experiments_spec> [short]\n" "$0"
 
     [[ -n $1 ]] && exit $1
 }
@@ -24,6 +24,9 @@ shift
     usage 1 >&2
 }
 
+read_experiments_spec "$1" || usage $? >&2
+shift
+
 read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
@@ -32,8 +35,8 @@ read_max_samples "$1" && shift
 }
 
 ## Collect consecutive experiments as well
-declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
-declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_ALL_EXPERIMENTS_NAMES_LEN
+declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
+declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
 
 EXPERIMENT_MAX_WIDTH=$(( 1 + $lMAX_EXPERIMENT_NAMES_LEN ))
 

@@ -1,7 +1,21 @@
-OUTPUT_DIRS=(explanations/heart_attack explanations/obesity)
-
 ## Models and datasets that correspond to the output directories
-MODELS=(models/heart_attack/heart_attack-50.nnet models/obesity/obesity-10-20-10.nnet)
-#+ obesity_short is slight approximation of obesity (probably just floats printed differently)
-# should not be a problem but ideally fix it
-DATASETS=(datasets/heart_attack.csv datasets/obesity_short.csv)
+
+OUTPUT_DIRS=(
+    explanations/heart_attack
+
+    explanations/obesity
+)
+
+MODELS=(
+    models/heart_attack/heart_attack-50.nnet
+
+    models/obesity/obesity-10-20-10.nnet
+)
+
+DATASETS=(
+    datasets/heart_attack.csv
+
+    #+ slight approximation of obesity (probably just floats printed differently)
+    # should not be a problem but ideally fix it
+    datasets/obesity_short.csv
+)

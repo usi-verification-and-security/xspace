@@ -7,7 +7,7 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> [short] [<filter_regex>] [<filter_regex2>]\n" "$0"
+    printf "USAGE: %s <action> <dir> <experiments_spec> [short] [<filter_regex>] [<filter_regex2>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
     printf "\t[<filter_regex2>] is only to be used with binary actions\n"
 
@@ -46,6 +46,9 @@ PSI_FILE+=.smt2
     usage 2 >&2
 }
 
+read_experiments_spec "$1" || usage $? >&2
+shift
+
 read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
@@ -63,8 +66,8 @@ esac
 
 ## Analyze consecutive experiments as well
 ## It is necessary to consider all to preserve caching
-declare -n lEXPERIMENT_NAMES=ALL_EXPERIMENTS_NAMES
-declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_ALL_EXPERIMENTS_NAMES_LEN
+declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
+declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
 
 ## Require at least one extra space before the experiment names
 case $ACTION in

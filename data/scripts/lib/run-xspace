@@ -16,12 +16,12 @@ function read_output_dir {
     [[ -z $OUTPUT_DIR_IDX ]] && {
         printf "Unrecognized output directory: %s\n" "$OUTPUT_DIR" >&2
         printf "Expected one of: %s\n" "${OUTPUT_DIRS[*]}" >&2
-        exit 1
+        return 1
     }
 
     [[ -d $OUTPUT_DIR && -w $OUTPUT_DIR ]] || {
         printf "Output directory %s is not writable directory.\n" "$OUTPUT_DIR" >&2
-        exit 2
+        return 2
     }
 
     export MODEL="${MODELS[$OUTPUT_DIR_IDX]}"
@@ -29,12 +29,12 @@ function read_output_dir {
 
     [[ -r $MODEL ]] || {
         printf "Model file %s is not readable.\n" "$MODEL" >&2
-        exit 2
+        return 2
     }
 
     [[ -r $DATASET ]] || {
         printf "Dataset file %s is not readable.\n" "$DATASET" >&2
-        exit 2
+        return 2
     }
 
     return 0

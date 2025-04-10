@@ -1,0 +1,40 @@
+EXPERIMENT_NAMES=(
+    abductive
+
+    trial_n_4_abductive
+
+    itp_astronger_bstrong
+    itp_astrong_bstrong
+    itp_afactor_0.5_bstrong
+    itp_aweak_bstrong
+    itp_aweaker_bstrong
+    ucore_itp_astronger_bstrong
+    ucore_itp_astrong_bstrong
+    ucore_itp_afactor_0.5_bstrong
+    ucore_itp_aweak_bstrong
+    ucore_itp_aweaker_bstrong
+    ucore_min_itp_astronger_bstrong
+    ucore_min_itp_astrong_bstrong
+    ucore_min_itp_afactor_0.5_bstrong
+    ucore_min_itp_aweak_bstrong
+    ucore_min_itp_aweaker_bstrong
+
+    itp_vars_x1_x3
+    itp_vars_x1_x4
+    itp_vars_x3_x12
+    itp_vars_x5_x8
+    ucore_itp_vars_x1_x3
+    ucore_itp_vars_x1_x4
+    ucore_itp_vars_x3_x12
+    ucore_itp_vars_x5_x8
+    ucore_min_itp_vars_x1_x3
+    ucore_min_itp_vars_x1_x4
+    ucore_min_itp_vars_x3_x12
+    ucore_min_itp_vars_x5_x8
+)
+
+CONSECUTIVE_EXPERIMENTS=(
+    'trial_n_4_abductive;itp_aweak_bstrong'
+    'trial_n_4_abductive;ucore_itp_aweak_bstrong'
+    'trial_n_4_abductive;ucore_min_itp_aweak_bstrong'
+)

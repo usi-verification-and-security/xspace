@@ -1,0 +1,219 @@
+EXPERIMENT_NAMES=(
+    abductive
+    ucore_sample_min
+    ucore_interval_min
+
+    trial_n_4_abductive
+    trial_n_4_ucore_sample_min
+
+    itp_ucore_sample_min
+    itp_ucore_interval_min
+    ucore_itp_ucore_sample_min
+    ucore_itp_ucore_interval_min
+    ucore_min_itp_ucore_sample_min
+    ucore_min_itp_ucore_interval_min
+
+    itp_astronger_bstrong
+    itp_astronger_bweak
+    itp_astrong_bstrong
+    itp_astrong_bweak
+    itp_afactor_0.5_bstrong
+    itp_afactor_0.5_bweak
+    itp_aweak_bstrong
+    itp_aweak_bweak
+    itp_aweaker_bstrong
+    itp_aweaker_bweak
+    ucore_itp_astronger_bstrong
+    ucore_itp_astrong_bstrong
+    ucore_itp_afactor_0.5_bstrong
+    ucore_itp_aweak_bstrong
+    ucore_itp_aweaker_bstrong
+    ucore_min_itp_astronger_bstrong
+    ucore_min_itp_astrong_bstrong
+    ucore_min_itp_afactor_0.5_bstrong
+    ucore_min_itp_aweak_bstrong
+    ucore_min_itp_aweaker_bstrong
+
+    itp_vars_x1_x3
+    itp_vars_x1_x4
+    itp_vars_x1_x5
+    itp_vars_x1_x8
+    itp_vars_x1_x10
+    itp_vars_x1_x12
+    itp_vars_x2_x4
+    itp_vars_x2_x6
+    itp_vars_x2_x7
+    itp_vars_x2_x9
+    itp_vars_x2_x11
+    itp_vars_x3_x5
+    itp_vars_x3_x8
+    itp_vars_x3_x9
+    itp_vars_x3_x12
+    itp_vars_x3_x13
+    itp_vars_x4_x6
+    itp_vars_x4_x10
+    itp_vars_x4_x11
+    itp_vars_x4_x12
+    itp_vars_x5_x7
+    itp_vars_x5_x8
+    itp_vars_x5_x9
+    itp_vars_x5_x13
+    ucore_itp_vars_x1_x3
+    ucore_itp_vars_x1_x4
+    ucore_itp_vars_x1_x5
+    ucore_itp_vars_x1_x8
+    ucore_itp_vars_x1_x10
+    ucore_itp_vars_x1_x12
+    ucore_itp_vars_x2_x4
+    ucore_itp_vars_x2_x6
+    ucore_itp_vars_x2_x7
+    ucore_itp_vars_x2_x9
+    ucore_itp_vars_x2_x11
+    ucore_itp_vars_x3_x5
+    ucore_itp_vars_x3_x8
+    ucore_itp_vars_x3_x9
+    ucore_itp_vars_x3_x12
+    ucore_itp_vars_x3_x13
+    ucore_itp_vars_x4_x6
+    ucore_itp_vars_x4_x10
+    ucore_itp_vars_x4_x11
+    ucore_itp_vars_x4_x12
+    ucore_itp_vars_x5_x7
+    ucore_itp_vars_x5_x8
+    ucore_itp_vars_x5_x9
+    ucore_itp_vars_x5_x13
+    ucore_min_itp_vars_x1_x3
+    ucore_min_itp_vars_x1_x4
+    ucore_min_itp_vars_x1_x5
+    ucore_min_itp_vars_x1_x8
+    ucore_min_itp_vars_x1_x10
+    ucore_min_itp_vars_x1_x12
+    ucore_min_itp_vars_x2_x4
+    ucore_min_itp_vars_x2_x6
+    ucore_min_itp_vars_x2_x7
+    ucore_min_itp_vars_x2_x9
+    ucore_min_itp_vars_x2_x11
+    ucore_min_itp_vars_x3_x5
+    ucore_min_itp_vars_x3_x8
+    ucore_min_itp_vars_x3_x9
+    ucore_min_itp_vars_x3_x12
+    ucore_min_itp_vars_x3_x13
+    ucore_min_itp_vars_x4_x6
+    ucore_min_itp_vars_x4_x10
+    ucore_min_itp_vars_x4_x11
+    ucore_min_itp_vars_x4_x12
+    ucore_min_itp_vars_x5_x7
+    ucore_min_itp_vars_x5_x8
+    ucore_min_itp_vars_x5_x9
+    ucore_min_itp_vars_x5_x13
+)
+
+EXPERIMENT_STRATEGIES=(
+    'abductive'
+    'ucore sample, min'
+    'ucore interval, min'
+
+    'abductive; trial n 4'
+    'ucore sample, min; trial n 4'
+
+    'ucore sample, min; itp'
+    'ucore interval, min; itp'
+    'ucore sample, min; itp; ucore'
+    'ucore interval, min; itp; ucore'
+    'ucore sample, min; itp; ucore min'
+    'ucore interval, min; itp; ucore min'
+
+    'itp astronger, bstrong'
+    'itp astronger, bweak'
+    'itp astrong, bstrong'
+    'itp astrong, bweak'
+    'itp afactor 0.5, bstrong'
+    'itp afactor 0.5, bweak'
+    'itp aweak, bstrong'
+    'itp aweak, bweak'
+    'itp aweaker, bstrong'
+    'itp aweaker, bweak'
+    'itp astronger, bstrong; ucore'
+    'itp astrong, bstrong; ucore'
+    'itp afactor 0.5, bstrong; ucore'
+    'itp aweak, bstrong; ucore'
+    'itp aweaker, bstrong; ucore'
+    'itp astronger, bstrong; ucore min'
+    'itp astrong, bstrong; ucore min'
+    'itp afactor 0.5, bstrong; ucore min'
+    'itp aweak, bstrong; ucore min'
+    'itp aweaker, bstrong; ucore min'
+
+    'itp vars x1 x3'
+    'itp vars x1 x4'
+    'itp vars x1 x5'
+    'itp vars x1 x8'
+    'itp vars x1 x10'
+    'itp vars x1 x12'
+    'itp vars x2 x4'
+    'itp vars x2 x6'
+    'itp vars x2 x7'
+    'itp vars x2 x9'
+    'itp vars x2 x11'
+    'itp vars x3 x5'
+    'itp vars x3 x8'
+    'itp vars x3 x9'
+    'itp vars x3 x12'
+    'itp vars x3 x13'
+    'itp vars x4 x6'
+    'itp vars x4 x10'
+    'itp vars x4 x11'
+    'itp vars x4 x12'
+    'itp vars x5 x7'
+    'itp vars x5 x8'
+    'itp vars x5 x9'
+    'itp vars x5 x13'
+    'itp vars x1 x3; ucore'
+    'itp vars x1 x4; ucore'
+    'itp vars x1 x5; ucore'
+    'itp vars x1 x8; ucore'
+    'itp vars x1 x10; ucore'
+    'itp vars x1 x12; ucore'
+    'itp vars x2 x4; ucore'
+    'itp vars x2 x6; ucore'
+    'itp vars x2 x7; ucore'
+    'itp vars x2 x9; ucore'
+    'itp vars x2 x11; ucore'
+    'itp vars x3 x5; ucore'
+    'itp vars x3 x8; ucore'
+    'itp vars x3 x9; ucore'
+    'itp vars x3 x12; ucore'
+    'itp vars x3 x13; ucore'
+    'itp vars x4 x6; ucore'
+    'itp vars x4 x10; ucore'
+    'itp vars x4 x11; ucore'
+    'itp vars x4 x12; ucore'
+    'itp vars x5 x7; ucore'
+    'itp vars x5 x8; ucore'
+    'itp vars x5 x9; ucore'
+    'itp vars x5 x13; ucore'
+    'itp vars x1 x3; ucore min'
+    'itp vars x1 x4; ucore min'
+    'itp vars x1 x5; ucore min'
+    'itp vars x1 x8; ucore min'
+    'itp vars x1 x10; ucore min'
+    'itp vars x1 x12; ucore min'
+    'itp vars x2 x4; ucore min'
+    'itp vars x2 x6; ucore min'
+    'itp vars x2 x7; ucore min'
+    'itp vars x2 x9; ucore min'
+    'itp vars x2 x11; ucore min'
+    'itp vars x3 x5; ucore min'
+    'itp vars x3 x8; ucore min'
+    'itp vars x3 x9; ucore min'
+    'itp vars x3 x12; ucore min'
+    'itp vars x3 x13; ucore min'
+    'itp vars x4 x6; ucore min'
+    'itp vars x4 x10; ucore min'
+    'itp vars x4 x11; ucore min'
+    'itp vars x4 x12; ucore min'
+    'itp vars x5 x7; ucore min'
+    'itp vars x5 x8; ucore min'
+    'itp vars x5 x9; ucore min'
+    'itp vars x5 x13; ucore min'
+)

@@ -1,47 +1,10 @@
 [[ -z $DIRNAME ]] && DIRNAME=$(dirname "$0")
 
-source "$DIRNAME/spec/models_datasets"
-source "$DIRNAME/spec/experiments"
+SPEC_DIR="$DIRNAME/spec"
+MODELS_DATASETS_SPEC="$SPEC_DIR/models_datasets"
+EXPERIMENTS_SPEC_DIR="$SPEC_DIR/experiments"
 
-# 1 - input string
-#<2>- array var. name to write into
-#(3)- field separator to use
-function _split_string {
-   [[ -n $3 ]] && local IFS=$3
-   local -n larray=$2
-   larray=($1)
-}
-
-function _split_consecutive_experiments {
-    local array_var=$1
-    local dst_array_of_src_var=$2
-    local dst_array_of_dst_var=$3
-
-    local -n larray=$array_var
-    local -n ldst_array_of_src=$dst_array_of_src_var
-    local -n ldst_array_of_dst=$dst_array_of_dst_var
-
-    local ary=()
-
-    for spec in "${larray[@]}"; do
-        _split_string "$spec" ary ';'
-        (( ${#ary[@]} == 2 )) || {
-            printf "Two consecutive experiments expected, got: %s\n" "$spec" >&2
-            exit 1
-        }
-
-        local src="${ary[0]}"
-        local dst="${ary[1]}"
-
-        ldst_array_of_src+=("$src")
-        ldst_array_of_dst+=("$dst")
-    done
-}
-
-CONSECUTIVE_EXPERIMENTS_SRC_NAMES=()
-CONSECUTIVE_EXPERIMENTS_DST_NAMES=()
-
-_split_consecutive_experiments CONSECUTIVE_EXPERIMENTS CONSECUTIVE_EXPERIMENTS_SRC_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
+source "$MODELS_DATASETS_SPEC"
 
 function _check_array_sizes {
     local array_var1=$1
@@ -58,80 +21,43 @@ function _check_array_sizes {
 
 _check_array_sizes OUTPUT_DIRS MODELS
 _check_array_sizes OUTPUT_DIRS DATASETS
-_check_array_sizes EXPERIMENT_NAMES EXPERIMENT_STRATEGIES
 
-_check_array_sizes CONSECUTIVE_EXPERIMENTS_SRC_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
+function _read_experiments_spec_source {
+    local f="$1"
 
-function __contains {
-    local array_var=$1
-    local elem="$2"
+    grep -q '^EXPERIMENT_NAMES=' "$f" &>/dev/null || return 1
 
-    local -n larray=$array_var
+    source "$f" && source "$DIRNAME/lib/_set_experiments_spec"
+}
 
-    local e
-    for e in "${larray[@]}"; do
-        [[ $e == $elem ]] && return 0
-    done
+function read_experiments_spec {
+    local arg="$1"
 
+    [[ -z $arg ]] && {
+        printf "Expected experiments spec.\n" >&2
+        return 1
+    }
+
+    export EXPERIMENTS_SPEC="$arg"
+
+    [[ -r $arg ]] && _read_experiments_spec_source "$arg" && return 0
+
+    local f="$EXPERIMENTS_SPEC_DIR/$arg"
+    [[ -e $f ]] || {
+        printf "Unrecognized experiments spec %s: file %s does not exist!\n" "$arg" "$f" >&2
+        return 1
+    }
+
+    [[ -r $f ]] || {
+        printf "Experiments spec file %s is not readable!\n" "$f" >&2
+        return 1
+    }
+
+    _read_experiments_spec_source "$f" && return 0
+
+    printf "Neither %s nor %s is a valid experiments spec file!\n" "$arg" "$f" >&2
     return 1
 }
-
-function _includes {
-    local array_var1=$1
-    local array_var2=$2
-
-    local -n larray1=$array_var1
-    local -n larray2=$array_var2
-
-    local e
-    for e in "${larray2[@]}"; do
-        __contains $array_var1 "$e" && continue
-
-        printf "Element '%s' of array %s is not included in array %s\n" "$e" $array_var2 $array_var1 >&2
-        exit 9
-    done
-
-    return 0
-}
-
-_includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
-_includes EXPERIMENT_NAMES CONSECUTIVE_EXPERIMENTS_DST_NAMES
-
-CONSECUTIVE_EXPERIMENTS_NAMES=()
-for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
-    src_experiment="${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}"
-    dst_experiment="${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}"
-    experiment_name="${dst_experiment}__${src_experiment}"
-    CONSECUTIVE_EXPERIMENTS_NAMES+=("$experiment_name")
-done
-
-_check_array_sizes CONSECUTIVE_EXPERIMENTS_NAMES CONSECUTIVE_EXPERIMENTS_SRC_NAMES
-
-## Beware: use just the names, they are no more synced with strategies here!
-ALL_EXPERIMENTS_NAMES=("${EXPERIMENT_NAMES[@]}" "${CONSECUTIVE_EXPERIMENTS_NAMES[@]}")
-
-function _max_len {
-    local array_var=$1
-    local dst_max_len_var=$2
-
-    local -n larray=$array_var
-    local -n ldst_max_len=$dst_max_len_var
-
-    local max_len=0
-    for e in "${larray[@]}"; do
-        local len=${#e}
-        (( $len <= $max_len )) && continue
-        max_len=$len
-    done
-
-    ldst_max_len=$max_len
-}
-
-_max_len EXPERIMENT_NAMES MAX_EXPERIMENT_NAMES_LEN
-_max_len CONSECUTIVE_EXPERIMENTS_NAMES MAX_CONSECUTIVE_EXPERIMENTS_NAMES_LEN
-_max_len ALL_EXPERIMENTS_NAMES MAX_ALL_EXPERIMENTS_NAMES_LEN
-
-## Functions to be used in scripts follow ...
 
 function read_max_samples {
     [[ $1 =~ ^(short|[0-9]+)$ ]] || return 1
@@ -159,29 +85,49 @@ function read_max_samples {
     return 0
 }
 
+source "$EXPERIMENTS_SPEC_DIR/all"
+
+ALL_EXPERIMENT_NAMES=("${EXPERIMENT_NAMES[@]}")
+
+_check_array_sizes ALL_EXPERIMENT_NAMES EXPERIMENT_STRATEGIES
+
 declare -A EXPERIMENT_TO_STRATEGIES
 
-## Use if the index is not available
+## Map experiment names to strategies
+for exp_idx in ${!ALL_EXPERIMENT_NAMES[@]}; do
+    experiment="${ALL_EXPERIMENT_NAMES[$exp_idx]}"
+    strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
+    EXPERIMENT_TO_STRATEGIES[$experiment]="$strategies"
+done
+
 function find_strategies_for_experiment {
     local experiment="$1"
     local -n lexperiment_strategies=$2
+    local exp_idx=$3
 
-    local strategies="${EXPERIMENT_TO_STRATEGIES[$experiment]}"
+    local strategies
+    if [[ -n $exp_idx && $EXPERIMENTS_SPEC == all ]]; then
+        strategies="${EXPERIMENT_STRATEGIES[$exp_idx]}"
+    else
+        strategies="${EXPERIMENT_TO_STRATEGIES[$experiment]}"
+    fi
+
     [[ -n $strategies ]] && {
         lexperiment_strategies="$strategies"
         return 0
     }
 
+    ## EXPERIMENT_TO_STRATEGIES should contain all
+    printf "UNEXPECTED\n" >&2
+    exit 37
+
     local eidx
-    for eidx in ${!EXPERIMENT_NAMES[@]}; do
-        [[ $experiment == ${EXPERIMENT_NAMES[$eidx]} ]] || continue
+    for eidx in ${!ALL_EXPERIMENT_NAMES[@]}; do
+        [[ $experiment == ${ALL_EXPERIMENT_NAMES[$eidx]} ]] || continue
         strategies="${EXPERIMENT_STRATEGIES[$eidx]}"
         EXPERIMENT_TO_STRATEGIES[$experiment]="$strategies"
         lexperiment_strategies="$strategies"
         return 0
     done
-
-    printf "UNEXPECTED\n" >&2
-    exit 37
 }
 export -f find_strategies_for_experiment
