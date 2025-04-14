@@ -7,7 +7,7 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> <experiments_spec> [short] [<filter_regex>] [<filter_regex2>]\n" "$0"
+    printf "USAGE: %s <action> <dir> <experiments_spec> [<max_samples>] [<filter_regex>] [<filter_regex2>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
     printf "\t[<filter_regex2>] is only to be used with binary actions\n"
 

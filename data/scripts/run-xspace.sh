@@ -5,7 +5,7 @@ DIRNAME=$(dirname "$0")
 source "$DIRNAME/lib/run-xspace"
 
 function usage {
-    printf "USAGE: %s <output_dir> <exp_strategies_spec> <name> [reverse] [short | <max_samples>] <args>...\n" "$0"
+    printf "USAGE: %s <output_dir> <exp_strategies_spec> <name> [reverse] [<max_samples>] <args>...\n" "$0"
 
     [[ -n $1 ]] && exit $1
 }

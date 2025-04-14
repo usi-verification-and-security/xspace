@@ -7,7 +7,7 @@ source "$DIRNAME/lib/run-xspace"
 function usage {
     local experiments_spec_ary=($(ls "$EXPERIMENTS_SPEC_DIR"))
 
-    printf "USAGE: %s <output_dir> <experiments_spec> [consecutive] [short] [<filter_experiments_regex>] [-h|-n]\n" "$0"
+    printf "USAGE: %s <output_dir> <experiments_spec> [consecutive] [<max_samples>] [<filter_experiments_regex>] [-h|-n]\n" "$0"
     printf "\t<output_dir> must be specified in %s\n" "$MODELS_DATASETS_SPEC"
     printf "\t<experiments_spec> is one of: %s\n" "${experiments_spec_ary[*]}"
     printf "CONSECUTIVE_EXPERIMENTS are not run unless 'consecutive' is provided\n"

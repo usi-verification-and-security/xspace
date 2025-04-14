@@ -2,19 +2,25 @@
 
 OUTPUT_DIRS=(
     explanations/heart_attack
+    explanations/heart_attack/short
 
     explanations/obesity
+    explanations/obesity/short
 )
 
 MODELS=(
     models/heart_attack/heart_attack-50.nnet
+    models/heart_attack/heart_attack-50.nnet
 
+    models/obesity/obesity-10-20-10.nnet
     models/obesity/obesity-10-20-10.nnet
 )
 
 DATASETS=(
     datasets/heart_attack.csv
+    datasets/heart_attack_short.csv
 
+    datasets/obesity.csv
     #+ slight approximation of obesity (probably just floats printed differently)
     # should not be a problem but ideally fix it
     datasets/obesity_short.csv
