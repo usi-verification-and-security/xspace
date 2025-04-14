@@ -153,7 +153,12 @@ function set_phi_filename {
     done
 }
 
-MODEL=$(basename "$PHI_DIR")
+MODEL=$(realpath "$PHI_DIR")
+DATA_DIR=$(realpath "$SCRIPTS_DIR/..")
+MODEL="${MODEL#$DATA_DIR}"
+MODEL="${MODEL##/}"
+MODEL="${MODEL#explanations}"
+MODEL="${MODEL##/}"
 
 SCRIPT_NAME=$(basename -s .sh "$0")
 SCRIPT_OUTPUT_CACHE_FILE_REVERSE="$SCRIPTS_DIR/cache/$MODEL/$MAX_SAMPLES_NAME/reverse/${SCRIPT_NAME}.${ACTION}.txt"
