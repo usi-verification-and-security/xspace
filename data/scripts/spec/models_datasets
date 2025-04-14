@@ -10,6 +10,9 @@ OUTPUT_DIRS=(
     explanations/obesity/full
     explanations/obesity/short
     explanations/obesity/quick
+
+    explanations/mnist/short
+    explanations/mnist/quick
 )
 
 MODELS=(
@@ -20,6 +23,9 @@ MODELS=(
     models/obesity/obesity-10-20-10.nnet
     models/obesity/obesity-10-20-10.nnet
     models/obesity/obesity-10-20-10.nnet
+
+    models/mnist/mnist-200.nnet
+    models/mnist/mnist-200.nnet
 )
 
 DATASETS=(
@@ -32,4 +38,7 @@ DATASETS=(
     # should not be a problem but ideally fix it
     datasets/obesity/obesity_short.csv
     datasets/obesity/obesity_quick.csv
+
+    datasets/mnist/mnist_short.csv
+    datasets/mnist/mnist_quick.csv
 )
