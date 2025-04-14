@@ -1,10 +1,12 @@
 ## Models and datasets that correspond to the output directories
 
+## It expects psi files to be located at the common directory of the variants (e.g. explanations/heart_attack)
+#? do not make this assumption but make it explicit
 OUTPUT_DIRS=(
-    explanations/heart_attack
+    explanations/heart_attack/full
     explanations/heart_attack/short
 
-    explanations/obesity
+    explanations/obesity/full
     explanations/obesity/short
 )
 
@@ -17,11 +19,11 @@ MODELS=(
 )
 
 DATASETS=(
-    datasets/heart_attack.csv
-    datasets/heart_attack_short.csv
+    datasets/heart_attack/heart_attack_full.csv
+    datasets/heart_attack/heart_attack_short.csv
 
-    datasets/obesity.csv
-    #+ slight approximation of obesity (probably just floats printed differently)
+    datasets/obesity/obesity_full.csv
+    #+ slight approximation of obesity_full (probably just floats printed differently)
     # should not be a problem but ideally fix it
-    datasets/obesity_short.csv
+    datasets/obesity/obesity_short.csv
 )

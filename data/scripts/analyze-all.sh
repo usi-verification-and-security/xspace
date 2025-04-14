@@ -7,7 +7,7 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>] [<filter_regex>] [<filter_regex2>]\n" "$0"
+    printf "USAGE: %s <action> <explanations_dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>] [<filter_regex>] [<filter_regex2>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
     printf "\t[<filter_regex2>] is only to be used with binary actions\n"
 
@@ -24,12 +24,15 @@ shift
     usage 1 >&2
 }
 
-PHI_DIR="$1"
+EXPLANATIONS_DIR="$1"
 shift
-[[ -d $PHI_DIR && -r $PHI_DIR ]] || {
-    printf "'%s' is not a readable directory.\n" "$PHI_DIR" >&2
+[[ -d $EXPLANATIONS_DIR && -r $EXPLANATIONS_DIR ]] || {
+    printf "'%s' is not a readable directory.\n" "$EXPLANATIONS_DIR" >&2
     usage 1 >&2
 }
+
+#+ do not make this implicit assumption
+PHI_DIR="$EXPLANATIONS_DIR/.."
 
 PSI_FILE="$PHI_DIR/psi_"
 case $ACTION in
@@ -142,7 +145,7 @@ function set_phi_filename {
     (( $do_reverse )) && experiment_stem=reverse/$experiment_stem
     [[ -n $MAX_SAMPLES ]] && experiment_stem=$MAX_SAMPLES_NAME/$experiment_stem
 
-    lphi_file="${PHI_DIR}/${experiment_stem}.phi.txt"
+    lphi_file="${EXPLANATIONS_DIR}/${experiment_stem}.phi.txt"
 }
 
 [[ -n $FILTER ]] && {
@@ -153,12 +156,7 @@ function set_phi_filename {
     done
 }
 
-MODEL=$(realpath "$PHI_DIR")
-DATA_DIR=$(realpath "$SCRIPTS_DIR/..")
-MODEL="${MODEL#$DATA_DIR}"
-MODEL="${MODEL##/}"
-MODEL="${MODEL#explanations}"
-MODEL="${MODEL##/}"
+MODEL="$(basename $(realpath "$PHI_DIR"))/$(basename "$EXPLANATIONS_DIR")"
 
 SCRIPT_NAME=$(basename -s .sh "$0")
 SCRIPT_OUTPUT_CACHE_FILE_REVERSE="$SCRIPTS_DIR/cache/$MODEL/$MAX_SAMPLES_NAME/reverse/${SCRIPT_NAME}.${ACTION}.txt"

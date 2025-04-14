@@ -7,7 +7,7 @@ STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>]\n" "$0"
+    printf "USAGE: %s <explanations_dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>]\n" "$0"
 
     [[ -n $1 ]] && exit $1
 }
