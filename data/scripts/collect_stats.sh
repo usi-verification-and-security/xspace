@@ -7,7 +7,7 @@ STATS_SCRIPT="$SCRIPTS_DIR/stats.awk"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <dir> <experiments_spec> [<max_samples>]\n" "$0"
+    printf "USAGE: %s <dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>]\n" "$0"
 
     [[ -n $1 ]] && exit $1
 }
@@ -27,16 +27,25 @@ shift
 read_experiments_spec "$1" || usage $? >&2
 shift
 
-read_max_samples "$1" && shift
+maybe_read_consecutive "$1" && shift
+maybe_read_reverse "$1" && shift
+maybe_read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
     FILTER="$1"
     shift
 }
 
-## Collect consecutive experiments as well
-declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
-declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
+if [[ -z $INCLUDE_CONSECUTIVE ]]; then
+    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_LEN
+elif (( $CONSECUTIVE_ONLY )); then
+    declare -n lEXPERIMENT_NAMES=CONSECUTIVE_EXPERIMENTS_NAMES
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_CONSECUTIVE_EXPERIMENTS_NAMES_LEN
+else
+    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
+fi
 
 EXPERIMENT_MAX_WIDTH=$(( 1 + $lMAX_EXPERIMENT_NAMES_LEN ))
 
@@ -101,7 +110,13 @@ function print_header {
     fi
 }
 
-for do_reverse in 0 1; do
+do_reverse_args=(0)
+[[ -n $INCLUDE_REVERSE ]] && {
+    (( $REVERSE_ONLY )) && do_reverse_args=()
+    do_reverse_args+=(1)
+}
+
+for do_reverse in ${do_reverse_args[@]}; do
     for experiment in ${lEXPERIMENT_NAMES[@]}; do
         experiment_stem=$experiment
         [[ -n $FILTER && ! $experiment =~ $FILTER ]] && continue

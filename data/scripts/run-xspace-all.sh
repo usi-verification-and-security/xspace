@@ -7,7 +7,7 @@ source "$DIRNAME/lib/run-xspace"
 function usage {
     local experiments_spec_ary=($(ls "$EXPERIMENTS_SPEC_DIR"))
 
-    printf "USAGE: %s <output_dir> <experiments_spec> [consecutive] [<max_samples>] [<filter_experiments_regex>] [-h|-n]\n" "$0"
+    printf "USAGE: %s <output_dir> <experiments_spec> [consecutive] [[+]reverse] [<max_samples>] [<filter_experiments_regex>] [-h|-n]\n" "$0"
     printf "\t<output_dir> must be specified in %s\n" "$MODELS_DATASETS_SPEC"
     printf "\t<experiments_spec> is one of: %s\n" "${experiments_spec_ary[*]}"
     printf "CONSECUTIVE_EXPERIMENTS are not run unless 'consecutive' is provided\n"
@@ -26,15 +26,9 @@ shift
 read_experiments_spec "$1" || usage $? >&2
 shift
 
-if [[ $1 == consecutive ]]; then
-    CONSECUTIVE=1
-    shift
-else
-    CONSECUTIVE=0
-fi
-export CONSECUTIVE
-
-read_max_samples "$1" && shift
+maybe_read_consecutive "$1" && shift
+maybe_read_reverse "$1" && shift
+maybe_read_max_samples "$1" && shift
 
 [[ -n $1 && ! $1 =~ ^- ]] && {
     export FILTER="$1"
@@ -61,19 +55,34 @@ export DRY_RUN=0
 
 set_cmd
 
+if [[ -z $INCLUDE_CONSECUTIVE ]]; then
+    EXPERIMENT_NAMES_VAR=EXPERIMENT_NAMES
+else
+    (( $CONSECUTIVE_ONLY )) || {
+        printf "Only isolated run of consecutive experiments is supported.\n" >&2
+        usage 1 >&2
+    }
+
+    EXPERIMENT_NAMES_VAR=CONSECUTIVE_EXPERIMENTS_NAMES
+fi
+export EXPERIMENT_NAMES_VAR
+
 printf "Output directory: %s\n" "$OUTPUT_DIR"
 printf "Model: %s\n" "$MODEL"
 printf "Dataset: %s\n" "$DATASET"
 printf "\n"
 
-(( $DRY_RUN )) && printf "DRY RUN - only printing what would be run\n\n"
+[[ -n $INCLUDE_REVERSE ]] && {
+    printf "Running reversed-order experiments "
+    if (( $REVERSE_ONLY )); then
+        printf "only"
+    else
+        printf "as well"
+    fi
+    printf "\n\n"
+}
 
-if (( ! $CONSECUTIVE )); then
-    EXPERIMENT_NAMES_VAR=EXPERIMENT_NAMES
-else
-    EXPERIMENT_NAMES_VAR=CONSECUTIVE_EXPERIMENTS_NAMES
-fi
-export EXPERIMENT_NAMES_VAR
+(( $DRY_RUN )) && printf "DRY RUN - only printing what would be run\n\n"
 
 function run1 {
     source "$DIRNAME/lib/run-xspace"
@@ -90,13 +99,13 @@ function run1 {
     }
 
     local {src,dst}_experiment
-    (( $CONSECUTIVE )) && {
+    [[ -n $INCLUDE_CONSECUTIVE ]] && {
         src_experiment=${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}
         dst_experiment=${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}
     }
 
     local experiment_strategies
-    if (( ! $CONSECUTIVE )); then
+    if [[ -z $INCLUDE_CONSECUTIVE ]]; then
         find_strategies_for_experiment $experiment experiment_strategies $exp_idx
     else
         find_strategies_for_experiment $dst_experiment experiment_strategies
@@ -106,7 +115,13 @@ function run1 {
 
     (( $DRY_RUN )) && return 0
 
-    for rev in '' reverse; do
+    reverse_args=('')
+    [[ -n $INCLUDE_REVERSE ]] && {
+        (( $REVERSE_ONLY )) && reverse_args=()
+        reverse_args+=(reverse)
+    }
+
+    for rev in "${reverse_args[@]}"; do
         SRC_EXPERIMENT=$src_experiment "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $experiment $rev $MAX_SAMPLES &
     done
 
@@ -121,8 +136,7 @@ export -f run1
 
 [[ -z $CPU_PERCENTAGE ]] && CPU_PERCENTAGE=60
 
-## It also runs reverse and non-reverse in parallel -> adjust
-CPU_PERCENTAGE=$(( $CPU_PERCENTAGE/2 ))
+[[ -n $INCLUDE_REVERSE ]] && (( ! $REVERSE_ONLY )) && CPU_PERCENTAGE=$(( $CPU_PERCENTAGE/2 ))
 
 declare -n lEXPERIMENT_NAMES=$EXPERIMENT_NAMES_VAR
 

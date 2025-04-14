@@ -7,7 +7,7 @@ ANALYZE_SCRIPT="$SCRIPTS_DIR/analyze.sh"
 source "$SCRIPTS_DIR/lib/experiments"
 
 function usage {
-    printf "USAGE: %s <action> <dir> <experiments_spec> [<max_samples>] [<filter_regex>] [<filter_regex2>]\n" "$0"
+    printf "USAGE: %s <action> <dir> <experiments_spec> [[+]consecutive] [[+]reverse] [<max_samples>] [<filter_regex>] [<filter_regex2>]\n" "$0"
     $ANALYZE_SCRIPT |& grep ACTIONS
     printf "\t[<filter_regex2>] is only to be used with binary actions\n"
 
@@ -49,7 +49,9 @@ PSI_FILE+=.smt2
 read_experiments_spec "$1" || usage $? >&2
 shift
 
-read_max_samples "$1" && shift
+maybe_read_consecutive "$1" && shift
+maybe_read_reverse "$1" && shift
+maybe_read_max_samples "$1" && shift
 
 [[ -n $1 ]] && {
     FILTER="$1"
@@ -64,10 +66,17 @@ compare-subset)
     }
 esac
 
-## Analyze consecutive experiments as well
-## It is necessary to consider all to preserve caching
-declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
-declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
+#++ store consecutive cache to separate files to avoid destroying it
+if [[ -z $INCLUDE_CONSECUTIVE ]]; then
+    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_LEN
+elif (( $CONSECUTIVE_ONLY )); then
+    declare -n lEXPERIMENT_NAMES=CONSECUTIVE_EXPERIMENTS_NAMES
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_CONSECUTIVE_EXPERIMENTS_NAMES_LEN
+else
+    declare -n lEXPERIMENT_NAMES=EXPERIMENT_NAMES_WITH_CONSECUTIVE
+    declare -n lMAX_EXPERIMENT_NAMES_LEN=MAX_EXPERIMENT_NAMES_WITH_CONSECUTIVE_LEN
+fi
 
 ## Require at least one extra space before the experiment names
 case $ACTION in
@@ -203,7 +212,13 @@ function get_cache_line {
     [[ -n $lcache_line ]]
 }
 
-for do_reverse in 0 1; do
+do_reverse_args=(0)
+[[ -n $INCLUDE_REVERSE ]] && {
+    (( $REVERSE_ONLY )) && do_reverse_args=()
+    do_reverse_args+=(1)
+}
+
+for do_reverse in ${do_reverse_args[@]}; do
     if (( $do_reverse )); then
         declare -n lSCRIPT_OUTPUT_CACHE_FILE=SCRIPT_OUTPUT_CACHE_FILE_REVERSE
     else

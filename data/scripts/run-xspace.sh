@@ -28,7 +28,7 @@ shift
     shift
 }
 
-read_max_samples "$1" && shift
+maybe_read_max_samples "$1" && shift
 
 [[ $1 =~ ^(reverse|short)$ ]] && usage 1 >&2
 
