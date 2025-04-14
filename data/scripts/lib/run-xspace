@@ -19,8 +19,8 @@ function read_output_dir {
         return 1
     }
 
-    [[ -d $OUTPUT_DIR && -w $OUTPUT_DIR ]] || {
-        printf "Output directory %s is not writable directory.\n" "$OUTPUT_DIR" >&2
+    [[ -d $OUTPUT_DIR && -w $OUTPUT_DIR ]] || mkdir -p "$OUTPUT_DIR" >/dev/null || {
+        printf "Could not create output directory %s.\n" "$OUTPUT_DIR" >&2
         return 2
     }
 
