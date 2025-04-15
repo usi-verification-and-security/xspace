@@ -54,6 +54,7 @@ export DRY_RUN=0
 }
 
 set_cmd
+set_timeout
 
 if [[ -z $INCLUDE_CONSECUTIVE ]]; then
     EXPERIMENT_NAMES_VAR=EXPERIMENT_NAMES
@@ -125,12 +126,21 @@ function run1 {
         SRC_EXPERIMENT=$src_experiment "$DIRNAME/run-xspace.sh" "$OUTPUT_DIR" "$experiment_strategies" $experiment $rev $MAX_SAMPLES &
     done
 
-    wait || {
+    wait -n
+    case $? in
+    0)
+        printf "Finished %s\n" $experiment
+        return 0
+        ;;
+    $TIMEOUT_STATUS)
+        printf "Timeout %s\n" $experiment
+        return 0
+        ;;
+    *)
         printf "%s failed!\n" $experiment
         return 1
-    }
-
-    printf "Finished %s\n" $experiment
+        ;;
+    esac
 }
 export -f run1
 

@@ -33,6 +33,7 @@ maybe_read_max_samples "$1" && shift
 [[ $1 =~ ^(reverse|short)$ ]] && usage 1 >&2
 
 set_cmd
+set_timeout
 
 OPTIONS=(-sv)
 
@@ -69,4 +70,4 @@ done
     ARGS+=(-E "$src_phi_file")
 }
 
-{ time ${CMD} "$MODEL" "$DATASET" "$STRATEGIES" ${OPTIONS[@]} "${ARGS[@]}" "$@" >"$phi_file" 2>"$stats_file" ; } 2>"$time_file"
+timeout $TIMEOUT bash -c "{ time ${CMD} \"$MODEL\" \"$DATASET\" \"$STRATEGIES\" ${OPTIONS[@]} "'"$@"'" >\"$phi_file\" 2>\"$stats_file\" ; } 2>\"$time_file\"" xspace "${ARGS[@]}" "$@"

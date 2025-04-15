@@ -44,3 +44,10 @@ function set_cmd {
     [[ -z $CMD ]] && CMD="$DIRNAME/../../build/xspace"
     export CMD
 }
+
+TIMEOUT_STATUS=124
+
+function set_timeout {
+    [[ -z $TIMEOUT ]] && TIMEOUT=30m
+    export TIMEOUT
+}

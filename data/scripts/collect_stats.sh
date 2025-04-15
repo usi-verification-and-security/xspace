@@ -116,6 +116,14 @@ do_reverse_args=(0)
     do_reverse_args+=(1)
 }
 
+ERR_FILE=$(mktemp)
+
+function cleanup {
+    rm $ERR_FILE
+
+    exit $1
+}
+
 for do_reverse in ${do_reverse_args[@]}; do
     for experiment in ${lEXPERIMENT_NAMES[@]}; do
         experiment_stem=$experiment
@@ -127,60 +135,82 @@ for do_reverse in ${do_reverse_args[@]}; do
         stats_file="${STATS_DIR}/${experiment_stem}.stats.txt"
         [[ -r $stats_file ]] || {
             printf "File '%s' is not a readable.\n" "$stats_file" >&2
-            exit 1
+            cleanup 1
         }
 
         time_file="${STATS_DIR}/${experiment_stem}.time.txt"
         [[ -r $time_file ]] || {
             printf "File '%s' is not a readable.\n" "$time_file" >&2
-            exit 1
+            cleanup 1
         }
 
         phi_file="${STATS_DIR}/${experiment_stem}.phi.txt"
         [[ -r $phi_file ]] || {
             printf "File '%s' is not a readable.\n" "$phi_file" >&2
-            exit 1
+            cleanup 1
         }
 
-        stats=$($STATS_SCRIPT "$stats_file")
+        stats=$($STATS_SCRIPT "$stats_file" 2>$ERR_FILE)
         size=$(sed -n 's/^Total:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
         features=$(sed -n 's/^Features:[^0-9]*\([0-9]*\)$/\1/p' <<<"$stats")
 
         print_header $do_reverse $size $features
 
-        perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
-        perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
-        nterms_stats=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
-        nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p' <<<"$stats")
-
-        perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
-
-        nterms=$(compute_term_size "$phi_file" $size)
-        [[ -z $nterms_stats ]] && {
-            ##! fragile
-            nterms_stats=$(bc -l <<<"($features * $perc_features)/100")
-            nterms_stats=$(printf '%.1f' $nterms_stats)
-        }
-        [[ $nterms == $nterms_stats ]] || {
-            printf "%s: encountered inconsistency: stats.termSize != termSize(phi): %s != %s\n" $experiment_stem "$nterms_stats" "$nterms" >&2
-            exit 3
-        }
-
         time_str=$(sed -n 's/^user[^0-9]*\([0-9].*\)$/\1/p' <"$time_file")
+        if [[ -n $time_str ]]; then
+            [[ -s $ERR_FILE ]] && {
+                cat $ERR_FILE >&2
+                cleanup 3
+            }
 
-        time_min=${time_str%%m*}
-        time_s=${time_str##*m}
-        time_s=${time_s%s}
-        total_time_s=$(bc -l <<<"${time_min}*60 + ${time_s}")
-        avg_time_s=$(bc -l <<<"${total_time_s}/${size}")
+            perc_features=$(sed -n 's/^.*#any features: \([^%]*\)%.*$/\1/p' <<<"$stats")
+            perc_fixed_features=$(sed -n 's/^.*#fixed features: \([^%]*\)%.*$/\1/p' <<<"$stats")
+            nterms_stats=$(sed -n 's/^.*#terms: \(.*\)$/\1/p' <<<"$stats")
+            nchecks=$(sed -n 's/^.*#checks: \(.*\)$/\1/p' <<<"$stats")
+
+            perc_dimension=$(bc -l <<<"100 - $perc_fixed_features")
+
+            nterms=$(compute_term_size "$phi_file" $size)
+            [[ -z $nterms_stats ]] && {
+                ##! fragile
+                nterms_stats=$(bc -l <<<"($features * $perc_features)/100")
+                nterms_stats=$(printf '%.1f' $nterms_stats)
+            }
+            [[ $nterms == $nterms_stats ]] || {
+                printf "%s: encountered inconsistency: stats.termSize != termSize(phi): %s != %s\n" $experiment_stem "$nterms_stats" "$nterms" >&2
+                cleanup 3
+            }
+
+            time_min=${time_str%%m*}
+            time_s=${time_str##*m}
+            time_s=${time_s%s}
+            total_time_s=$(bc -l <<<"${time_min}*60 + ${time_s}")
+            avg_time_s=$(bc -l <<<"${total_time_s}/${size}")
+
+            perc_features_str=$(printf "%.1f%%" $perc_features)
+            perc_fixed_features_str=$(printf "%.1f%%" $perc_fixed_features)
+            perc_dimension_str=$(printf "%.1f%%" $perc_dimension)
+            nterms_str=$(printf "%.1f" $nterms)
+            nchecks_str=$(printf "%.1f" $nchecks)
+            avg_time_s_str=$(printf "%.2f" $avg_time_s)
+        else
+            perc_features_str=X
+            perc_fixed_features_str=X
+            perc_dimension_str=X
+            nterms_str=X
+            nchecks_str=X
+            avg_time_s_str=X
+        fi
 
         printf "%${EXPERIMENT_MAX_WIDTH}s" $experiment
-        printf " |%${FEATURES_MAX_WIDTH}.1f%%" $perc_features
-        printf " |%${FIXED_MAX_WIDTH}.1f%%" $perc_fixed_features
-        printf " |%${DIMENSION_MAX_WIDTH}.1f%%" $perc_dimension
-        printf " | %${TERMS_MAX_WIDTH}.1f" $nterms
-        printf " | %${CHECKS_MAX_WIDTH}.1f" $nchecks
-        printf " | %.2f" $avg_time_s
+        printf " | %${FEATURES_MAX_WIDTH}s" $perc_features_str
+        printf " | %${FIXED_MAX_WIDTH}s" $perc_fixed_features_str
+        printf " | %${DIMENSION_MAX_WIDTH}s" $perc_dimension_str
+        printf " | %${TERMS_MAX_WIDTH}s" $nterms_str
+        printf " | %${CHECKS_MAX_WIDTH}s" $nchecks_str
+        printf " | %s" $avg_time_s_str
         printf "\n"
     done
 done
+
+cleanup 0
