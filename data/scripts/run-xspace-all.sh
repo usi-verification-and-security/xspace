@@ -150,7 +150,11 @@ export -f run1
 
 declare -n lEXPERIMENT_NAMES=$EXPERIMENT_NAMES_VAR
 
-parallel --line-buffer --jobs ${CPU_PERCENTAGE}% 'run1 {}' ::: ${!lEXPERIMENT_NAMES[@]}
+if (( ${#lEXPERIMENT_NAMES[@]} )); then
+    parallel --line-buffer --jobs ${CPU_PERCENTAGE}% 'run1 {}' ::: ${!lEXPERIMENT_NAMES[@]}
+else
+    printf "Nothing to run.\n"
+fi
 
 (( $? )) && {
     printf "\nFailed.\n"
