@@ -1,0 +1,19 @@
+This Docker-based artifact image reproduces data of the tables
+presented in the paper #332
+``Space Explanations of Neural Network Classification''
+submitted to CAV 2025.
+The software computes explanations of neural network classification
+for 3 models presented in the paper.
+The resulting observed data is runtime and some properties of the explanations.
+
+The package is available from URL
+https://doi.org/10.5281/zenodo.15225988
+
+The SHA256 checksum of the package is
+08d0b323940c954902f51c2b8bec1356eb2d8cf020268175340aaa8c47c45d75
+
+There are no additional requirements beyond Docker.
+The image should be ready-to-use automatically.
+
+We claim available and functional badges.
+The justification follows in the README file enclosed in the package.
