@@ -115,14 +115,15 @@ count-fixed)
     printf " | %s" "$DIMENSION_CAPTION"
     ;;
 compare-subset)
+    COMPARE_SUBSET_MAX_WIDTH=5
     SUBSET_CAPTION='<'
-    SUBSET_MAX_WIDTH=3
+    SUBSET_MAX_WIDTH=$COMPARE_SUBSET_MAX_WIDTH
     EQUAL_CAPTION='='
-    EQUAL_MAX_WIDTH=3
+    EQUAL_MAX_WIDTH=$COMPARE_SUBSET_MAX_WIDTH
     SUPSET_CAPTION='>'
-    SUPSET_MAX_WIDTH=3
+    SUPSET_MAX_WIDTH=$COMPARE_SUBSET_MAX_WIDTH
     UNCOMPARABLE_CAPTION='NC'
-    UNCOMPARABLE_MAX_WIDTH=3
+    UNCOMPARABLE_MAX_WIDTH=$COMPARE_SUBSET_MAX_WIDTH
 
     printf " | %${SUBSET_MAX_WIDTH}s" $SUBSET_CAPTION
     printf " | %${EQUAL_MAX_WIDTH}s" $EQUAL_CAPTION
@@ -343,16 +344,22 @@ for do_reverse in ${do_reverse_args[@]}; do
                 printf "\n"
                 ;;
             compare-subset)
-                outs=($(sed -n '2s/[^:]*: \([0-9]*\)/\1 /pg' <<<"$out"))
-                subset_out=${outs[0]}
-                equal_out=${outs[1]}
-                supset_out=${outs[2]}
-                uncomparable_out=${outs[3]}
+                outs=($(sed -n 's/[^:]*: \([0-9]*\)/\1 /pg' <<<"$out"))
+                cnt=${outs[0]}
+                subset_cnt=${outs[1]}
+                equal_cnt=${outs[2]}
+                supset_cnt=${outs[3]}
+                uncomparable_cnt=${outs[4]}
 
-                printf " | %${SUBSET_MAX_WIDTH}d" $subset_out
-                printf " | %${EQUAL_MAX_WIDTH}d" $equal_out
-                printf " | %${SUPSET_MAX_WIDTH}d" $supset_out
-                printf " | %${UNCOMPARABLE_MAX_WIDTH}d" $uncomparable_out
+                subset_perc=$(bc -l <<<"100 * ($subset_cnt / $cnt)")
+                equal_perc=$(bc -l <<<"100 * ($equal_cnt / $cnt)")
+                supset_perc=$(bc -l <<<"100 * ($supset_cnt / $cnt)")
+                uncomparable_perc=$(bc -l <<<"100 * ($uncomparable_cnt / $cnt)")
+
+                printf " |%${SUBSET_MAX_WIDTH}.1f%%" $subset_perc
+                printf " |%${EQUAL_MAX_WIDTH}.1f%%" $equal_perc
+                printf " |%${SUPSET_MAX_WIDTH}.1f%%" $supset_perc
+                printf " |%${UNCOMPARABLE_MAX_WIDTH}.1f%%" $uncomparable_perc
                 printf "\n"
                 ;;
             esac

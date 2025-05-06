@@ -417,6 +417,12 @@ compare-subset)
             cleanup 3
         fi
     done
+
+    sum=$(( $SUBSET_CNT + $SUPSET_CNT + $EQUAL_CNT + $UNCOMPARABLE_CNT ))
+    (( $cnt == $sum )) || {
+        printf "Unexpected mismatch of particular counts with the total count: %d != %d\n" $cnt $sum >&2
+        cleanup 3
+    }
     ;;
 *)
     cnt=0
