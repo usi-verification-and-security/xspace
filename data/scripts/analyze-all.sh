@@ -311,6 +311,8 @@ for do_reverse in ${do_reverse_args[@]}; do
                 continue
             }
 
+            args=()
+
             case $ACTION in
             check)
                 printf "Analyzing %s ... " "$phi_file"
@@ -320,10 +322,13 @@ for do_reverse in ${do_reverse_args[@]}; do
                 ;;
             compare-subset)
                 printf "%${EXPERIMENT_MAX_WIDTH}s" "$experiment $VS_STR $experiment2"
+
+                ## Be flexible and accept even incomplete phi files (as in other actions) for any argument
+                args+=(max)
                 ;;
             esac
 
-            out=$($ANALYZE_SCRIPT $ACTION "$PSI_FILE" "${phi_files[@]}") || exit $?
+            out=$($ANALYZE_SCRIPT $ACTION "$PSI_FILE" "${phi_files[@]}" "${args[@]}") || exit $?
 
             case $ACTION in
             check)
