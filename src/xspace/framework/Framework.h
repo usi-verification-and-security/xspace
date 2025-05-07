@@ -89,6 +89,11 @@ protected:
         return *expandPtr;
     }
 
+    Print const & getPrint() const {
+        assert(printPtr);
+        return *printPtr;
+    }
+
     std::unique_ptr<Config> configPtr;
 
     std::unique_ptr<xai::nn::NNet> networkPtr{};

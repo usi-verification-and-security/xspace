@@ -123,7 +123,7 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
                                     std::to_string(explanations.size()) + " < " + std::to_string(data.size())};
     }
 
-    Print & print = *framework.printPtr;
+    auto & print = framework.getPrint();
     bool const printingStats = not print.ignoringStats();
     bool const printingExplanations = not print.ignoringExplanations();
     auto & cexp = print.explanations();
@@ -212,7 +212,7 @@ void Framework::Expand::resetClassification() {
 }
 
 void Framework::Expand::printStatsHead(Dataset const & data) const {
-    Print const & print = *framework.printPtr;
+    auto & print = framework.getPrint();
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
 
@@ -229,7 +229,7 @@ void Framework::Expand::printStatsHead(Dataset const & data) const {
 }
 
 void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data, ExplanationIdx idx) const {
-    Print const & print = *framework.printPtr;
+    auto & print = framework.getPrint();
     assert(not print.ignoringStats());
     auto & cstats = print.stats();
     auto const defaultPrecision = cstats.precision();
