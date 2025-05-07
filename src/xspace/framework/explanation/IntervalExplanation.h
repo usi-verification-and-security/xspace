@@ -77,7 +77,8 @@ private:
 
     void condense() override;
 
-    void merge(ConjunctExplanation &&) override;
+    void intersect(std::unique_ptr<Explanation> &&) override;
+    void intersect(ConjunctExplanation &&) override;
 
     template<bool skipFixed>
     Float computeRelativeVolumeTp() const;

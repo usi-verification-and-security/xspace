@@ -64,7 +64,11 @@ void IntervalExplanation::condense() {
     assert(false);
 }
 
-void IntervalExplanation::merge(ConjunctExplanation &&) {
+void IntervalExplanation::intersect(std::unique_ptr<Explanation> && explanationPtr) {
+    ConjunctExplanation::intersect(std::move(explanationPtr));
+}
+
+void IntervalExplanation::intersect(ConjunctExplanation &&) {
     // Would result in non-IntervalExplanation
     assert(false);
 }

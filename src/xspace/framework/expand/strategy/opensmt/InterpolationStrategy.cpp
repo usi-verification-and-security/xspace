@@ -162,7 +162,7 @@ void InterpolationStrategy::executeBody(Explanations & explanations, Dataset con
         insertItp(itp);
     }
 
-    if (filteringVars) { newConjExplanation.merge(std::move(cexplanation)); }
+    if (filteringVars) { newConjExplanation.intersect(std::move(cexplanation)); }
 
     assignNew<ConjunctExplanation>(explanationPtr, std::move(newConjExplanation));
 }

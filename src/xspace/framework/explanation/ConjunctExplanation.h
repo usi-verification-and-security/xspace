@@ -53,7 +53,8 @@ public:
 
     virtual void condense();
 
-    virtual void merge(ConjunctExplanation &&);
+    virtual void intersect(std::unique_ptr<Explanation> &&);
+    virtual void intersect(ConjunctExplanation &&);
 
     void printSmtLib2(std::ostream &) const override;
     void printSmtLib2(std::ostream &, PrintConfig const &) const;

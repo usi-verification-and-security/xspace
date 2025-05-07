@@ -81,14 +81,23 @@ void ConjunctExplanation::condense() {
     if (not isSparse()) { return; }
 
     ConjunctExplanation cexplanation{*frameworkPtr};
-    cexplanation.merge(std::move(*this));
+    cexplanation.intersect(std::move(*this));
     swap(cexplanation);
 
     assert(not isSparse());
 }
 
-void ConjunctExplanation::merge(ConjunctExplanation && cexplanation) {
-    for (auto & pexplanationPtr : cexplanation.conjunction) {
+void ConjunctExplanation::intersect(std::unique_ptr<Explanation> && explanationPtr) {
+    if (auto optConjExp = dynamic_cast<ConjunctExplanation *>(explanationPtr.get())) {
+        intersect(std::move(*optConjExp));
+        return;
+    }
+
+    insertExplanation(std::move(explanationPtr));
+}
+
+void ConjunctExplanation::intersect(ConjunctExplanation && rhs) {
+    for (auto & pexplanationPtr : rhs.conjunction) {
         if (not pexplanationPtr) { continue; }
         insertExplanation(std::move(pexplanationPtr));
     }
