@@ -23,7 +23,7 @@ public:
 protected:
     using Strategy::getVerifier;
 
-    void executeInit(std::unique_ptr<Explanation> &) override;
+    void executeInit(Explanations &, Dataset const &, ExplanationIdx) override;
 
     // using Strategy::assertFormulaExplanation allows to handle those explanations as well
 

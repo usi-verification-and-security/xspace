@@ -26,8 +26,8 @@ public:
     static char const * name() { return "itp"; }
 
 protected:
-    void executeInit(std::unique_ptr<Explanation> &) override;
-    void executeBody(std::unique_ptr<Explanation> &) override;
+    void executeInit(Explanations &, Dataset const &, ExplanationIdx) override;
+    void executeBody(Explanations &, Dataset const &, ExplanationIdx) override;
 
     Config config{};
 };

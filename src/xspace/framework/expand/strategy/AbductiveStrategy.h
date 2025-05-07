@@ -11,7 +11,7 @@ public:
     static char const * name() { return "abductive"; }
 
 protected:
-    void executeBody(std::unique_ptr<Explanation> &) override;
+    void executeBody(Explanations &, Dataset const &, ExplanationIdx) override;
 };
 } // namespace xspace
 

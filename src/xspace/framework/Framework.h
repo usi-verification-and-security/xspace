@@ -17,6 +17,14 @@ class Dataset;
 class Explanation;
 
 using Explanations = std::vector<std::unique_ptr<Explanation>>;
+using ExplanationIdx = Explanations::size_type;
+
+inline std::unique_ptr<Explanation> & getExplanationPtr(Explanations & explanations, ExplanationIdx idx) {
+    return explanations[idx];
+}
+inline Explanation & getExplanation(Explanations & explanations, ExplanationIdx idx) {
+    return *getExplanationPtr(explanations, idx);
+}
 
 // Class that represents the Space Explanation Framework
 class Framework {
@@ -73,6 +81,8 @@ protected:
     class Print;
 
     using VarNames = std::vector<VarName>;
+
+    static_assert(std::is_same_v<VarNames::size_type, VarIdx>);
 
     Expand const & getExpand() const {
         assert(expandPtr);

@@ -5,8 +5,8 @@
 #include <api/MainSolver.h>
 
 namespace xspace::expand::opensmt {
-void UnsatCoreStrategy::executeInit(std::unique_ptr<Explanation> & explanationPtr) {
-    Base::executeInit(explanationPtr);
+void UnsatCoreStrategy::executeInit(Explanations & explanations, Dataset const & data, ExplanationIdx idx) {
+    Base::executeInit(explanations, data, idx);
     // if opensmt Strategy also has executeInit, only its local function should be called
 
     auto & verifier = getVerifier();

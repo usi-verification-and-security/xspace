@@ -16,8 +16,8 @@
 #include <cassert>
 
 namespace xspace::expand::opensmt {
-void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanationPtr) {
-    Strategy::executeInit(explanationPtr);
+void InterpolationStrategy::executeInit(Explanations & explanations, Dataset const & data, ExplanationIdx idx) {
+    Strategy::executeInit(explanations, data, idx);
 
     auto & verifier = getVerifier();
     auto & solver = verifier.getSolver();
@@ -61,7 +61,8 @@ void InterpolationStrategy::executeInit(std::unique_ptr<Explanation> & explanati
     }
 }
 
-void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
+void InterpolationStrategy::executeBody(Explanations & explanations, Dataset const &, ExplanationIdx idx) {
+    auto & explanationPtr = getExplanationPtr(explanations, idx);
     if (auto * optIntExp = dynamic_cast<IntervalExplanation *>(explanationPtr.get())) {
         explanationPtr = std::move(*optIntExp).toConjunctExplanation(varOrdering.order);
     }

@@ -23,10 +23,11 @@ xai::verifiers::UnsatCoreVerifier & Framework::Expand::UnsatCoreStrategy::getVer
     return const_cast<xai::verifiers::UnsatCoreVerifier &>(std::as_const(*this).getVerifier());
 }
 
-void Framework::Expand::UnsatCoreStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
+void Framework::Expand::UnsatCoreStrategy::executeBody(Explanations & explanations, Dataset const &,
+                                                       ExplanationIdx idx) {
     assert(storeNamedTerms());
 
-    auto & explanation = *explanationPtr;
+    auto & explanation = getExplanation(explanations, idx);
     if (not dynamic_cast<ConjunctExplanation *>(&explanation)) { return; }
 
     auto & cexplanation = static_cast<ConjunctExplanation &>(explanation);

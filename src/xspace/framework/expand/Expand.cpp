@@ -143,13 +143,12 @@ void Framework::Expand::operator()(Explanations & explanations, Dataset const & 
         auto const & output = data.getComputedOutput(idx);
         assertClassification(output);
 
-        auto & explanationPtr = explanations[idx];
         for (auto & strategy : strategies) {
-            strategy->execute(explanationPtr);
+            strategy->execute(explanations, data, idx);
         }
 
+        auto & explanation = getExplanation(explanations, idx);
         //+ get rid of the conditionals
-        auto & explanation = *explanationPtr;
         if (printingStats) { printStats(explanation, data, idx); }
         if (printingExplanations) {
             explanation.print(cexp);
@@ -223,16 +222,13 @@ void Framework::Expand::printStatsHead(Dataset const & data) const {
     cstats << "Dataset size: " << size << '\n';
     if (config.limitingMaxSamples()) {
         auto const maxSamples = config.getMaxSamples();
-        if (maxSamples < size) {
-            cstats << "Number of samples: " << maxSamples << '\n';
-        }
+        if (maxSamples < size) { cstats << "Number of samples: " << maxSamples << '\n'; }
     }
     cstats << "Number of variables: " << framework.varSize() << '\n';
     cstats << std::string(60, '-') << '\n';
 }
 
-void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data,
-                                   Dataset::Sample::Idx idx) const {
+void Framework::Expand::printStats(Explanation const & explanation, Dataset const & data, ExplanationIdx idx) const {
     Print const & print = *framework.printPtr;
     assert(not print.ignoringStats());
     auto & cstats = print.stats();

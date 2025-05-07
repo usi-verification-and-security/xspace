@@ -9,7 +9,6 @@
 namespace xspace {
 class VarBound;
 class PartialExplanation;
-class Explanation;
 class ConjunctExplanation;
 class IntervalExplanation;
 
@@ -24,7 +23,7 @@ public:
 
     virtual bool requiresSMTSolver() const { return false; }
 
-    virtual void execute(std::unique_ptr<Explanation> &);
+    virtual void execute(Explanations &, Dataset const &, ExplanationIdx);
 
 protected:
     struct AssertExplanationConf {
@@ -37,9 +36,9 @@ protected:
 
     virtual bool storeNamedTerms() const { return false; }
 
-    virtual void executeInit(std::unique_ptr<Explanation> &);
-    virtual void executeBody(std::unique_ptr<Explanation> &) = 0;
-    virtual void executeFinish(std::unique_ptr<Explanation> &);
+    virtual void executeInit(Explanations &, Dataset const &, ExplanationIdx);
+    virtual void executeBody(Explanations &, Dataset const &, ExplanationIdx) = 0;
+    virtual void executeFinish(Explanations &, Dataset const &, ExplanationIdx);
 
     void initVarOrdering();
 

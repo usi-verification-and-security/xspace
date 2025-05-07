@@ -18,7 +18,7 @@ public:
     static char const * name() { return "trial"; }
 
 protected:
-    void executeBody(std::unique_ptr<Explanation> &) override;
+    void executeBody(Explanations &, Dataset const &, ExplanationIdx) override;
 
     Config config{};
 };

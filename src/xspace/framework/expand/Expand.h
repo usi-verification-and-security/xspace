@@ -16,6 +16,8 @@ class Verifier;
 namespace xspace {
 class Explanation;
 
+static_assert(std::is_same_v<ExplanationIdx, Dataset::Sample::Idx>);
+
 class Framework::Expand {
 public:
     struct VarOrdering {
@@ -65,7 +67,7 @@ protected:
     void resetClassification();
 
     void printStatsHead(Dataset const &) const;
-    void printStats(Explanation const &, Dataset const &, Dataset::Sample::Idx) const;
+    void printStats(Explanation const &, Dataset const &, ExplanationIdx) const;
 
     Framework & framework;
 

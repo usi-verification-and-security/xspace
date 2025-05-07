@@ -9,8 +9,9 @@
 #include <cassert>
 
 namespace xspace {
-void Framework::Expand::TrialAndErrorStrategy::executeBody(std::unique_ptr<Explanation> & explanationPtr) {
-    auto & explanation = *explanationPtr;
+void Framework::Expand::TrialAndErrorStrategy::executeBody(Explanations & explanations, Dataset const &,
+                                                           ExplanationIdx idx) {
+    auto & explanation = getExplanation(explanations, idx);
     assert(dynamic_cast<IntervalExplanation *>(&explanation));
     auto & iexplanation = static_cast<IntervalExplanation &>(explanation);
 
