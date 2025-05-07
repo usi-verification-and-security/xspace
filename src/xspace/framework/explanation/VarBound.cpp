@@ -196,6 +196,24 @@ void VarBound::eraseUpperBound() {
     assertValid();
 }
 
+void VarBound::intersect(VarBound && rhs) {
+#ifndef NDEBUG
+    assert(varIdx == rhs.varIdx);
+    toInterval().intersect(rhs.toInterval());
+#endif
+
+    if (isPoint()) { return; }
+    if (rhs.isPoint()) {
+        swap(rhs);
+        return;
+    }
+
+    Interval ival{toInterval()};
+    ival.intersect(std::move(rhs).toInterval());
+    VarBound varBnd{*frameworkPtr, varIdx, std::move(ival)};
+    swap(varBnd);
+}
+
 void VarBound::printRegular(std::ostream & os) const {
     if (not isInterval()) {
         printRegularBound(os, firstBound);

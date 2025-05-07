@@ -54,6 +54,9 @@ public:
 
     constexpr Float size() const { return getUpper() - getLower(); }
 
+    // It assumes that they have at least some overlap
+    void intersect(Interval &&);
+
     void print(std::ostream &) const;
 
 protected:

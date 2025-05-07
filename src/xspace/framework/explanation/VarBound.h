@@ -86,6 +86,9 @@ public:
     void eraseLowerBound();
     void eraseUpperBound();
 
+    // It assumes that they have at least some overlap
+    void intersect(VarBound &&);
+
     void print(std::ostream & os) const override { printRegular(os); }
     void printSmtLib2(std::ostream &) const override;
 

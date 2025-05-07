@@ -65,12 +65,39 @@ void IntervalExplanation::condense() {
 }
 
 void IntervalExplanation::intersect(std::unique_ptr<Explanation> && explanationPtr) {
+    if (auto optIntExp = dynamic_cast<IntervalExplanation *>(explanationPtr.get())) {
+        intersect(std::move(*optIntExp));
+        return;
+    }
+
     ConjunctExplanation::intersect(std::move(explanationPtr));
 }
 
 void IntervalExplanation::intersect(ConjunctExplanation &&) {
     // Would result in non-IntervalExplanation
     assert(false);
+}
+
+void IntervalExplanation::intersect(IntervalExplanation && rhs) {
+    assert(size() == rhs.size());
+
+    std::size_t const size_ = size();
+    for (VarIdx idx = 0; idx < size_; ++idx) {
+        auto & varBndPtr2 = rhs[idx];
+        if (not varBndPtr2) { continue; }
+
+        auto & varBndPtr = operator[](idx);
+        if (not varBndPtr) {
+            varBndPtr = std::move(varBndPtr2);
+            continue;
+        }
+
+        assert(varBndPtr and varBndPtr2);
+        auto & varBnd = *castToVarBound(varBndPtr.get());
+        auto & varBnd2 = *castToVarBound(varBndPtr2.get());
+        // It assumes that they have at least some overlap
+        varBnd.intersect(std::move(varBnd2));
+    }
 }
 
 std::unique_ptr<ConjunctExplanation>
