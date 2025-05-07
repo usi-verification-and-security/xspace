@@ -74,6 +74,11 @@ protected:
 
     bool checkFormsExplanation();
 
+    void intersectExplanation(std::unique_ptr<Explanation> &, std::unique_ptr<Explanation> &&);
+    virtual bool intersectExplanationImpl(std::unique_ptr<Explanation> &, std::unique_ptr<Explanation> &);
+    virtual bool intersectIntervalExplanationImpl(std::unique_ptr<Explanation> &, std::unique_ptr<Explanation> &);
+    virtual bool intersectNonIntervalExplanationImpl(std::unique_ptr<Explanation> &, std::unique_ptr<Explanation> &);
+
     Expand & expand;
 
     VarOrdering varOrdering;

@@ -1,5 +1,6 @@
 #include "Strategy.h"
 
+#include <xspace/common/Macro.h>
 #include <xspace/framework/explanation/ConjunctExplanation.h>
 #include <xspace/framework/explanation/Explanation.h>
 #include <xspace/framework/explanation/IntervalExplanation.h>
@@ -299,5 +300,63 @@ bool Framework::Expand::Strategy::checkFormsExplanation() {
     auto answer = getVerifier().check();
     assert(answer == xai::verifiers::Verifier::Answer::SAT or answer == xai::verifiers::Verifier::Answer::UNSAT);
     return (answer == xai::verifiers::Verifier::Answer::UNSAT);
+}
+
+void Framework::Expand::Strategy::intersectExplanation(std::unique_ptr<Explanation> & explanationPtr,
+                                                       std::unique_ptr<Explanation> && otherExpPtr) {
+    [[maybe_unused]] bool success = intersectExplanationImpl(explanationPtr, otherExpPtr);
+    assert(success);
+}
+
+bool Framework::Expand::Strategy::intersectExplanationImpl(std::unique_ptr<Explanation> & explanationPtr,
+                                                           std::unique_ptr<Explanation> & otherExpPtr) {
+    if (dynamic_cast<IntervalExplanation *>(explanationPtr.get())) {
+        return intersectIntervalExplanationImpl(explanationPtr, otherExpPtr);
+    } else {
+        return intersectNonIntervalExplanationImpl(explanationPtr, otherExpPtr);
+    }
+}
+
+bool Framework::Expand::Strategy::intersectIntervalExplanationImpl(std::unique_ptr<Explanation> & explanationPtr,
+                                                                   std::unique_ptr<Explanation> & otherExpPtr) {
+    assert(dynamic_cast<IntervalExplanation *>(explanationPtr.get()));
+    auto & iexplanation = static_cast<IntervalExplanation &>(*explanationPtr);
+
+    if (auto * optOtherIntExp = dynamic_cast<IntervalExplanation *>(otherExpPtr.get())) {
+        iexplanation.intersect(std::move(*optOtherIntExp));
+        return true;
+    }
+
+    explanationPtr.swap(otherExpPtr);
+    assert(otherExpPtr.get() == &iexplanation);
+    return intersectNonIntervalExplanationImpl(explanationPtr, otherExpPtr);
+}
+
+bool Framework::Expand::Strategy::intersectNonIntervalExplanationImpl(std::unique_ptr<Explanation> & explanationPtr,
+                                                                      std::unique_ptr<Explanation> & otherExpPtr) {
+    assert(not dynamic_cast<IntervalExplanation *>(explanationPtr.get()));
+
+    if (auto * optConjExp = dynamic_cast<ConjunctExplanation *>(explanationPtr.get())) {
+        optConjExp->intersect(std::move(otherExpPtr));
+        return true;
+    }
+
+    if (not dynamic_cast<ConjunctExplanation *>(otherExpPtr.get())) {
+        assert(not dynamic_cast<IntervalExplanation *>(otherExpPtr.get()));
+        return false;
+    }
+
+    if (auto * optIntExp = dynamic_cast<IntervalExplanation *>(otherExpPtr.get())) {
+        // Not both are intervals so we have no other choice
+        otherExpPtr = std::move(*optIntExp).toConjunctExplanation(varOrdering.order);
+    }
+
+    explanationPtr.swap(otherExpPtr);
+    assert(dynamic_cast<ConjunctExplanation *>(explanationPtr.get()));
+    auto & cexp = static_cast<ConjunctExplanation &>(*explanationPtr);
+    assert(not dynamic_cast<ConjunctExplanation *>(otherExpPtr.get()));
+    cexp.insertExplanation(std::move(otherExpPtr));
+
+    return true;
 }
 } // namespace xspace

@@ -49,4 +49,17 @@ void Strategy::assertFormulaExplanation(FormulaExplanation const & phiexplanatio
     [[maybe_unused]] bool const success = solver.tryAddTermNameFor(phi, "phi_"s + std::to_string(counter++));
     assert(success);
 }
+
+bool Strategy::intersectNonIntervalExplanationImpl(std::unique_ptr<Explanation> & explanationPtr,
+                                                   std::unique_ptr<Explanation> & otherExpPtr) {
+    if (Base::intersectNonIntervalExplanationImpl(explanationPtr, otherExpPtr)) { return true; }
+
+    assert(dynamic_cast<FormulaExplanation *>(explanationPtr.get()));
+    assert(dynamic_cast<FormulaExplanation *>(otherExpPtr.get()));
+    auto & phiexplanation = static_cast<FormulaExplanation &>(*explanationPtr);
+    auto & otherPhiExp = static_cast<FormulaExplanation &>(*otherExpPtr);
+    phiexplanation.intersect(std::move(otherPhiExp));
+
+    return true;
+}
 } // namespace xspace::expand::opensmt

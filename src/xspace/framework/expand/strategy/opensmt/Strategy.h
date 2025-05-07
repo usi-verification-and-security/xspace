@@ -29,6 +29,8 @@ protected:
 
     void assertFormulaExplanation(FormulaExplanation const &);
     void assertFormulaExplanation(FormulaExplanation const &, AssertExplanationConf const &);
+
+    bool intersectNonIntervalExplanationImpl(std::unique_ptr<Explanation> &, std::unique_ptr<Explanation> &) override;
 };
 } // namespace xspace::expand::opensmt
 
