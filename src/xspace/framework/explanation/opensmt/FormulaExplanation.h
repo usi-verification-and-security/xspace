@@ -31,6 +31,8 @@ public:
 
     void swap(FormulaExplanation &);
 
+    void intersect(FormulaExplanation &&);
+
     void printSmtLib2(std::ostream &) const override;
 
 protected:

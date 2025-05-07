@@ -71,7 +71,18 @@ void FormulaExplanation::resetFormula() {
 void FormulaExplanation::swap(FormulaExplanation & rhs) {
     Explanation::swap(rhs);
 
-    std::swap(formulaPtr, rhs.formulaPtr);
+    formulaPtr.swap(rhs.formulaPtr);
+}
+
+void FormulaExplanation::intersect(FormulaExplanation && rhs) {
+    auto & solver = getVerifier().getSolver();
+    auto & logic = solver.getLogic();
+
+    auto & phi = *formulaPtr;
+    auto & phi2 = rhs.getFormula();
+    Formula newPhi = logic.mkAnd(phi, phi2);
+
+    phi = std::move(newPhi);
 }
 
 void FormulaExplanation::printSmtLib2(std::ostream & os) const {
