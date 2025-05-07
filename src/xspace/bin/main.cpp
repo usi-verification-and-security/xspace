@@ -40,8 +40,8 @@ void printUsageOptRow(std::ostream & os, char opt, std::string_view arg, std::st
 
 void printUsage(char * const argv[], std::ostream & os = std::cout) {
     using xspace::Framework;
-    using xspace::expand::opensmt::UnsatCoreStrategy;
     using xspace::expand::opensmt::InterpolationStrategy;
+    using xspace::expand::opensmt::UnsatCoreStrategy;
 
     assert(argv);
     std::string const cmd = argv[0];
@@ -59,6 +59,7 @@ void printUsage(char * const argv[], std::ostream & os = std::cout) {
     printUsageStrategyRow(os, InterpolationStrategy::name(),
                           {"weak", "strong", "weaker", "stronger", "bweak", "bstrong", "aweak", "astrong", "aweaker",
                            "astronger", "afactor <factor>", "vars x<i>..."});
+    printUsageStrategyRow(os, Framework::Expand::SliceStrategy::name(), {"x<i>..."});
 
     os << "VERIFIERS: opensmt";
 #ifdef MARABOU

@@ -33,6 +33,7 @@ std::unique_ptr<Framework::Expand::Strategy> Framework::Expand::Strategy::Factor
     if (nameLower == TrialAndErrorStrategy::name()) { return parseTrial(str, params); }
     if (nameLower == expand::opensmt::UnsatCoreStrategy::name()) { return parseUnsatCore(str, params); }
     if (nameLower == expand::opensmt::InterpolationStrategy::name()) { return parseInterpolation(str, params); }
+    if (nameLower == SliceStrategy::name()) { return parseSlice(str, params); }
 
     throw std::invalid_argument{"Unrecognized strategy name: "s + name};
 }
@@ -71,6 +72,21 @@ void Framework::Expand::Strategy::Factory::throwInvalidParameterTp(std::string c
 template<typename T>
 std::string Framework::Expand::Strategy::Factory::throwMessageTp(std::string const & msg) const {
     return "Strategy "s + T::name() + ": " + msg;
+}
+
+std::vector<VarIdx> Framework::Expand::Strategy::Factory::parseVarIndices(std::istream & is) const {
+    std::vector<VarIdx> varIndices;
+
+    //+ not handled when no vars are provided
+    std::string param;
+    while (is >> param) {
+        //+ no checks
+        VarName const & varName = param;
+        VarIdx idx = getVarIdx(varName);
+        varIndices.push_back(idx);
+    }
+
+    return varIndices;
 }
 
 std::unique_ptr<Framework::Expand::Strategy>
@@ -210,13 +226,7 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
         }
 
         if (paramLower == "vars") {
-            //+ not handled when no vars are provided
-            while (iss >> param) {
-                //+ no checks
-                VarName const & varName = param;
-                VarIdx idx = getVarIdx(varName);
-                conf.varIndicesFilter.push_back(idx);
-            }
+            conf.varIndicesFilter = parseVarIndices(iss);
             continue;
         }
 
@@ -224,5 +234,18 @@ Framework::Expand::Strategy::Factory::parseInterpolation(std::string const & str
     }
 
     return parseReturnTp<InterpolationStrategy>(str, params, conf);
+}
+
+std::unique_ptr<Framework::Expand::Strategy>
+Framework::Expand::Strategy::Factory::parseSlice(std::string const & str, auto & params) {
+    SliceStrategy::Config conf;
+
+    std::string const paramStr = std::move(params.front());
+    std::istringstream iss{paramStr};
+    params.pop();
+
+    conf.varIndices = parseVarIndices(iss);
+
+    return parseReturnTp<SliceStrategy>(str, params, conf);
 }
 } // namespace xspace

@@ -6,6 +6,7 @@
 #include "AbductiveStrategy.h"
 #include "TrialAndErrorStrategy.h"
 #include "UnsatCoreStrategy.h"
+#include "SliceStrategy.h"
 #include "opensmt/InterpolationStrategy.h"
 #include "opensmt/UnsatCoreStrategy.h"
 

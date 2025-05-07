@@ -16,6 +16,7 @@ PRIVATE
     framework/expand/strategy/AbductiveStrategy.cpp
     framework/expand/strategy/TrialAndErrorStrategy.cpp
     framework/expand/strategy/UnsatCoreStrategy.cpp
+    framework/expand/strategy/SliceStrategy.cpp
     framework/expand/strategy/opensmt/Strategy.cpp
     framework/expand/strategy/opensmt/UnsatCoreStrategy.cpp
     framework/expand/strategy/opensmt/InterpolationStrategy.cpp

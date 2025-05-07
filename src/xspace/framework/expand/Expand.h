@@ -18,6 +18,7 @@ class Explanation;
 
 static_assert(std::is_same_v<ExplanationIdx, Dataset::Sample::Idx>);
 
+//! rename to `Explain`?
 class Framework::Expand {
 public:
     struct VarOrdering {
@@ -31,6 +32,8 @@ public:
     class AbductiveStrategy;
     class TrialAndErrorStrategy;
     class UnsatCoreStrategy;
+    //! does not expand, it shrinks
+    class SliceStrategy;
 
     using Strategies = std::vector<std::unique_ptr<Strategy>>;
 
