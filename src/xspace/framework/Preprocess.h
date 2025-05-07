@@ -11,6 +11,7 @@ public:
     Preprocess(Framework &, Dataset &);
 
     Explanations makeExplanationsFromSamples() const;
+    std::unique_ptr<Explanation> makeExplanationFromSample(Dataset::Sample const &) const;
 
     static bool isBinaryClassification(Dataset::Output::Values const &);
 

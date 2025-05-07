@@ -41,20 +41,27 @@ Explanations Framework::Preprocess::makeExplanationsFromSamples() const {
     assert(size == samples.size());
     Explanations explanations;
     explanations.reserve(size);
-    std::size_t const vSize = framework.varSize();
     for (auto const & sample : samples) {
-        assert(sample.size() == vSize);
-
-        IntervalExplanation iexplanation{framework};
-        for (VarIdx idx = 0; idx < vSize; ++idx) {
-            Float val = sample[idx];
-            iexplanation.insertVarBound(VarBound{framework, idx, val});
-        }
-        explanations.push_back(MAKE_UNIQUE(std::move(iexplanation)));
+        auto explanationPtr = makeExplanationFromSample(sample);
+        explanations.push_back(std::move(explanationPtr));
     }
 
     assert(explanations.size() == size);
     return explanations;
+}
+
+std::unique_ptr<Explanation> Framework::Preprocess::makeExplanationFromSample(Dataset::Sample const & sample) const {
+    std::size_t const vSize = framework.varSize();
+
+    assert(sample.size() == vSize);
+
+    IntervalExplanation iexplanation{framework};
+    for (VarIdx idx = 0; idx < vSize; ++idx) {
+        Float val = sample[idx];
+        iexplanation.insertVarBound(VarBound{framework, idx, val});
+    }
+
+    return MAKE_UNIQUE(std::move(iexplanation));
 }
 
 Dataset::Output Framework::Preprocess::computeOutput(Dataset::Sample const & sample) const {
