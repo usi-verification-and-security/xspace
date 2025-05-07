@@ -89,6 +89,11 @@ protected:
         return *expandPtr;
     }
 
+    Preprocess const & getPreprocess() const {
+        assert(preprocessPtr);
+        return *preprocessPtr;
+    }
+
     Print const & getPrint() const {
         assert(printPtr);
         return *printPtr;
@@ -101,6 +106,8 @@ protected:
     std::vector<Interval> domainIntervals{};
 
     std::unique_ptr<Expand> expandPtr{};
+
+    std::unique_ptr<Preprocess> preprocessPtr{};
 
     std::unique_ptr<Print> printPtr{};
 };

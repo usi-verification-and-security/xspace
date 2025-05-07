@@ -8,9 +8,11 @@
 namespace xspace {
 class Framework::Preprocess {
 public:
-    Preprocess(Framework &, Dataset &);
+    Preprocess(Framework &);
 
-    Explanations makeExplanationsFromSamples() const;
+    void operator()(Dataset &) const;
+
+    Explanations makeExplanationsFromSamples(Dataset const &) const;
     std::unique_ptr<Explanation> makeExplanationFromSample(Dataset::Sample const &) const;
 
     static bool isBinaryClassification(Dataset::Output::Values const &);
@@ -20,13 +22,9 @@ public:
     static Dataset::Classification::Label computeNonBinaryClassificationLabel(Dataset::Output::Values const &);
 
 protected:
-    void initDataset();
-
     Dataset::Output computeOutput(Dataset::Sample const &) const;
 
     Framework & framework;
-
-    Dataset & dataset;
 };
 } // namespace xspace
 

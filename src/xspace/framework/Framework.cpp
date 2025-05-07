@@ -18,6 +18,7 @@ Framework::Framework() : Framework(Config{}) {}
 
 Framework::Framework(Config const & config) : configPtr{MAKE_UNIQUE(config)} {
     expandPtr = std::make_unique<Expand>(*this);
+    preprocessPtr = std::make_unique<Preprocess>(*this);
     printPtr = std::make_unique<Print>(*this);
 }
 
@@ -69,8 +70,10 @@ void Framework::setExpand(std::string_view verifierName, std::istream & strategi
 }
 
 Explanations Framework::explain(Dataset & data) {
-    Preprocess preprocess{*this, data};
-    auto explanations = preprocess.makeExplanationsFromSamples();
+    auto & preprocess = getPreprocess();
+
+    preprocess(data);
+    auto explanations = preprocess.makeExplanationsFromSamples(data);
 
     expand(explanations, data);
 
@@ -78,9 +81,10 @@ Explanations Framework::explain(Dataset & data) {
 }
 
 Explanations Framework::expand(std::string_view fileName, Dataset & data) {
-    Preprocess preprocess{*this, data};
+    auto & preprocess = getPreprocess();
     Parse parse{*this};
 
+    preprocess(data);
     //++ only interval explanations supported, but general phis probably require a solver
     auto explanations = parse.parseIntervalExplanations(fileName, data);
 

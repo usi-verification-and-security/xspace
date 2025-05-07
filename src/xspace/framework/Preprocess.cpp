@@ -12,13 +12,11 @@
 #include <concepts>
 
 namespace xspace {
-Framework::Preprocess::Preprocess(Framework & fw, Dataset & data) : framework{fw}, dataset{data} {
+Framework::Preprocess::Preprocess(Framework & fw) : framework{fw} {}
+
+void Framework::Preprocess::operator()(Dataset & dataset) const {
     assert(not framework.varNames.empty());
 
-    initDataset();
-}
-
-void Framework::Preprocess::initDataset() {
     auto const & samples = dataset.getSamples();
     std::size_t const size = dataset.size();
     assert(size == samples.size());
@@ -35,7 +33,7 @@ void Framework::Preprocess::initDataset() {
     dataset.setComputedOutputs(std::move(outputs));
 }
 
-Explanations Framework::Preprocess::makeExplanationsFromSamples() const {
+Explanations Framework::Preprocess::makeExplanationsFromSamples(Dataset const & dataset) const {
     auto const & samples = dataset.getSamples();
     std::size_t const size = dataset.size();
     assert(size == samples.size());
