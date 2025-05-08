@@ -137,7 +137,8 @@ function run1 {
         return 0
         ;;
     *)
-        printf "%s failed!\n" $experiment
+        printf "%s failed!\nUsed command: %s\n" $experiment \
+            "SRC_EXPERIMENT=$src_experiment \"$DIRNAME/run-xspace.sh\" \"$OUTPUT_DIR\" \"$experiment_strategies\" $experiment $rev $MAX_SAMPLES &" >&2
         return 1
         ;;
     esac
