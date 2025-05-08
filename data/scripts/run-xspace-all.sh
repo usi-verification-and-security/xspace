@@ -162,5 +162,5 @@ fi
     exit 1
 }
 
-printf "\nDone.\n"
+printf "\nSuccess.\n"
 exit 0

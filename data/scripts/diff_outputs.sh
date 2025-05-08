@@ -4,4 +4,4 @@
 ## > we can check the results even if the experiments have not finished yet
 
 cd explanations
-git diff | grep '^+' | grep -Ev '^\+(real|user|sys)' | less
+git diff | grep '^+' | grep -Ev '(^\+(real|user|sys)|\.time\.txt$)' | less
