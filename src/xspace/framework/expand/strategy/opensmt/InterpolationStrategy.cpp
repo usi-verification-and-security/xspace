@@ -147,7 +147,8 @@ void InterpolationStrategy::executeBody(std::unique_ptr<Explanation> & explanati
     ConjunctExplanation newConjExplanation{fw};
 
     auto const insertItp = [&](Formula const & phi) {
-        assert(logic.isOr(phi) or isLit(phi));
+        assert(not logic.isAnd(phi));
+        assert(logic.isOr(phi) or isLit(phi) or (logic.isNot(phi) and logic.isAnd(logic.getPterm(phi)[0])));
         auto phiexplanationPtr = std::make_unique<FormulaExplanation>(fw, phi);
         newConjExplanation.insertExplanation(std::move(phiexplanationPtr));
     };
