@@ -106,8 +106,26 @@ EXPERIMENT_NAMES=(
     ucore_min_itp_vars_x5_x8
     ucore_min_itp_vars_x5_x9
     ucore_min_itp_vars_x5_x13
+
+    #+ consecutive currently does not work because we cannot parse itp formulas
+    slice_x1_x3_itp_aweak_bstrong
+    slice_x1_x4_itp_aweak_bstrong
+    slice_x1_x5_itp_aweak_bstrong
+    slice_x3_x12_itp_aweak_bstrong
+    slice_x5_x8_itp_aweak_bstrong
+    slice_x1_x3_ucore_itp_aweak_bstrong
+    slice_x1_x4_ucore_itp_aweak_bstrong
+    slice_x1_x5_ucore_itp_aweak_bstrong
+    slice_x3_x12_ucore_itp_aweak_bstrong
+    slice_x5_x8_ucore_itp_aweak_bstrong
+    slice_x1_x3_ucore_min_itp_aweak_bstrong
+    slice_x1_x4_ucore_min_itp_aweak_bstrong
+    slice_x1_x5_ucore_min_itp_aweak_bstrong
+    slice_x3_x12_ucore_min_itp_aweak_bstrong
+    slice_x5_x8_ucore_min_itp_aweak_bstrong
 )
 
+#+ change to associative array right away? and rename 'all' to 'strategies'
 EXPERIMENT_STRATEGIES=(
     'abductive'
     'ucore sample, min'
@@ -216,4 +234,20 @@ EXPERIMENT_STRATEGIES=(
     'itp vars x5 x8; ucore min'
     'itp vars x5 x9; ucore min'
     'itp vars x5 x13; ucore min'
+
+    'itp aweak, bstrong; slice x1 x3'
+    'itp aweak, bstrong; slice x1 x4'
+    'itp aweak, bstrong; slice x1 x5'
+    'itp aweak, bstrong; slice x3 x12'
+    'itp aweak, bstrong; slice x5 x8'
+    'itp aweak, bstrong; ucore; slice x1 x3'
+    'itp aweak, bstrong; ucore; slice x1 x4'
+    'itp aweak, bstrong; ucore; slice x1 x5'
+    'itp aweak, bstrong; ucore; slice x3 x12'
+    'itp aweak, bstrong; ucore; slice x5 x8'
+    'itp aweak, bstrong; ucore min; slice x1 x3'
+    'itp aweak, bstrong; ucore min; slice x1 x4'
+    'itp aweak, bstrong; ucore min; slice x1 x5'
+    'itp aweak, bstrong; ucore min; slice x3 x12'
+    'itp aweak, bstrong; ucore min; slice x5 x8'
 )

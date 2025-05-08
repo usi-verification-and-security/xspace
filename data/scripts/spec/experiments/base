@@ -19,22 +19,41 @@ EXPERIMENT_NAMES=(
     ucore_min_itp_aweak_bstrong
     ucore_min_itp_aweaker_bstrong
 
-    itp_vars_x1_x3
+    # itp_vars_x1_x3
     itp_vars_x1_x4
+    itp_vars_x1_x5
     itp_vars_x3_x12
     itp_vars_x5_x8
-    ucore_itp_vars_x1_x3
+    # ucore_itp_vars_x1_x3
     ucore_itp_vars_x1_x4
+    ucore_itp_vars_x1_x5
     ucore_itp_vars_x3_x12
     ucore_itp_vars_x5_x8
-    ucore_min_itp_vars_x1_x3
+    # ucore_min_itp_vars_x1_x3
     ucore_min_itp_vars_x1_x4
+    ucore_min_itp_vars_x1_x5
     ucore_min_itp_vars_x3_x12
     ucore_min_itp_vars_x5_x8
+
+    # slice_x1_x3_itp_aweak_bstrong
+    slice_x1_x4_itp_aweak_bstrong
+    slice_x1_x5_itp_aweak_bstrong
+    slice_x3_x12_itp_aweak_bstrong
+    slice_x5_x8_itp_aweak_bstrong
+    # slice_x1_x3_ucore_itp_aweak_bstrong
+    slice_x1_x4_ucore_itp_aweak_bstrong
+    slice_x1_x5_ucore_itp_aweak_bstrong
+    slice_x3_x12_ucore_itp_aweak_bstrong
+    slice_x5_x8_ucore_itp_aweak_bstrong
+    # slice_x1_x3_ucore_min_itp_aweak_bstrong
+    slice_x1_x4_ucore_min_itp_aweak_bstrong
+    slice_x1_x5_ucore_min_itp_aweak_bstrong
+    slice_x3_x12_ucore_min_itp_aweak_bstrong
+    slice_x5_x8_ucore_min_itp_aweak_bstrong
 )
 
 CONSECUTIVE_EXPERIMENTS=(
     'trial_n_4_abductive;itp_aweak_bstrong'
-    'trial_n_4_abductive;ucore_itp_aweak_bstrong'
-    'trial_n_4_abductive;ucore_min_itp_aweak_bstrong'
+    # 'trial_n_4_abductive;ucore_itp_aweak_bstrong'
+    # 'trial_n_4_abductive;ucore_min_itp_aweak_bstrong'
 )
