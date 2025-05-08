@@ -151,7 +151,7 @@ export -f run1
 declare -n lEXPERIMENT_NAMES=$EXPERIMENT_NAMES_VAR
 
 if (( ${#lEXPERIMENT_NAMES[@]} )); then
-    parallel --line-buffer --jobs ${CPU_PERCENTAGE}% 'run1 {}' ::: ${!lEXPERIMENT_NAMES[@]}
+    parallel --halt soon,fail=1 --line-buffer --jobs ${CPU_PERCENTAGE}% 'run1 {}' ::: ${!lEXPERIMENT_NAMES[@]}
 else
     printf "Nothing to run.\n"
 fi
