@@ -53,6 +53,8 @@ EXPERIMENT_NAMES=(
 )
 
 CONSECUTIVE_EXPERIMENTS=(
+    'abductive;trial_n_4'
+    'abductive;itp_aweak_bstrong'
     'trial_n_4_abductive;itp_aweak_bstrong'
     # 'trial_n_4_abductive;ucore_itp_aweak_bstrong'
     # 'trial_n_4_abductive;ucore_min_itp_aweak_bstrong'

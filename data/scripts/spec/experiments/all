@@ -3,6 +3,7 @@ EXPERIMENT_NAMES=(
     ucore_sample_min
     ucore_interval_min
 
+    trial_n_4
     trial_n_4_abductive
     trial_n_4_ucore_sample_min
 
@@ -131,6 +132,7 @@ EXPERIMENT_STRATEGIES=(
     'ucore sample, min'
     'ucore interval, min'
 
+    'trial n 4'
     'abductive; trial n 4'
     'ucore sample, min; trial n 4'
 

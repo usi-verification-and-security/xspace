@@ -80,6 +80,7 @@ CONSECUTIVE_EXPERIMENTS_NAMES=()
 for exp_idx in ${!CONSECUTIVE_EXPERIMENTS_SRC_NAMES[@]}; do
     src_experiment="${CONSECUTIVE_EXPERIMENTS_SRC_NAMES[$exp_idx]}"
     dst_experiment="${CONSECUTIVE_EXPERIMENTS_DST_NAMES[$exp_idx]}"
+    #+ consider using '::' instead of '__'
     experiment_name="${dst_experiment}__${src_experiment}"
     CONSECUTIVE_EXPERIMENTS_NAMES+=("$experiment_name")
 done
