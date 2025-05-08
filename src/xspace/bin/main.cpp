@@ -235,11 +235,15 @@ int main(int argc, char * argv[]) try {
 
     return 0;
 } catch (std::system_error const & e) {
-    std::cerr << e.what() << '\n' << std::endl;
+    std::cerr << "Terminated with a system error:\n" << e.what() << '\n' << std::endl;
     printUsage(argv, std::cerr);
     return e.code().value();
-} catch (std::exception const & e) {
-    std::cerr << e.what() << '\n' << std::endl;
+} catch (std::logic_error const & e) {
+    std::cerr << "Terminated with a logic error:\n" << e.what() << '\n' << std::endl;
     printUsage(argv, std::cerr);
     return 1;
+} catch (std::exception const & e) {
+    std::cerr << "Terminated with an exception:\n" << e.what() << '\n' << std::endl;
+    printUsage(argv, std::cerr);
+    return 2;
 }

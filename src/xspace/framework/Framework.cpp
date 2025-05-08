@@ -80,7 +80,8 @@ Explanations Framework::explain(Dataset & data) {
 Explanations Framework::expand(std::string_view fileName, Dataset & data) {
     Preprocess preprocess{*this, data};
     Parse parse{*this};
-    //+ only interval explanations supported
+
+    //++ only interval explanations supported, but general phis probably require a solver
     auto explanations = parse.parseIntervalExplanations(fileName, data);
 
     expand(explanations, data);

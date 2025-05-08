@@ -39,8 +39,7 @@ Explanations Framework::Parse::parseIntervalExplanationsSmtLib2(std::istream & i
             continue;
         }
 
-        //+ incomplete error
-        throw std::logic_error{iss.str()};
+        throw std::logic_error{"Invalid interval explanation:\n"s + std::move(iss).str()};
     }
 
     assert(explanations.size() <= maxSize);
